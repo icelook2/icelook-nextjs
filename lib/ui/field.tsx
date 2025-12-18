@@ -1,0 +1,115 @@
+"use client";
+
+import { Field as BaseField } from "@base-ui/react/field";
+import { cva, type VariantProps } from "class-variance-authority";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { cn } from "@/lib/utils/cn";
+
+// Field Root
+const fieldRootVariants = cva("flex flex-col", {
+  variants: {
+    gap: {
+      default: "gap-1.5",
+      sm: "gap-1",
+      lg: "gap-2",
+    },
+  },
+  defaultVariants: {
+    gap: "default",
+  },
+});
+
+type FieldRootProps = ComponentPropsWithoutRef<typeof BaseField.Root> &
+  VariantProps<typeof fieldRootVariants> & {
+    children: ReactNode;
+  };
+
+function FieldRoot({ gap, className, children, ...props }: FieldRootProps) {
+  return (
+    <BaseField.Root
+      className={cn(fieldRootVariants({ gap }), className)}
+      {...props}
+    >
+      {children}
+    </BaseField.Root>
+  );
+}
+
+// Field Label
+const fieldLabelVariants = cva("font-medium text-gray-700", {
+  variants: {
+    size: {
+      default: "text-sm",
+      lg: "text-base",
+    },
+  },
+  defaultVariants: {
+    size: "default",
+  },
+});
+
+type FieldLabelProps = ComponentPropsWithoutRef<typeof BaseField.Label> &
+  VariantProps<typeof fieldLabelVariants> & {
+    children: ReactNode;
+  };
+
+function FieldLabel({ size, className, children, ...props }: FieldLabelProps) {
+  return (
+    <BaseField.Label
+      className={cn(fieldLabelVariants({ size }), className)}
+      {...props}
+    >
+      {children}
+    </BaseField.Label>
+  );
+}
+
+// Field Error
+type FieldErrorProps = ComponentPropsWithoutRef<typeof BaseField.Error> & {
+  children?: ReactNode;
+};
+
+function FieldError({ children, className, ...props }: FieldErrorProps) {
+  if (!children) {
+    return null;
+  }
+
+  return (
+    <BaseField.Error
+      className={cn("text-sm text-red-500", className)}
+      match
+      {...props}
+    >
+      {children}
+    </BaseField.Error>
+  );
+}
+
+// Field Description
+type FieldDescriptionProps = ComponentPropsWithoutRef<
+  typeof BaseField.Description
+> & {
+  children: ReactNode;
+};
+
+function FieldDescription({
+  children,
+  className,
+  ...props
+}: FieldDescriptionProps) {
+  return (
+    <BaseField.Description
+      className={cn("text-sm text-gray-500", className)}
+      {...props}
+    >
+      {children}
+    </BaseField.Description>
+  );
+}
+
+export const Field = {
+  Root: FieldRoot,
+  Label: FieldLabel,
+  Error: FieldError,
+  Description: FieldDescription,
+};

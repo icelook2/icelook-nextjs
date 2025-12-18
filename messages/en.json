@@ -1,0 +1,64 @@
+{
+  "auth": {
+    "welcome": "Welcome",
+    "check_email": "Check your email",
+    "enter_email_description": "Enter your email to continue",
+    "code_sent": "We sent a code to {email}",
+    "email_label": "Email",
+    "email_placeholder": "you@example.com",
+    "otp_label": "Verification code",
+    "otp_placeholder": "123456",
+    "continue": "Continue",
+    "verify": "Verify",
+    "back": "Back",
+    "resend": "Resend code",
+    "resend_in": "Resend in {seconds}s",
+    "rate_limit": "Too many requests. Please wait before trying again.",
+    "resend_rate_limit": "Please wait before requesting another code.",
+    "code_expired": "Code has expired. Please request a new one.",
+    "code_invalid": "Invalid code. Please check and try again."
+  },
+  "onboarding": {
+    "title": "Complete your profile",
+    "subtitle": "What should we call you?",
+    "name_label": "Your name",
+    "name_placeholder": "John Doe",
+    "continue": "Continue",
+    "not_authenticated": "Not authenticated",
+    "update_failed": "Failed to update profile"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email_invalid": "Please enter a valid email address",
+    "min_length": "Must be at least {min} characters",
+    "max_length": "Must be at most {max} characters",
+    "otp_length": "Code must be 6 digits",
+    "otp_numeric": "Code must contain only numbers",
+    "name_too_short": "Name must be at least 2 characters",
+    "name_too_long": "Name is too long"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "sign_out": "Sign out",
+    "signing_out": "Signing out..."
+  },
+  "protected": {
+    "title": "Protected Page",
+    "welcome": "Welcome, {email}",
+    "demo_title": "Translation Demo",
+    "demo_description": "This section demonstrates that i18n is working. Try switching the language using the globe icon above.",
+    "current_language": "Current language",
+    "greeting": "Hello! How are you today?",
+    "items_count": "{count, plural, =0 {No items} =1 {1 item} other {# items}}",
+    "last_login": "Last login: {date}"
+  },
+  "not_found": {
+    "code": "404",
+    "title": "Page not found",
+    "go_home": "Go back home"
+  },
+  "home": {
+    "title": "Icelook"
+  }
+}

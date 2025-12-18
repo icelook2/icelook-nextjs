@@ -11,6 +11,15 @@
     "Sentry": {
       "type": "http",
       "url": "https://mcp.sentry.dev/mcp/icelook/javascript-nextjs"
+    },
+    "mixpanel": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.mixpanel.com/mcp",
+        "--allow-http"
+      ]
     }
   }
 }

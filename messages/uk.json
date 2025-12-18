@@ -1,0 +1,64 @@
+{
+  "auth": {
+    "welcome": "Вітаємо",
+    "check_email": "Перевірте свою пошту",
+    "enter_email_description": "Введіть email, щоб продовжити",
+    "code_sent": "Ми надіслали код на {email}",
+    "email_label": "Email",
+    "email_placeholder": "you@example.com",
+    "otp_label": "Код підтвердження",
+    "otp_placeholder": "123456",
+    "continue": "Продовжити",
+    "verify": "Підтвердити",
+    "back": "Назад",
+    "resend": "Надіслати код ще раз",
+    "resend_in": "Надіслати через {seconds}с",
+    "rate_limit": "Забагато запитів. Будь ласка, зачекайте.",
+    "resend_rate_limit": "Будь ласка, зачекайте перед повторним запитом коду.",
+    "code_expired": "Термін дії коду закінчився. Запросіть новий.",
+    "code_invalid": "Невірний код. Перевірте та спробуйте ще раз."
+  },
+  "onboarding": {
+    "title": "Завершіть налаштування профілю",
+    "subtitle": "Як вас називати?",
+    "name_label": "Ваше ім'я",
+    "name_placeholder": "Іван Петренко",
+    "continue": "Продовжити",
+    "not_authenticated": "Не авторизовано",
+    "update_failed": "Не вдалося оновити профіль"
+  },
+  "validation": {
+    "required": "Це поле обов'язкове",
+    "email_invalid": "Введіть дійсну email адресу",
+    "min_length": "Має бути не менше {min} символів",
+    "max_length": "Має бути не більше {max} символів",
+    "otp_length": "Код має містити 6 цифр",
+    "otp_numeric": "Код має містити лише цифри",
+    "name_too_short": "Ім'я має бути не менше 2 символів",
+    "name_too_long": "Ім'я занадто довге"
+  },
+  "common": {
+    "loading": "Завантаження...",
+    "error": "Щось пішло не так",
+    "sign_out": "Вийти",
+    "signing_out": "Виходимо..."
+  },
+  "protected": {
+    "title": "Захищена сторінка",
+    "welcome": "Вітаємо, {email}",
+    "demo_title": "Демонстрація перекладу",
+    "demo_description": "Цей розділ демонструє роботу i18n. Спробуйте змінити мову за допомогою іконки глобуса вище.",
+    "current_language": "Поточна мова",
+    "greeting": "Привіт! Як справи?",
+    "items_count": "{count, plural, =0 {Немає елементів} =1 {1 елемент} few {# елементи} many {# елементів} other {# елементів}}",
+    "last_login": "Останній вхід: {date}"
+  },
+  "not_found": {
+    "code": "404",
+    "title": "Сторінку не знайдено",
+    "go_home": "Повернутися на головну"
+  },
+  "home": {
+    "title": "Icelook"
+  }
+}
