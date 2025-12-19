@@ -104,6 +104,7 @@ pnpm test:ui  # Run Playwright with UI
 See `.claude/skills/coding-conventions/SKILL.md` for detailed coding guidelines including:
 
 - Component patterns (always wrap Base UI)
+- **Theming (dark & light mode must always be supported)**
 - TypeScript rules (no `any`)
 - Environment variable naming (`IL_` prefix)
 - Control flow style (always use braces)

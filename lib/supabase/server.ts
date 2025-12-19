@@ -28,8 +28,14 @@ export async function createClient() {
         return cookieStore.getAll();
       },
       setAll(cookiesToSet) {
-        for (const { name, value, options } of cookiesToSet) {
-          cookieStore.set(name, value, options);
+        try {
+          for (const { name, value, options } of cookiesToSet) {
+            cookieStore.set(name, value, options);
+          }
+        } catch {
+          // In Next.js 15+, cookies can only be set in Server Actions or Route Handlers.
+          // When called from a Server Component, this will throw - which is expected.
+          // The middleware handles session refresh, so we can safely ignore this error.
         }
       },
     },

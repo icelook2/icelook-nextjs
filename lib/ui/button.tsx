@@ -12,14 +12,16 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-violet-500 text-white hover:bg-violet-600 active:bg-violet-700 disabled:bg-gray-200 disabled:text-gray-400 rounded-full",
+          "bg-violet-500 text-white hover:bg-violet-600 active:bg-violet-700 disabled:bg-foreground/10 disabled:text-foreground/40 rounded-full",
         secondary:
-          "bg-gray-100 text-gray-900 hover:bg-gray-200 active:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 rounded-full",
+          "bg-foreground/10 text-foreground hover:bg-foreground/15 active:bg-foreground/20 disabled:bg-foreground/5 disabled:text-foreground/40 rounded-full",
         ghost:
-          "bg-transparent text-gray-700 hover:bg-gray-100 active:bg-gray-200 disabled:text-gray-400 disabled:hover:bg-transparent rounded-full",
-        link: "bg-transparent text-gray-500 hover:text-gray-700 disabled:text-gray-400 p-0",
+          "bg-transparent text-foreground/70 hover:bg-foreground/10 active:bg-foreground/15 disabled:text-foreground/40 disabled:hover:bg-transparent rounded-full",
+        danger:
+          "bg-red-500 text-white hover:bg-red-600 active:bg-red-700 disabled:bg-foreground/10 disabled:text-foreground/40 rounded-full",
+        link: "bg-transparent text-foreground/50 hover:text-foreground/80 disabled:text-foreground/40 p-0",
         "link-primary":
-          "bg-transparent text-violet-500 hover:text-violet-600 disabled:text-gray-400 p-0",
+          "bg-transparent text-violet-500 hover:text-violet-600 dark:hover:text-violet-400 disabled:text-foreground/40 p-0",
       },
       size: {
         default: "px-6 py-3",
@@ -53,6 +55,7 @@ export function Button({
   disabled,
   className,
   children,
+  render,
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
@@ -62,6 +65,8 @@ export function Button({
       disabled={isDisabled}
       focusableWhenDisabled={loading}
       className={cn(buttonVariants({ variant, size }), className)}
+      render={render}
+      nativeButton={render === undefined}
       {...props}
     >
       {loading && (

@@ -1,16 +1,19 @@
-import { z } from "zod";
+import {
+  createTranslatedEmailSchema,
+  createTranslatedOtpSchema,
+  emailSchema,
+  getValidationError,
+  otpSchema,
+} from "@/lib/validation/schemas";
 
-/**
- * Email schema - validation messages will be translated in components
- * using the validation namespace from translations.
- */
-export const emailSchema = z.string().email();
-
-/**
- * OTP schema - validation messages will be translated in components
- * using the validation namespace from translations.
- */
-export const otpSchema = z.string().length(6).regex(/^\d+$/);
+// Re-export from shared validation schemas
+export {
+  createTranslatedEmailSchema,
+  createTranslatedOtpSchema,
+  emailSchema,
+  getValidationError,
+  otpSchema,
+};
 
 /**
  * Creates translated Zod schemas using the provided translation function.
@@ -18,14 +21,7 @@ export const otpSchema = z.string().length(6).regex(/^\d+$/);
  */
 export function createTranslatedSchemas(t: (key: string) => string) {
   return {
-    email: z.string().email(t("email_invalid")),
-    otp: z.string().length(6, t("otp_length")).regex(/^\d+$/, t("otp_numeric")),
+    email: createTranslatedEmailSchema(t),
+    otp: createTranslatedOtpSchema(t),
   };
-}
-
-/**
- * Extracts the first validation error message from a Zod SafeParseError.
- */
-export function getValidationError<T>(result: z.ZodSafeParseError<T>): string {
-  return result.error.issues[0].message;
 }

@@ -1,6 +1,4 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { getUser } from "@/lib/auth/session";
 import { LogoutButton } from "./_components/logout-button";
 
@@ -20,11 +18,6 @@ export default async function ProtectedPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="absolute right-4 top-4 flex items-center gap-4">
-        <LanguageSwitcher />
-        <ThemeToggle />
-      </div>
-
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
         <div className="text-center">

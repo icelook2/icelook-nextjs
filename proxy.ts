@@ -8,7 +8,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_IL_SUPABASE_ANON_KEY;
 const LOCALE_COOKIE = "IL_LOCALE";
 
 // Routes that require authentication (show 404 for unauthenticated users)
-const protectedRoutes = ["/protected"];
+const protectedRoutes = ["/protected", "/settings"];
 
 // Routes that authenticated users cannot access
 const authRoutes = ["/auth"];
@@ -48,6 +48,16 @@ function resolveLocaleFromRequest(request: NextRequest): Locale {
 }
 
 export default async function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  // Handle /@username URLs - rewrite to /username
+  if (path.startsWith("/@")) {
+    const username = path.slice(2); // Remove "/@"
+    const url = request.nextUrl.clone();
+    url.pathname = `/${username}`;
+    return NextResponse.rewrite(url);
+  }
+
   // Skip if Supabase env vars are missing (build time)
   if (!supabaseUrl || !supabaseAnonKey) {
     return NextResponse.next();
@@ -89,7 +99,6 @@ export default async function proxy(request: NextRequest) {
     console.error("Failed to get user in proxy:", error);
   }
 
-  const path = request.nextUrl.pathname;
   const isProtectedRoute = matchesRoutes(path, protectedRoutes);
   const isAuthRoute = matchesRoutes(path, authRoutes);
   const isOnboardingRoute = matchesRoutes(path, onboardingRoutes);

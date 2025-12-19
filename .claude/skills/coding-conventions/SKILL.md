@@ -103,6 +103,70 @@ cn("px-4 py-2", "px-6") // → "py-2 px-6"
 cn("bg-red-500", condition && "bg-blue-500") // → conditional class
 ```
 
+### Theming (Dark & Light Mode)
+
+**Every component must support both dark and light themes** - never hardcode colors without dark mode equivalents.
+
+Use Tailwind's `dark:` variant for all color-related classes. The theme is controlled by a class on the `<html>` element.
+
+```tsx
+// BAD - only light theme
+function Card({ children }: Props) {
+  return (
+    <div className="bg-white text-gray-900 border-gray-200">
+      {children}
+    </div>
+  );
+}
+
+// GOOD - both themes supported
+function Card({ children }: Props) {
+  return (
+    <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700">
+      {children}
+    </div>
+  );
+}
+```
+
+#### Theme Color Guidelines
+
+| Element | Light | Dark |
+|---------|-------|------|
+| Background (page) | `bg-white` | `dark:bg-gray-950` |
+| Background (card) | `bg-gray-50` | `dark:bg-gray-900` |
+| Background (elevated) | `bg-white` | `dark:bg-gray-800` |
+| Text (primary) | `text-gray-900` | `dark:text-gray-100` |
+| Text (secondary) | `text-gray-600` | `dark:text-gray-400` |
+| Text (muted) | `text-gray-500` | `dark:text-gray-500` |
+| Border | `border-gray-200` | `dark:border-gray-700` |
+| Border (subtle) | `border-gray-100` | `dark:border-gray-800` |
+
+#### With CVA
+
+When using CVA, include dark mode in each variant:
+
+```tsx
+const cardVariants = cva(
+  "rounded-lg border transition-colors",
+  {
+    variants: {
+      variant: {
+        default: "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700",
+        elevated: "bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 shadow-sm",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
+```
+
+#### Testing Both Themes
+
+When creating or modifying components, verify they look correct in both themes before considering the work complete.
+
 ### Animations
 
 **Always use Motion (motion.dev)** for animations - never use raw CSS animations or other libraries.
