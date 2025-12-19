@@ -1,18 +1,7 @@
 import { getTranslations } from "next-intl/server";
-import { SearchInput } from "./_components/search-input";
-import { SearchResults } from "./_components/search-results";
-import { searchSpecialists } from "./actions";
 
-interface SearchPageProps {
-  searchParams: Promise<{ q?: string }>;
-}
-
-export default async function SearchPage({ searchParams }: SearchPageProps) {
+export default async function SearchPage() {
   const t = await getTranslations("search");
-  const { q } = await searchParams;
-
-  // Perform initial search if query exists
-  const results = q ? await searchSpecialists(q) : [];
 
   return (
     <div className="flex min-h-screen items-start justify-center bg-background px-4 py-12">
@@ -25,11 +14,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <p className="text-foreground/60">{t("subtitle")}</p>
         </div>
 
-        {/* Search Input */}
-        <SearchInput defaultValue={q} />
-
-        {/* Results */}
-        <SearchResults results={results} query={q} />
+        {/* Empty state */}
+        <div className="flex items-center justify-center rounded-lg border border-border bg-background/50 py-12">
+          <p className="text-center text-sm text-foreground/60">
+            {t("empty")}
+          </p>
+        </div>
       </div>
     </div>
   );
