@@ -12,61 +12,61 @@ import { signInWithOtp } from "../actions";
 import { createTranslatedSchemas } from "../schemas";
 
 interface EmailStepProps {
-  onSubmitted: (email: string) => void;
+ onSubmitted: (email: string) => void;
 }
 
 export function EmailStep({ onSubmitted }: EmailStepProps) {
-  const t = useTranslations("auth");
-  const tValidation = useTranslations("validation");
-  const [serverError, setServerError] = useState<string | null>(null);
+ const t = useTranslations("auth");
+ const tValidation = useTranslations("validation");
+ const [serverError, setServerError] = useState<string | null>(null);
 
-  const formSchema = useMemo(() => {
-    const schemas = createTranslatedSchemas((key) => tValidation(key));
-    return z.object({ email: schemas.email });
-  }, [tValidation]);
+ const formSchema = useMemo(() => {
+ const schemas = createTranslatedSchemas((key) => tValidation(key));
+ return z.object({ email: schemas.email });
+ }, [tValidation]);
 
-  type FormData = z.infer<typeof formSchema>;
+ type FormData = z.infer<typeof formSchema>;
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-  });
+ const {
+ register,
+ handleSubmit,
+ formState: { errors, isSubmitting },
+ } = useForm<FormData>({
+ resolver: zodResolver(formSchema),
+ });
 
-  async function onSubmit(data: FormData) {
-    setServerError(null);
+ async function onSubmit(data: FormData) {
+ setServerError(null);
 
-    const result = await signInWithOtp(data.email);
+ const result = await signInWithOtp(data.email);
 
-    if (result.success) {
-      onSubmitted(data.email);
-    } else {
-      setServerError(result.error);
-    }
-  }
+ if (result.success) {
+ onSubmitted(data.email);
+ } else {
+ setServerError(result.error);
+ }
+ }
 
-  const error = errors.email?.message || serverError;
+ const error = errors.email?.message || serverError;
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <Field.Root>
-        <Field.Label>{t("email_label")}</Field.Label>
-        <Input
-          type="email"
-          placeholder={t("email_placeholder")}
-          autoComplete="email"
-          autoFocus
-          state={error ? "error" : "default"}
-          {...register("email")}
-        />
-        <Field.Error>{error}</Field.Error>
-      </Field.Root>
+ return (
+ <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+ <Field.Root>
+ <Field.Label>{t("email_label")}</Field.Label>
+ <Input
+ type="email"
+ placeholder={t("email_placeholder")}
+ autoComplete="email"
+ autoFocus
+ state={error ? "error" : "default"}
+ {...register("email")}
+ />
+ <Field.Error>{error}</Field.Error>
+ </Field.Root>
 
-      <Button type="submit" loading={isSubmitting} className="w-full">
-        {t("continue")}
-      </Button>
-    </form>
-  );
+ <Button type="submit" loading={isSubmitting} className="w-full">
+ {t("continue")}
+ </Button>
+ </form>
+ );
 }

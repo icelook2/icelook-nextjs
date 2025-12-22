@@ -40,7 +40,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <LocaleProvider locale={locale} messages={messages}>
+          <LocaleProvider locale={locale} messages={messages} timeZone="UTC">
             {children}
           </LocaleProvider>
         </ThemeProvider>

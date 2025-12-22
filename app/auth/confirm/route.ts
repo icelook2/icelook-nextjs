@@ -12,31 +12,31 @@ import { createClient } from "@/lib/supabase/server";
  * - After both clicks, the email is changed
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
-  const tokenHash = searchParams.get("token_hash");
-  const type = searchParams.get("type");
-  const next = searchParams.get("next") ?? "/settings";
+ const { searchParams, origin } = new URL(request.url);
+ const tokenHash = searchParams.get("token_hash");
+ const type = searchParams.get("type");
+ const next = searchParams.get("next") ?? "/settings";
 
-  if (!tokenHash || !type) {
-    return NextResponse.redirect(
-      `${origin}/settings?error=missing_confirmation_params`,
-    );
-  }
+ if (!tokenHash || !type) {
+ return NextResponse.redirect(
+ `${origin}/settings?error=missing_confirmation_params`,
+ );
+ }
 
-  const supabase = await createClient();
+ const supabase = await createClient();
 
-  const { error } = await supabase.auth.verifyOtp({
-    token_hash: tokenHash,
-    type: type as "email_change" | "signup" | "recovery" | "email",
-  });
+ const { error } = await supabase.auth.verifyOtp({
+ token_hash: tokenHash,
+ type: type as "email_change" | "signup" | "recovery" | "email",
+ });
 
-  if (error) {
-    console.error("Email confirmation error:", error.message);
-    return NextResponse.redirect(
-      `${origin}/settings?error=confirmation_failed`,
-    );
-  }
+ if (error) {
+ console.error("Email confirmation error:", error.message);
+ return NextResponse.redirect(
+ `${origin}/settings?error=confirmation_failed`,
+ );
+ }
 
-  // Successful confirmation - redirect to settings with success message
-  return NextResponse.redirect(`${origin}${next}?email_confirmed=true`);
+ // Successful confirmation - redirect to settings with success message
+ return NextResponse.redirect(`${origin}${next}?email_confirmed=true`);
 }

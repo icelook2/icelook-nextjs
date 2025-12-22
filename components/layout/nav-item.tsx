@@ -1,70 +1,72 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { cva, type VariantProps } from "class-variance-authority";
+import Link from "next/link";
+import { useSelectedLayoutSegment } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 
-const navItemVariants = cva(
-  "flex items-center justify-center border-none outline-none ring-0 transition-colors focus-visible:ring-0",
-  {
-    variants: {
-      variant: {
-        sidebar:
-          "w-full gap-3 rounded-lg px-3 py-2.5 hover:bg-foreground/5 dark:hover:bg-foreground/5",
-        bottom:
-          "flex-col gap-1 rounded-lg px-3 py-2 hover:bg-foreground/5 dark:hover:bg-foreground/5",
-      },
-      active: {
-        true: "bg-violet-500/10 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400",
-        false: "text-foreground/60",
-      },
-    },
-    defaultVariants: {
-      variant: "sidebar",
-      active: false,
-    },
-  },
-);
-
-interface NavItemProps extends VariantProps<typeof navItemVariants> {
+interface NavItemProps {
   href: string;
   icon: LucideIcon;
   label: string;
-  showLabel?: boolean;
   className?: string;
 }
 
-export function NavItem({
-  href,
-  icon: Icon,
-  label,
-  variant,
-  showLabel = true,
-  className,
-}: NavItemProps) {
-  const pathname = usePathname();
+export function NavItem({ href, icon: Icon, label, className }: NavItemProps) {
+  const segment = useSelectedLayoutSegment();
 
-  // Check if current path matches the nav item
-  const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+  // Check if current segment matches the nav item
+  // Home is active when segment is null, others match their path segment
+  const hrefSegment = href === "/" ? null : href.split("/")[1];
+  const isActive = segment === hrefSegment;
 
   return (
     <Link
       href={href}
-      className={cn(navItemVariants({ variant, active: isActive }), className)}
-    >
-      <Icon className="h-5 w-5 shrink-0" />
-      {showLabel && (
-        <span
-          className={cn(
-            "text-sm font-medium",
-            variant === "bottom" && "text-xs",
-          )}
-        >
-          {label}
-        </span>
+      title={label}
+      className={cn(
+        "group flex h-14 w-14 items-center justify-center rounded-2xl transition-all hover:bg-surface",
+        isActive
+          ? "text-white"
+          : "text-neutral-600 hover:text-white",
+        className,
       )}
+    >
+      <Icon className="h-7 w-7" strokeWidth={isActive ? 2.5 : 2} />
+    </Link>
+  );
+}
+
+interface BottomNavItemProps {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  className?: string;
+}
+
+export function BottomNavItem({
+  href,
+  icon: Icon,
+  label,
+  className,
+}: BottomNavItemProps) {
+  const segment = useSelectedLayoutSegment();
+  const hrefSegment = href === "/" ? null : href.split("/")[1];
+  const isActive = segment === hrefSegment;
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 transition-colors",
+        className,
+      )}
+    >
+      <Icon
+        className="h-6 w-6"
+        strokeWidth={isActive ? 2.5 : 2}
+      />
+      <span className="text-xs font-medium">{label}</span>
     </Link>
   );
 }

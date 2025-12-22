@@ -36,7 +36,7 @@ function FieldRoot({ gap, className, children, ...props }: FieldRootProps) {
 }
 
 // Field Label
-const fieldLabelVariants = cva("font-medium text-gray-700", {
+const fieldLabelVariants = cva("font-medium text-foreground", {
   variants: {
     size: {
       default: "text-sm",
@@ -76,7 +76,7 @@ function FieldError({ children, className, ...props }: FieldErrorProps) {
 
   return (
     <BaseField.Error
-      className={cn("text-sm text-red-500", className)}
+      className={cn("text-sm text-danger", className)}
       match
       {...props}
     >
@@ -99,7 +99,7 @@ function FieldDescription({
 }: FieldDescriptionProps) {
   return (
     <BaseField.Description
-      className={cn("text-sm text-gray-500", className)}
+      className={cn("text-sm text-muted", className)}
       {...props}
     >
       {children}

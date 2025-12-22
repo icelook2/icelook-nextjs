@@ -6,12 +6,12 @@ import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils/cn";
 
 export const inputVariants = cva(
-  "w-full px-4 py-3 rounded-full border bg-background text-foreground placeholder:text-foreground/40 transition-colors duration-150 focus:outline-none focus:ring-2 focus:border-transparent disabled:bg-foreground/5 disabled:text-foreground/40 disabled:cursor-not-allowed",
+  "w-full px-4 py-3 rounded-2xl border border-border bg-background transition-colors duration-150 focus:outline-none focus:ring-2 focus:border-transparent disabled:opacity-40 disabled:cursor-not-allowed",
   {
     variants: {
       state: {
-        default: "border-foreground/20 focus:ring-violet-500",
-        error: "border-red-500 focus:ring-red-500",
+        default: "focus:ring-accent",
+        error: "border-danger focus:ring-danger",
       },
     },
     defaultVariants: {

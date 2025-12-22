@@ -1,18 +1,18 @@
 import {
-  createTranslatedEmailSchema,
-  createTranslatedOtpSchema,
-  emailSchema,
-  getValidationError,
-  otpSchema,
+ createTranslatedEmailSchema,
+ createTranslatedOtpSchema,
+ emailSchema,
+ getValidationError,
+ otpSchema,
 } from "@/lib/validation/schemas";
 
 // Re-export from shared validation schemas
 export {
-  createTranslatedEmailSchema,
-  createTranslatedOtpSchema,
-  emailSchema,
-  getValidationError,
-  otpSchema,
+ createTranslatedEmailSchema,
+ createTranslatedOtpSchema,
+ emailSchema,
+ getValidationError,
+ otpSchema,
 };
 
 /**
@@ -20,8 +20,8 @@ export {
  * Use this in components to get localized error messages.
  */
 export function createTranslatedSchemas(t: (key: string) => string) {
-  return {
-    email: createTranslatedEmailSchema(t),
-    otp: createTranslatedOtpSchema(t),
-  };
+ return {
+ email: createTranslatedEmailSchema(t),
+ otp: createTranslatedOtpSchema(t),
+ };
 }

@@ -1,23 +1,16 @@
 # Icelook
 
-A booking platform for beauty and barber services connecting clients with specialists and salons.
+A web-service for managing and booking beauty appointments.
 
-## Project Purpose
+## Business Model
 
-**Two-sided marketplace:**
+**Client flow:** Find beauty page by nickname → select services → select specialist → select time → book appointment.
 
-- **Clients**: Search for specialists or salons, view services, and book appointments
-- **Specialists** (barbers, beauty professionals): Create schedules, define services, manage appointments
+**Beauty Page:** Any user can create a beauty page and become its owner. Owners can invite users and create specialists. Users can be part of multiple beauty pages as either **admin** or **specialist**.
 
-**Organization hierarchy:**
+**Services & Pricing:** Beauty pages organize services into service groups. Specialists are assigned to services with individual prices. When specialists have different prices, the beauty page displays a price range (min–max).
 
-```
-Organization (large business)
-└── Salon (location)
-    └── Specialist (invited to salon)
-```
-
-Supports both independent specialists and large organizations with multiple salons.
+For detailed business rules, see `.claude/skills/icelook-business-expert/SKILL.md`.
 
 ## Tech Stack
 
@@ -91,13 +84,13 @@ pnpm test:ui  # Run Playwright with UI
 
 ## Key Entities (Domain Model)
 
-- **User**: Can be a client, specialist, or organization admin
-- **Organization**: Business entity that can own multiple salons
-- **Salon**: Physical location offering services
-- **Specialist**: Service provider (barber, stylist, etc.)
-- **Service**: What specialists offer (haircut, coloring, etc.)
+- **User**: Any Icelook user (can be client, owner, admin, or specialist)
+- **Beauty Page**: A page with a unique nickname where services are offered
+- **Specialist**: A user assigned to provide services on a beauty page
+- **Service Group**: Category for organizing services
+- **Service**: What specialists offer (assigned to a service group)
+- **Specialist-Service Assignment**: Links specialist to service with a specific price
 - **Appointment**: Booked time slot between client and specialist
-- **Schedule**: Specialist's availability
 
 ## Conventions
 

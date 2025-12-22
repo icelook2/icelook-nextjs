@@ -11,44 +11,44 @@ type ActionResult = { success: true } | { success: false; error: string };
  * The user must verify the OTP to complete the email change.
  */
 export async function requestEmailChange(
-  newEmail: string,
+ newEmail: string,
 ): Promise<ActionResult> {
-  const t = await getTranslations("settings");
-  const tValidation = await getTranslations("validation");
+ const t = await getTranslations("settings");
+ const tValidation = await getTranslations("validation");
 
-  const validation = emailSchema.safeParse(newEmail);
+ const validation = emailSchema.safeParse(newEmail);
 
-  if (!validation.success) {
-    return { success: false, error: tValidation("email_invalid") };
-  }
+ if (!validation.success) {
+ return { success: false, error: tValidation("email_invalid") };
+ }
 
-  const supabase = await createClient();
+ const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+ const {
+ data: { user },
+ } = await supabase.auth.getUser();
 
-  if (!user) {
-    return { success: false, error: t("not_authenticated") };
-  }
+ if (!user) {
+ return { success: false, error: t("not_authenticated") };
+ }
 
-  // Check if trying to set the same email
-  if (user.email === validation.data) {
-    return { success: false, error: t("same_email") };
-  }
+ // Check if trying to set the same email
+ if (user.email === validation.data) {
+ return { success: false, error: t("same_email") };
+ }
 
-  // Request email change - Supabase sends OTP to new email
-  const { error } = await supabase.auth.updateUser({
-    email: validation.data,
-  });
+ // Request email change - Supabase sends OTP to new email
+ const { error } = await supabase.auth.updateUser({
+ email: validation.data,
+ });
 
-  if (error) {
-    // Handle rate limiting
-    if (error.status === 429) {
-      return { success: false, error: t("rate_limit") };
-    }
-    return { success: false, error: t("email_change_failed") };
-  }
+ if (error) {
+ // Handle rate limiting
+ if (error.status === 429) {
+ return { success: false, error: t("rate_limit") };
+ }
+ return { success: false, error: t("email_change_failed") };
+ }
 
-  return { success: true };
+ return { success: true };
 }

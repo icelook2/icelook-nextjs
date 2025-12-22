@@ -1,11 +1,18 @@
 import { getTranslations } from "next-intl/server";
+import { PageHeader } from "@/lib/ui/page-header";
 
 export default async function HomePage() {
-  const t = await getTranslations("home");
+ const t = await getTranslations("home");
 
-  return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <h1 className="text-2xl font-semibold">{t("title")}</h1>
-    </div>
-  );
+ return (
+ <>
+ <PageHeader title={t("title")} containerClassName="mx-auto max-w-2xl" />
+
+ <div className="mx-auto max-w-2xl px-4">
+ <div className="flex items-center justify-center rounded-xl border border-dashed border-border bg-surface py-24">
+ <p className="text-muted">Welcome to Icelook</p>
+ </div>
+ </div>
+ </>
+ );
 }
