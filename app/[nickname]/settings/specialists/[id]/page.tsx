@@ -1,4 +1,4 @@
-import { ChevronRight, Scissors, User } from "lucide-react";
+import { Calendar, ChevronRight, Scissors, User } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -123,6 +123,24 @@ export default async function SpecialistDetailPage({
                   </p>
                   <p className="text-sm text-muted">
                     {t("assigned_services_description")}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted" />
+            </Link>
+
+            <Link
+              href={`/${nickname}/settings/specialists/${id}/schedule`}
+              className="flex items-center justify-between border-t border-border px-4 py-4 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400">
+                  <Calendar className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-medium">{t("schedule")}</p>
+                  <p className="text-sm text-muted">
+                    {t("schedule_description")}
                   </p>
                 </div>
               </div>
