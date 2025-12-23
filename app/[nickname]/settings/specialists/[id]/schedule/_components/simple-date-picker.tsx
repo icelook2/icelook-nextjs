@@ -19,14 +19,17 @@ import { cn } from "@/lib/utils/cn";
 
 interface SimpleDatePickerProps {
   selectedDate: Date;
+  highlightedDates?: Date[];
   onSelect: (date: Date) => void;
 }
 
 /**
  * Simple calendar date picker component
+ * Supports highlighting multiple dates (e.g., the currently displayed date range)
  */
 export function SimpleDatePicker({
   selectedDate,
+  highlightedDates = [],
   onSelect,
 }: SimpleDatePickerProps) {
   const [viewDate, setViewDate] = useState(selectedDate);
@@ -38,6 +41,11 @@ export function SimpleDatePicker({
 
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  // Check if a day is in the highlighted range
+  function isHighlighted(day: Date): boolean {
+    return highlightedDates.some((d) => isSameDay(d, day));
+  }
 
   return (
     <div className="w-64">
@@ -80,6 +88,7 @@ export function SimpleDatePicker({
           const isSelected = isSameDay(day, selectedDate);
           const isCurrentMonth = isSameMonth(day, viewDate);
           const isTodayDate = isToday(day);
+          const isInRange = isHighlighted(day);
 
           return (
             <button
@@ -92,6 +101,9 @@ export function SimpleDatePicker({
                 !isCurrentMonth && "text-muted/50",
                 isTodayDate && !isSelected && "font-semibold text-accent",
                 isSelected && "bg-accent text-white hover:bg-accent/90",
+                isInRange &&
+                  !isSelected &&
+                  "bg-accent-soft ring-1 ring-accent/30",
               )}
             >
               {format(day, "d")}

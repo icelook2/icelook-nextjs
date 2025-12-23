@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/lib/ui/button";
@@ -45,6 +46,7 @@ export function WorkingDayDialog({
   beautyPageId,
   nickname,
 }: WorkingDayDialogProps) {
+  const t = useTranslations("schedule");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -138,7 +140,7 @@ export function WorkingDayDialog({
     <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <Dialog.Portal open={open}>
         <Dialog.Header onClose={onClose}>
-          {mode === "create" ? "Add Working Hours" : "Edit Working Hours"}
+          {mode === "create" ? t("add_working_hours") : t("edit_working_hours")}
         </Dialog.Header>
 
         <Dialog.Body>
@@ -149,13 +151,13 @@ export function WorkingDayDialog({
           >
             {/* Date display */}
             <div className="rounded-lg bg-surface p-3">
-              <p className="text-sm text-muted">Date</p>
+              <p className="text-sm text-muted">{t("select_date")}</p>
               <p className="font-medium">{displayDate}</p>
             </div>
 
             {/* Start time */}
             <Field.Root>
-              <Field.Label>Start Time</Field.Label>
+              <Field.Label>{t("start_time")}</Field.Label>
               <Input
                 type="time"
                 {...register("startTime", {
@@ -170,7 +172,7 @@ export function WorkingDayDialog({
 
             {/* End time */}
             <Field.Root>
-              <Field.Label>End Time</Field.Label>
+              <Field.Label>{t("end_time")}</Field.Label>
               <Input
                 type="time"
                 {...register("endTime", { required: "End time is required" })}
@@ -196,7 +198,7 @@ export function WorkingDayDialog({
               onClick={handleDelete}
               disabled={isPending}
             >
-              Delete
+              {t("delete_working_day")}
             </Button>
           )}
           <div className="flex gap-2 ml-auto">
@@ -206,10 +208,10 @@ export function WorkingDayDialog({
               onClick={onClose}
               disabled={isPending}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" form="working-day-form" loading={isPending}>
-              {mode === "create" ? "Create" : "Save"}
+              {t("save")}
             </Button>
           </div>
         </Dialog.Footer>

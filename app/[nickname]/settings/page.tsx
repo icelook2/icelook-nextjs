@@ -1,5 +1,6 @@
 import {
   Calendar,
+  Clock,
   CreditCard,
   Scissors,
   Shield,
@@ -78,6 +79,15 @@ export default async function BeautyPageSettings({
   ];
 
   const operationsLinks = [
+    {
+      href: `/${nickname}/settings/business-hours`,
+      icon: Clock,
+      title: t("nav.business_hours"),
+      description: t("nav.business_hours_description"),
+      iconClassName:
+        "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
+      disabled: false,
+    },
     {
       href: `/${nickname}/settings/schedule`,
       icon: Calendar,

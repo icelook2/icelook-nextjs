@@ -114,7 +114,7 @@ export function ScheduleView({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       {/* Toolbar */}
       <ScheduleToolbar
         viewMode={viewMode}
@@ -128,18 +128,16 @@ export function ScheduleView({
       />
 
       {/* Timeline grid */}
-      <div className="flex-1 overflow-hidden">
-        <TimelineGrid
-          dates={dates}
-          workingDays={workingDays}
-          appointments={appointments}
-          canManage={canManage}
-          onAddWorkingDay={handleAddWorkingDay}
-          onEditWorkingDay={handleEditWorkingDay}
-          onEditBreak={handleEditBreak}
-          onViewAppointment={handleViewAppointment}
-        />
-      </div>
+      <TimelineGrid
+        dates={dates}
+        workingDays={workingDays}
+        appointments={appointments}
+        canManage={canManage}
+        onAddWorkingDay={handleAddWorkingDay}
+        onEditWorkingDay={handleEditWorkingDay}
+        onEditBreak={handleEditBreak}
+        onViewAppointment={handleViewAppointment}
+      />
 
       {/* Dialogs */}
       {workingDayDialog.open && (

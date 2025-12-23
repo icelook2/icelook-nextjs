@@ -94,7 +94,7 @@ function InvitationRow({
       if (result.success) {
         setDialogOpen(false);
       } else {
-        setServerError(result.error);
+        setServerError(result.error ?? "An error occurred");
       }
     });
   }

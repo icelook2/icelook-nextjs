@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/cn";
 
 interface EmptyDaySlotProps {
@@ -19,6 +20,8 @@ export function EmptyDaySlot({
   canManage,
   className,
 }: EmptyDaySlotProps) {
+  const t = useTranslations("schedule");
+
   if (!canManage) {
     return (
       <div
@@ -27,7 +30,7 @@ export function EmptyDaySlot({
           className,
         )}
       >
-        <p className="text-sm">No hours set</p>
+        <p className="text-sm">{t("no_hours_set")}</p>
       </div>
     );
   }
@@ -45,7 +48,7 @@ export function EmptyDaySlot({
       <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-dashed border-current">
         <Plus className="h-5 w-5" />
       </div>
-      <span className="text-sm">Add working hours</span>
+      <span className="text-sm">{t("add_working_hours")}</span>
     </button>
   );
 }

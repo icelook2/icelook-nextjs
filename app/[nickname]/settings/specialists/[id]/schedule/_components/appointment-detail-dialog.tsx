@@ -2,6 +2,7 @@
 
 import { Calendar, Clock, Mail, Phone, Scissors, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
@@ -36,6 +37,7 @@ export function AppointmentDetailDialog({
   nickname,
   canManage,
 }: AppointmentDetailDialogProps) {
+  const t = useTranslations("schedule");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -110,7 +112,9 @@ export function AppointmentDetailDialog({
   return (
     <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <Dialog.Portal open={open} size="lg">
-        <Dialog.Header onClose={onClose}>Appointment Details</Dialog.Header>
+        <Dialog.Header onClose={onClose}>
+          {t("appointment_details")}
+        </Dialog.Header>
 
         <Dialog.Body className="space-y-6">
           {/* Status badge */}
@@ -125,7 +129,7 @@ export function AppointmentDetailDialog({
 
           {/* Client info */}
           <div className="rounded-lg bg-surface p-4">
-            <h3 className="mb-3 font-medium">Client</h3>
+            <h3 className="mb-3 font-medium">{t("client")}</h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <User className="h-4 w-4 text-muted" />
@@ -146,7 +150,7 @@ export function AppointmentDetailDialog({
 
           {/* Service & Time */}
           <div className="rounded-lg bg-surface p-4">
-            <h3 className="mb-3 font-medium">Service</h3>
+            <h3 className="mb-3 font-medium">{t("service")}</h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <Scissors className="h-4 w-4 text-muted" />
@@ -168,16 +172,16 @@ export function AppointmentDetailDialog({
 
           {/* Price */}
           <div className="flex items-center justify-between rounded-lg bg-surface p-4">
-            <span className="font-medium">Total</span>
+            <span className="font-medium">{t("total")}</span>
             <span className="text-lg font-semibold">
-              {appointment.service_currency} {appointment.service_price}
+              {appointment.service_currency} {(appointment.service_price_cents / 100).toFixed(2)}
             </span>
           </div>
 
           {/* Notes */}
           {(appointment.client_notes || appointment.specialist_notes) && (
             <div className="rounded-lg bg-surface p-4">
-              <h3 className="mb-3 font-medium">Notes</h3>
+              <h3 className="mb-3 font-medium">{t("notes")}</h3>
               {appointment.client_notes && (
                 <div className="mb-2">
                   <p className="text-xs text-muted">Client note:</p>
@@ -205,7 +209,7 @@ export function AppointmentDetailDialog({
                   onClick={() => handleStatusChange("confirm")}
                   disabled={isPending}
                 >
-                  Confirm
+                  {t("confirm_appointment")}
                 </Button>
               )}
               {availableActions.includes("complete" as never) && (
@@ -213,7 +217,7 @@ export function AppointmentDetailDialog({
                   onClick={() => handleStatusChange("complete")}
                   disabled={isPending}
                 >
-                  Mark Complete
+                  {t("mark_completed")}
                 </Button>
               )}
               {availableActions.includes("no_show" as never) && (
@@ -222,7 +226,7 @@ export function AppointmentDetailDialog({
                   onClick={() => handleStatusChange("no_show")}
                   disabled={isPending}
                 >
-                  No Show
+                  {t("mark_no_show")}
                 </Button>
               )}
               {availableActions.includes("cancel" as never) && (
@@ -231,7 +235,7 @@ export function AppointmentDetailDialog({
                   onClick={() => handleStatusChange("cancel")}
                   disabled={isPending}
                 >
-                  Cancel
+                  {t("cancel_appointment")}
                 </Button>
               )}
             </div>

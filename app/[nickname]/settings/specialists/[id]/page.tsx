@@ -9,7 +9,11 @@ import { Avatar } from "@/lib/ui/avatar";
 import { PageHeader } from "@/lib/ui/page-header";
 import { Paper } from "@/lib/ui/paper";
 import { SettingsGroup } from "@/lib/ui/settings-group";
-import { ActiveToggle, RemoveSpecialistButton } from "./_components";
+import {
+  ActiveToggle,
+  BusinessHoursRestrictionToggle,
+  RemoveSpecialistButton,
+} from "./_components";
 
 interface SpecialistDetailPageProps {
   params: Promise<{ nickname: string; id: string }>;
@@ -147,6 +151,20 @@ export default async function SpecialistDetailPage({
               <ChevronRight className="h-5 w-5 text-muted" />
             </Link>
           </SettingsGroup>
+
+          {/* Settings */}
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">{t("settings_section")}</h2>
+
+            <Paper className="p-4">
+              <BusinessHoursRestrictionToggle
+                specialistId={specialist.id}
+                restrictToBusinessHours={specialist.restrict_to_business_hours}
+                beautyPageId={beautyPage.id}
+                nickname={nickname}
+              />
+            </Paper>
+          </div>
 
           {/* Danger Zone */}
           <div className="space-y-4">

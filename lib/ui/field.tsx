@@ -6,15 +6,21 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
 // Field Root
-const fieldRootVariants = cva("flex flex-col", {
+const fieldRootVariants = cva("flex", {
   variants: {
+    direction: {
+      column: "flex-col",
+      row: "flex-row items-center",
+    },
     gap: {
       default: "gap-1.5",
       sm: "gap-1",
       lg: "gap-2",
+      none: "gap-0",
     },
   },
   defaultVariants: {
+    direction: "column",
     gap: "default",
   },
 });
@@ -24,10 +30,16 @@ type FieldRootProps = ComponentPropsWithoutRef<typeof BaseField.Root> &
     children: ReactNode;
   };
 
-function FieldRoot({ gap, className, children, ...props }: FieldRootProps) {
+function FieldRoot({
+  direction,
+  gap,
+  className,
+  children,
+  ...props
+}: FieldRootProps) {
   return (
     <BaseField.Root
-      className={cn(fieldRootVariants({ gap }), className)}
+      className={cn(fieldRootVariants({ direction, gap }), className)}
       {...props}
     >
       {children}

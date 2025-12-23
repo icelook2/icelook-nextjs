@@ -41,12 +41,15 @@ export function DatePickerButton({
           </Button>
         }
       />
-      <Popover.Content className="p-4">
-        <SimpleDatePicker
-          selectedDate={currentDate}
-          onSelect={handleDateSelect}
-        />
-      </Popover.Content>
+      <Popover.Portal>
+        <Popover.Content className="p-4">
+          <SimpleDatePicker
+            selectedDate={currentDate}
+            highlightedDates={dates}
+            onSelect={handleDateSelect}
+          />
+        </Popover.Content>
+      </Popover.Portal>
     </Popover.Root>
   );
 }

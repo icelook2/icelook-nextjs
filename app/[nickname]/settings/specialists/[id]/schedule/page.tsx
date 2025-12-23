@@ -7,7 +7,7 @@ import { getSpecialistProfileById } from "@/lib/queries/specialists";
 import { PageHeader } from "@/lib/ui/page-header";
 import { ScheduleView } from "./_components";
 import { toDateString } from "./_lib/date-utils";
-import { getScheduleData, getSpecialistByUserId } from "./_lib/queries";
+import { getScheduleData } from "./_lib/queries";
 import type { ViewMode } from "./_lib/types";
 
 interface SchedulePageProps {
@@ -40,7 +40,7 @@ export default async function SchedulePage({
   const admins = await getBeautyPageAdmins(beautyPage.id);
   const userIsAdmin = admins.some((a) => a.user_id === profile.id);
 
-  // Get specialist profile
+  // Get specialist profile (beauty_page_specialists table)
   const specialist = await getSpecialistProfileById(id);
   if (!specialist) {
     notFound();
@@ -57,12 +57,6 @@ export default async function SchedulePage({
     redirect(`/${nickname}`);
   }
 
-  // Get specialist ID from specialists table (needed for schedule data)
-  // The schedule tables reference the specialists table, not beauty_page_specialist_profiles
-  const specialistRecord = await getSpecialistByUserId(
-    specialist.beauty_page_members.user_id,
-  );
-
   // Calculate display name
   const displayName =
     specialist.display_name ||
@@ -78,22 +72,12 @@ export default async function SchedulePage({
   const startDate = toDateString(subDays(currentDate, 1)); // Buffer for week calculations
   const endDate = toDateString(addDays(currentDate, daysToFetch + 7)); // Buffer ahead
 
-  // Fetch schedule data if specialist exists
-  let workingDays: Awaited<ReturnType<typeof getScheduleData>>["workingDays"] =
-    [];
-  let appointments: Awaited<
-    ReturnType<typeof getScheduleData>
-  >["appointments"] = [];
-
-  if (specialistRecord) {
-    const scheduleData = await getScheduleData(
-      specialistRecord.id,
-      startDate,
-      endDate,
-    );
-    workingDays = scheduleData.workingDays;
-    appointments = scheduleData.appointments;
-  }
+  // Fetch schedule data using beauty_page_specialists.id
+  const { workingDays, appointments } = await getScheduleData(
+    specialist.id,
+    startDate,
+    endDate,
+  );
 
   return (
     <>
@@ -104,26 +88,15 @@ export default async function SchedulePage({
         containerClassName="mx-auto max-w-full px-4"
       />
 
-      <main className="h-[calc(100vh-140px)] bg-gray-50 dark:bg-gray-950">
-        {specialistRecord ? (
-          <ScheduleView
-            specialistId={specialistRecord.id}
-            beautyPageId={beautyPage.id}
-            nickname={nickname}
-            workingDays={workingDays}
-            appointments={appointments}
-            canManage={canManage}
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <div className="text-center">
-              <p className="text-muted">{t("no_specialist_profile")}</p>
-              <p className="mt-2 text-sm text-muted">
-                {t("no_specialist_profile_hint")}
-              </p>
-            </div>
-          </div>
-        )}
+      <main className="bg-background px-4 pb-4">
+        <ScheduleView
+          specialistId={specialist.id}
+          beautyPageId={beautyPage.id}
+          nickname={nickname}
+          workingDays={workingDays}
+          appointments={appointments}
+          canManage={canManage}
+        />
       </main>
     </>
   );

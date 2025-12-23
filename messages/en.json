@@ -72,7 +72,9 @@
     "loading": "Loading...",
     "error": "Something went wrong",
     "sign_out": "Sign out",
-    "signing_out": "Signing out..."
+    "signing_out": "Signing out...",
+    "search": "Search",
+    "no_results": "No results found"
   },
   "profile_menu": {
     "appearance": "Appearance",
@@ -490,6 +492,9 @@
     "mark_completed": "Mark Completed",
     "mark_no_show": "No Show",
     "close": "Close",
+    "no_hours_set": "No hours set",
+    "service": "Service",
+    "total": "Total",
     "errors": {
       "not_authenticated": "You must be logged in",
       "not_authorized": "You don't have permission to do this",
@@ -504,7 +509,64 @@
       "working_day_not_found": "Working day not found",
       "break_outside_hours": "Break must be within working hours",
       "break_overlap": "Break overlaps with another break",
-      "invalid_status_transition": "Invalid status change"
+      "invalid_status_transition": "Invalid status change",
+      "salon_closed_this_day": "The salon is closed on this day",
+      "hours_outside_business_hours": "Working hours must be within business hours ({open} - {close})"
+    }
+  },
+  "business_hours": {
+    "page_title": "Business Hours",
+    "regular_hours": {
+      "title": "Regular Hours",
+      "description": "Set your weekly opening schedule"
+    },
+    "special_hours": {
+      "title": "Special Hours",
+      "description": "Holidays and exceptions to your regular schedule",
+      "add": "Add",
+      "edit": "Edit Special Day",
+      "date": "Date",
+      "name": "Name (optional)",
+      "name_placeholder": "e.g. Easter, Christmas Eve",
+      "empty": "No special hours configured",
+      "delete_title": "Delete Special Hours",
+      "delete_description": "Are you sure you want to delete the special hours for {date}? This action cannot be undone."
+    },
+    "days": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    },
+    "open": "Open",
+    "closed": "Closed",
+    "open_time": "Opens",
+    "close_time": "Closes",
+    "from": "From",
+    "to": "To",
+    "timezone": {
+      "title": "Timezone",
+      "description": "Set your location's timezone",
+      "label": "Select timezone"
+    },
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "saved": "Business hours saved",
+    "special_saved": "Special hours saved",
+    "special_deleted": "Special hours removed",
+    "errors": {
+      "not_authenticated": "You must be logged in",
+      "not_authorized": "You don't have permission to do this",
+      "validation_failed": "Invalid data provided",
+      "invalid_time_range": "Closing time must be after opening time",
+      "times_required_when_open": "Opening and closing times are required when open",
+      "date_already_exists": "A special day already exists for this date",
+      "save_failed": "Failed to save",
+      "delete_failed": "Failed to delete"
     }
   },
   "booking": {
@@ -672,6 +734,8 @@
       "specialists_description": "Manage service providers and profiles",
       "team": "Team",
       "team_description": "Invite specialists and manage roles",
+      "business_hours": "Business Hours",
+      "business_hours_description": "Set opening hours and holidays",
       "schedule": "Schedule",
       "schedule_description": "Set working hours and availability",
       "billing": "Billing",
@@ -942,6 +1006,9 @@
     "remove_specialist_confirm_removes_entirely": "Remove {name} as specialist? They will be completely removed from the team.",
     "services_warning": "This will also remove {count, plural, =1 {1 service assignment} other {# service assignments}}",
     "remove": "Remove",
+    "settings_section": "Settings",
+    "restrict_to_business_hours_label": "Restrict to business hours",
+    "restrict_to_business_hours_description": "When enabled, specialist can only set working hours within the beauty page's business hours",
     "errors": {
       "not_authenticated": "You must be logged in",
       "not_authorized": "You don't have permission to do this",

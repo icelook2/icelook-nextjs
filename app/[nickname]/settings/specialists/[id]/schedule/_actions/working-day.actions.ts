@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { z } from "zod";
+import {
+  getEffectiveHoursForDate,
+  normalizeTime,
+} from "@/lib/queries/business-hours";
 import { createClient } from "@/lib/supabase/server";
 
 type ActionResult<T = void> =
@@ -104,6 +108,39 @@ export async function createWorkingDay(input: {
     return { success: false, error: t("errors.invalid_time_range") };
   }
 
+  // Validate against business hours
+  const effectiveHours = await getEffectiveHoursForDate(
+    input.beautyPageId,
+    validation.data.date,
+  );
+
+  if (!effectiveHours.isOpen) {
+    return { success: false, error: t("errors.salon_closed_this_day") };
+  }
+
+  const businessOpen = normalizeTime(effectiveHours.openTime);
+  const businessClose = normalizeTime(effectiveHours.closeTime);
+
+  if (businessOpen && validation.data.startTime < businessOpen) {
+    return {
+      success: false,
+      error: t("errors.hours_outside_business_hours", {
+        open: businessOpen ?? "",
+        close: businessClose ?? "",
+      }),
+    };
+  }
+
+  if (businessClose && validation.data.endTime > businessClose) {
+    return {
+      success: false,
+      error: t("errors.hours_outside_business_hours", {
+        open: businessOpen ?? "",
+        close: businessClose ?? "",
+      }),
+    };
+  }
+
   // Check authorization
   const authorization = await verifyCanManageSchedule(input.beautyPageId);
   if (!authorization.authorized) {
@@ -180,7 +217,7 @@ export async function updateWorkingDay(input: {
   // Get current working day to validate time range
   const { data: current } = await supabase
     .from("working_days")
-    .select("start_time, end_time")
+    .select("date, start_time, end_time")
     .eq("id", input.id)
     .eq("specialist_id", input.specialistId)
     .single();
@@ -196,6 +233,41 @@ export async function updateWorkingDay(input: {
 
   if (newStartTime >= newEndTime) {
     return { success: false, error: t("errors.invalid_time_range") };
+  }
+
+  // Validate against business hours
+  const effectiveHours = await getEffectiveHoursForDate(
+    input.beautyPageId,
+    current.date,
+  );
+
+  if (!effectiveHours.isOpen) {
+    return { success: false, error: t("errors.salon_closed_this_day") };
+  }
+
+  const businessOpen = normalizeTime(effectiveHours.openTime);
+  const businessClose = normalizeTime(effectiveHours.closeTime);
+  const normalizedStartTime = normalizeTime(newStartTime);
+  const normalizedEndTime = normalizeTime(newEndTime);
+
+  if (businessOpen && normalizedStartTime && normalizedStartTime < businessOpen) {
+    return {
+      success: false,
+      error: t("errors.hours_outside_business_hours", {
+        open: businessOpen ?? "",
+        close: businessClose ?? "",
+      }),
+    };
+  }
+
+  if (businessClose && normalizedEndTime && normalizedEndTime > businessClose) {
+    return {
+      success: false,
+      error: t("errors.hours_outside_business_hours", {
+        open: businessOpen ?? "",
+        close: businessClose ?? "",
+      }),
+    };
   }
 
   // Build update object

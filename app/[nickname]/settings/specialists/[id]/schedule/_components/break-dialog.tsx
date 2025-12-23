@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/lib/ui/button";
@@ -38,6 +39,7 @@ export function BreakDialog({
   beautyPageId,
   nickname,
 }: BreakDialogProps) {
+  const t = useTranslations("schedule");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -113,7 +115,7 @@ export function BreakDialog({
     <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <Dialog.Portal open={open}>
         <Dialog.Header onClose={onClose}>
-          {mode === "create" ? "Add Break" : "Edit Break"}
+          {mode === "create" ? t("add_break_title") : t("edit_break_title")}
         </Dialog.Header>
 
         <Dialog.Body>
@@ -124,7 +126,7 @@ export function BreakDialog({
           >
             {/* Start time */}
             <Field.Root>
-              <Field.Label>Start Time</Field.Label>
+              <Field.Label>{t("start_time")}</Field.Label>
               <Input
                 type="time"
                 {...register("startTime", {
@@ -139,7 +141,7 @@ export function BreakDialog({
 
             {/* End time */}
             <Field.Root>
-              <Field.Label>End Time</Field.Label>
+              <Field.Label>{t("end_time")}</Field.Label>
               <Input
                 type="time"
                 {...register("endTime", { required: "End time is required" })}
@@ -165,7 +167,7 @@ export function BreakDialog({
               onClick={handleDelete}
               disabled={isPending}
             >
-              Delete
+              {t("delete_break")}
             </Button>
           )}
           <div className="flex gap-2 ml-auto">
@@ -175,10 +177,10 @@ export function BreakDialog({
               onClick={onClose}
               disabled={isPending}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" form="break-form" loading={isPending}>
-              {mode === "create" ? "Create" : "Save"}
+              {t("save")}
             </Button>
           </div>
         </Dialog.Footer>

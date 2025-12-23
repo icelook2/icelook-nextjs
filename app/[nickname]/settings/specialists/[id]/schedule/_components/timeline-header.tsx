@@ -15,15 +15,15 @@ export function TimelineHeader({ dates, className }: TimelineHeaderProps) {
   return (
     <div
       className={cn(
-        "sticky top-0 z-20 flex border-b border-border bg-background",
+        "sticky top-0 z-20 flex bg-background pb-2",
         className,
       )}
     >
       {/* Spacer for time column */}
       <div className="w-16 shrink-0" />
 
-      {/* Day headers */}
-      <div className="flex flex-1">
+      {/* Day headers with gap to match columns */}
+      <div className="flex flex-1 gap-2 pr-2">
         {dates.map((date) => {
           const { dayName, dayNumber } = formatDayHeader(date);
           const isToday = checkIsToday(date);
@@ -32,8 +32,8 @@ export function TimelineHeader({ dates, className }: TimelineHeaderProps) {
             <div
               key={date.toISOString()}
               className={cn(
-                "flex-1 border-l border-border py-3 text-center first:border-l-0",
-                isToday && "bg-accent/5",
+                "flex-1 rounded-lg bg-surface py-3 text-center",
+                isToday && "ring-2 ring-accent/30",
               )}
             >
               <p className="text-xs font-medium uppercase text-muted">

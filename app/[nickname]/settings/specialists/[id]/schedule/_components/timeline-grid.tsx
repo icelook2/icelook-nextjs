@@ -37,19 +37,19 @@ export function TimelineGrid({
   const { config, timeSlots, gridHeight } = useTimeGrid();
 
   return (
-    <div className={cn("flex h-full flex-col", className)}>
+    <div className={cn("flex flex-col", className)}>
       {/* Header with day names */}
       <TimelineHeader dates={dates} />
 
-      {/* Scrollable body */}
-      <div className="flex flex-1 overflow-auto">
+      {/* Grid body - uses page scroll */}
+      <div className="flex">
         {/* Time labels */}
         <div className="relative w-16 shrink-0" style={{ height: gridHeight }}>
           <TimeColumn timeSlots={timeSlots} />
         </div>
 
-        {/* Day columns */}
-        <div className="flex flex-1" style={{ height: gridHeight }}>
+        {/* Day columns with gap spacing */}
+        <div className="flex flex-1 gap-2 pr-2" style={{ height: gridHeight }}>
           {dates.map((date) => (
             <DayColumn
               key={date.toISOString()}

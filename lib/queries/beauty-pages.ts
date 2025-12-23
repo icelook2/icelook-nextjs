@@ -7,6 +7,7 @@ export type BeautyPage = {
  owner_id: string;
  is_active: boolean;
  description?: string | null;
+ timezone: string;
  created_at: string;
  updated_at: string;
 };

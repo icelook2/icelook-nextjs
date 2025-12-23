@@ -45,9 +45,8 @@ export function WorkingDayBlock({
     <div
       className={cn(
         "absolute inset-x-1 rounded-lg border transition-colors",
-        "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800",
-        canManage &&
-          "cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30",
+        "bg-accent-soft/50 border-accent/20",
+        canManage && "cursor-pointer hover:bg-accent-soft/70",
         className,
       )}
       style={{
@@ -68,7 +67,7 @@ export function WorkingDayBlock({
       tabIndex={canManage ? 0 : undefined}
     >
       <div className="p-2">
-        <p className="text-xs font-medium text-blue-700 dark:text-blue-300">
+        <p className="text-xs font-medium text-accent">
           {startTime} - {endTime}
         </p>
       </div>

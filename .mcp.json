@@ -6,7 +6,7 @@
     },
     "supabase": {
       "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=flhufoqoepfbkixpdged"
+      "url": "http://127.0.0.1:54421/mcp"
     },
     "Sentry": {
       "type": "http",

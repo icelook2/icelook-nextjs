@@ -57,16 +57,16 @@ export function DayColumn({
   return (
     <div
       className={cn(
-        "relative flex-1 border-l border-border first:border-l-0",
-        isToday && "bg-accent/5",
+        "relative flex-1 rounded-lg bg-surface",
+        isToday && "ring-2 ring-accent/30",
         className,
       )}
     >
-      {/* Grid lines for hours */}
+      {/* Grid lines for hours - subtle */}
       {Array.from({ length: config.endHour - config.startHour + 1 }, (_, i) => (
         <div
           key={`hour-${config.startHour + i}`}
-          className="absolute left-0 right-0 border-t border-border/50"
+          className="absolute left-0 right-0 border-t border-border/20"
           style={{
             top: `${(i / (config.endHour - config.startHour)) * 100}%`,
           }}

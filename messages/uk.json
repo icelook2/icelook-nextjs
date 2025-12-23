@@ -72,7 +72,9 @@
     "loading": "Завантаження...",
     "error": "Щось пішло не так",
     "sign_out": "Вийти",
-    "signing_out": "Виходимо..."
+    "signing_out": "Виходимо...",
+    "search": "Пошук",
+    "no_results": "Нічого не знайдено"
   },
   "profile_menu": {
     "appearance": "Вигляд",
@@ -490,6 +492,9 @@
     "mark_completed": "Завершити",
     "mark_no_show": "Не з'явився",
     "close": "Закрити",
+    "no_hours_set": "Години не встановлено",
+    "service": "Послуга",
+    "total": "Всього",
     "errors": {
       "not_authenticated": "Потрібно увійти в систему",
       "not_authorized": "У вас немає дозволу на цю дію",
@@ -504,7 +509,64 @@
       "working_day_not_found": "Робочий день не знайдено",
       "break_outside_hours": "Перерва має бути в межах робочих годин",
       "break_overlap": "Перерва перетинається з іншою перервою",
-      "invalid_status_transition": "Недопустима зміна статусу"
+      "invalid_status_transition": "Недопустима зміна статусу",
+      "salon_closed_this_day": "Салон закритий у цей день",
+      "hours_outside_business_hours": "Робочі години мають бути в межах годин роботи ({open} - {close})"
+    }
+  },
+  "business_hours": {
+    "page_title": "Години роботи",
+    "regular_hours": {
+      "title": "Звичайний графік",
+      "description": "Встановіть щотижневий графік роботи"
+    },
+    "special_hours": {
+      "title": "Особливі дні",
+      "description": "Свята та винятки зі звичайного графіка",
+      "add": "Додати",
+      "edit": "Редагувати особливий день",
+      "date": "Дата",
+      "name": "Назва (необов'язково)",
+      "name_placeholder": "напр. Великдень, Новий рік",
+      "empty": "Особливих днів не налаштовано",
+      "delete_title": "Видалити особливий день",
+      "delete_description": "Ви впевнені, що хочете видалити особливий день на {date}? Цю дію не можна скасувати."
+    },
+    "days": {
+      "sunday": "Неділя",
+      "monday": "Понеділок",
+      "tuesday": "Вівторок",
+      "wednesday": "Середа",
+      "thursday": "Четвер",
+      "friday": "П'ятниця",
+      "saturday": "Субота"
+    },
+    "open": "Відкрито",
+    "closed": "Закрито",
+    "open_time": "Відкриття",
+    "close_time": "Закриття",
+    "from": "З",
+    "to": "До",
+    "timezone": {
+      "title": "Часовий пояс",
+      "description": "Встановіть часовий пояс вашого закладу",
+      "label": "Оберіть часовий пояс"
+    },
+    "save": "Зберегти зміни",
+    "cancel": "Скасувати",
+    "delete": "Видалити",
+    "saved": "Години роботи збережено",
+    "special_saved": "Особливий день збережено",
+    "special_deleted": "Особливий день видалено",
+    "errors": {
+      "not_authenticated": "Ви маєте увійти в систему",
+      "not_authorized": "У вас немає дозволу на цю дію",
+      "validation_failed": "Надано невірні дані",
+      "invalid_time_range": "Час закриття має бути після часу відкриття",
+      "times_required_when_open": "Час відкриття та закриття обов'язкові, коли відкрито",
+      "date_already_exists": "Особливий день для цієї дати вже існує",
+      "save_failed": "Не вдалося зберегти",
+      "delete_failed": "Не вдалося видалити"
     }
   },
   "booking": {
@@ -672,6 +734,8 @@
       "specialists_description": "Керуйте надавачами послуг та профілями",
       "team": "Команда",
       "team_description": "Запрошуйте спеціалістів та керуйте ролями",
+      "business_hours": "Години роботи",
+      "business_hours_description": "Встановіть години роботи та вихідні",
       "schedule": "Розклад",
       "schedule_description": "Встановіть робочі години та доступність",
       "billing": "Оплата",
@@ -915,6 +979,8 @@
     "personal_details": "Особисті дані",
     "personal_details_description": "Ім'я, опис та фото спеціаліста",
     "assigned_services_description": "Послуги, які надає спеціаліст",
+    "schedule": "Розклад",
+    "schedule_description": "Керуйте робочими годинами та переглядайте записи",
     "service": "послуга",
     "danger_zone": "Небезпечна зона",
     "remove_warning_keeps_admin": "Видалення ролі спеціаліста залишить цього учасника лише як адміністратора. Їх призначення послуг буде видалено.",
@@ -940,6 +1006,9 @@
     "remove_specialist_confirm_removes_entirely": "Видалити {name} як спеціаліста? Вони будуть повністю видалені з команди.",
     "services_warning": "Це також видалить {count, plural, =1 {1 призначення послуги} few {# призначення послуг} many {# призначень послуг} other {# призначень послуг}}",
     "remove": "Видалити",
+    "settings_section": "Налаштування",
+    "restrict_to_business_hours_label": "Обмежити робочими годинами",
+    "restrict_to_business_hours_description": "Коли увімкнено, спеціаліст може встановлювати робочі години лише в межах годин роботи салону",
     "errors": {
       "not_authenticated": "Ви повинні увійти",
       "not_authorized": "У вас немає дозволу на це",

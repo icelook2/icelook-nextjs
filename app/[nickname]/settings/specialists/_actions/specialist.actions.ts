@@ -108,7 +108,7 @@ export async function addSpecialistRole(input: {
 
   // Create specialist profile
   const { data: profile, error: profileError } = await supabase
-    .from("beauty_page_specialist_profiles")
+    .from("beauty_page_specialists")
     .insert({ member_id: input.memberId })
     .select("id")
     .single();
@@ -180,7 +180,7 @@ export async function removeSpecialistRole(input: {
   } else {
     // Admin specialist - delete profile first (cascades assignments), then update roles
     const { error: profileError } = await supabase
-      .from("beauty_page_specialist_profiles")
+      .from("beauty_page_specialists")
       .delete()
       .eq("member_id", input.memberId);
 
@@ -212,6 +212,7 @@ const profileUpdateSchema = z.object({
   displayName: z.string().max(100).optional().nullable(),
   bio: z.string().max(500).optional().nullable(),
   isActive: z.boolean().optional(),
+  restrictToBusinessHours: z.boolean().optional(),
 });
 
 /**
@@ -223,6 +224,7 @@ export async function updateSpecialistProfile(input: {
   displayName?: string | null;
   bio?: string | null;
   isActive?: boolean;
+  restrictToBusinessHours?: boolean;
   nickname: string;
 }): Promise<ActionResult> {
   const t = await getTranslations("specialists");
@@ -231,6 +233,7 @@ export async function updateSpecialistProfile(input: {
     displayName: input.displayName,
     bio: input.bio,
     isActive: input.isActive,
+    restrictToBusinessHours: input.restrictToBusinessHours,
   });
 
   if (!validation.success) {
@@ -254,9 +257,13 @@ export async function updateSpecialistProfile(input: {
   if (validation.data.isActive !== undefined) {
     updateData.is_active = validation.data.isActive;
   }
+  if (validation.data.restrictToBusinessHours !== undefined) {
+    updateData.restrict_to_business_hours =
+      validation.data.restrictToBusinessHours;
+  }
 
   const { error } = await supabase
-    .from("beauty_page_specialist_profiles")
+    .from("beauty_page_specialists")
     .update(updateData)
     .eq("id", input.profileId);
 

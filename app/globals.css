@@ -56,4 +56,11 @@ body {
  font-family: var(--font-family-sans), system-ui, sans-serif;
  background-color: var(--theme-background);
  color: var(--theme-text);
+ /* Base UI: Required for iOS Safari 26+ backdrop compatibility */
+ position: relative;
+}
+
+.root {
+ /* Base UI: Creates stacking context for portal components (Dialog, Popover, Menu) */ isolation: isolate;
+  isolation: isolate;
 }
