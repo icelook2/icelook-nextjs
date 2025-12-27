@@ -6,30 +6,28 @@ import type { BeautyPageType } from "@/lib/queries";
 import { CreateBeautyPageDialog } from "./create-beauty-page-dialog";
 
 interface CreateBeautyPageSectionProps {
- beautyPageTypes: BeautyPageType[];
+  beautyPageTypes: BeautyPageType[];
 }
 
 export function CreateBeautyPageSection({
- beautyPageTypes,
+  beautyPageTypes,
 }: CreateBeautyPageSectionProps) {
- const t = useTranslations("settings");
+  const t = useTranslations("settings");
 
- return (
- <div className="flex items-center justify-between gap-4">
- <div className="flex items-center gap-3">
- <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent-soft text-accent">
- <Store className="h-5 w-5" />
- </div>
- <div>
- <p className="font-medium">
- {t("beauty_page_section")}
- </p>
- <p className="text-sm text-muted">
- {t("beauty_page_section_description")}
- </p>
- </div>
- </div>
- <CreateBeautyPageDialog beautyPageTypes={beautyPageTypes} />
- </div>
- );
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-500/15 text-violet-500">
+          <Store className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="font-medium">{t("beauty_page_section")}</p>
+          <p className="text-sm text-muted">
+            {t("beauty_page_section_description")}
+          </p>
+        </div>
+      </div>
+      <CreateBeautyPageDialog beautyPageTypes={beautyPageTypes} />
+    </div>
+  );
 }

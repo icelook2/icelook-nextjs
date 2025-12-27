@@ -104,6 +104,17 @@ See `.claude/skills/coding-conventions/SKILL.md` for detailed coding guidelines 
 
 For Base UI component documentation, see `.claude/skills/base-ui/`.
 
+### CRITICAL: No z-index
+
+**NEVER use `z-index` in this codebase. This is a strict rule.**
+
+- All floating UI (dialogs, selects, popovers, tooltips) must use **Portals** for stacking
+- Portals render elements to `<body>` in DOM order - later elements naturally appear on top
+- If you encounter stacking issues, the solution is ALWAYS to fix the Portal usage, never add z-index
+- **ASK FOR PERMISSION** before even considering z-index as a solution
+
+Why: z-index creates maintenance nightmares with competing values (z-50, z-[9999], etc.). Portals solve stacking correctly by leveraging DOM order.
+
 ## Supabase info for local development
 
 supabase local development setup is running.

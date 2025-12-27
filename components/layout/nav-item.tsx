@@ -26,9 +26,7 @@ export function NavItem({ href, icon: Icon, label, className }: NavItemProps) {
       title={label}
       className={cn(
         "group flex h-14 w-14 items-center justify-center rounded-2xl transition-all hover:bg-surface",
-        isActive
-          ? "text-white"
-          : "text-neutral-600 hover:text-white",
+        isActive ? "text-white" : "text-neutral-600 hover:text-white",
         className,
       )}
     >
@@ -62,10 +60,7 @@ export function BottomNavItem({
         className,
       )}
     >
-      <Icon
-        className="h-6 w-6"
-        strokeWidth={isActive ? 2.5 : 2}
-      />
+      <Icon className="h-6 w-6" strokeWidth={isActive ? 2.5 : 2} />
       <span className="text-xs font-medium">{label}</span>
     </Link>
   );

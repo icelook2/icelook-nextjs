@@ -250,7 +250,11 @@ export async function updateWorkingDay(input: {
   const normalizedStartTime = normalizeTime(newStartTime);
   const normalizedEndTime = normalizeTime(newEndTime);
 
-  if (businessOpen && normalizedStartTime && normalizedStartTime < businessOpen) {
+  if (
+    businessOpen &&
+    normalizedStartTime &&
+    normalizedStartTime < businessOpen
+  ) {
     return {
       success: false,
       error: t("errors.hours_outside_business_hours", {

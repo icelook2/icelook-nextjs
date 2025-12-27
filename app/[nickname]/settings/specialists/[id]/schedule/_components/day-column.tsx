@@ -7,6 +7,7 @@ import {
   getAppointmentsForDate,
   sortBreaksByTime,
 } from "../_lib/schedule-utils";
+import { normalizeTime, timeToPercentage } from "../_lib/time-utils";
 import type {
   Appointment,
   GridConfig,
@@ -15,7 +16,6 @@ import type {
 import { AppointmentBlock } from "./appointment-block";
 import { BreakBlock } from "./break-block";
 import { EmptyDaySlot } from "./empty-day-slot";
-import { WorkingDayBlock } from "./working-day-block";
 
 interface DayColumnProps {
   date: Date;
@@ -24,7 +24,6 @@ interface DayColumnProps {
   config: GridConfig;
   canManage: boolean;
   onAddWorkingDay?: (date: string) => void;
-  onEditWorkingDay?: (workingDay: WorkingDayWithBreaks) => void;
   onEditBreak?: (breakData: WorkingDayWithBreaks["breaks"][number]) => void;
   onViewAppointment?: (appointment: Appointment) => void;
   className?: string;
@@ -41,7 +40,6 @@ export function DayColumn({
   config,
   canManage,
   onAddWorkingDay,
-  onEditWorkingDay,
   onEditBreak,
   onViewAppointment,
   className,
@@ -54,14 +52,60 @@ export function DayColumn({
   // Sort breaks by time
   const sortedBreaks = workingDay ? sortBreaksByTime(workingDay.breaks) : [];
 
+  // Calculate working hours position percentages
+  const workingHoursPosition = workingDay
+    ? {
+        startPercent: timeToPercentage(
+          normalizeTime(workingDay.start_time),
+          config,
+        ),
+        endPercent: timeToPercentage(
+          normalizeTime(workingDay.end_time),
+          config,
+        ),
+      }
+    : null;
+
   return (
     <div
       className={cn(
-        "relative flex-1 rounded-lg bg-surface",
+        "relative flex-1 border-r border-border/30 last:border-r-0",
         isToday && "ring-2 ring-accent/30",
         className,
       )}
     >
+      {/* Working hours background tint - shows working vs non-working areas */}
+      {workingHoursPosition && (
+        <>
+          {/* Non-working hours BEFORE working period - dimmed */}
+          {workingHoursPosition.startPercent > 0 && (
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 bg-muted/30 dark:bg-muted/20"
+              style={{ height: `${workingHoursPosition.startPercent}%` }}
+            />
+          )}
+
+          {/* Working hours area - subtle accent tint */}
+          <div
+            className="pointer-events-none absolute inset-x-0 bg-accent/5 dark:bg-accent/10"
+            style={{
+              top: `${workingHoursPosition.startPercent}%`,
+              height: `${workingHoursPosition.endPercent - workingHoursPosition.startPercent}%`,
+            }}
+          />
+
+          {/* Non-working hours AFTER working period - dimmed */}
+          {workingHoursPosition.endPercent < 100 && (
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 bg-muted/30 dark:bg-muted/20"
+              style={{
+                height: `${100 - workingHoursPosition.endPercent}%`,
+              }}
+            />
+          )}
+        </>
+      )}
+
       {/* Grid lines for hours - subtle */}
       {Array.from({ length: config.endHour - config.startHour + 1 }, (_, i) => (
         <div
@@ -75,14 +119,6 @@ export function DayColumn({
 
       {workingDay ? (
         <>
-          {/* Working day block */}
-          <WorkingDayBlock
-            workingDay={workingDay}
-            config={config}
-            canManage={canManage}
-            onClick={() => onEditWorkingDay?.(workingDay)}
-          />
-
           {/* Breaks */}
           {sortedBreaks.map((breakData) => (
             <BreakBlock

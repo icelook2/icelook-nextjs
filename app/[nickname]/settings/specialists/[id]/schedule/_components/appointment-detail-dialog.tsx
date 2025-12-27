@@ -174,7 +174,8 @@ export function AppointmentDetailDialog({
           <div className="flex items-center justify-between rounded-lg bg-surface p-4">
             <span className="font-medium">{t("total")}</span>
             <span className="text-lg font-semibold">
-              {appointment.service_currency} {(appointment.service_price_cents / 100).toFixed(2)}
+              {appointment.service_currency}{" "}
+              {(appointment.service_price_cents / 100).toFixed(2)}
             </span>
           </div>
 

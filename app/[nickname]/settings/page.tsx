@@ -2,8 +2,10 @@ import {
   Calendar,
   Clock,
   CreditCard,
+  MapPin,
   Scissors,
   Shield,
+  Tag,
   UserCircle,
 } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
@@ -47,7 +49,7 @@ export default async function BeautyPageSettings({
 
   const servicesLinks = [
     {
-      href: `/${nickname}/settings/services`,
+      href: `/${nickname}/settings/service-groups`,
       icon: Scissors,
       title: t("nav.services"),
       description: t("nav.services_description"),
@@ -76,9 +78,27 @@ export default async function BeautyPageSettings({
         "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400",
       disabled: false,
     },
+    {
+      href: `/${nickname}/settings/labels`,
+      icon: Tag,
+      title: t("nav.labels"),
+      description: t("nav.labels_description"),
+      iconClassName:
+        "bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400",
+      disabled: false,
+    },
   ];
 
   const operationsLinks = [
+    {
+      href: `/${nickname}/settings/contact`,
+      icon: MapPin,
+      title: t("nav.contact"),
+      description: t("nav.contact_description"),
+      iconClassName:
+        "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
+      disabled: false,
+    },
     {
       href: `/${nickname}/settings/business-hours`,
       icon: Clock,

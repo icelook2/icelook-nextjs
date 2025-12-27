@@ -14,7 +14,10 @@ type ComboboxInputWrapperProps = {
   className?: string;
 };
 
-function ComboboxInputWrapper({ children, className }: ComboboxInputWrapperProps) {
+function ComboboxInputWrapper({
+  children,
+  className,
+}: ComboboxInputWrapperProps) {
   return (
     <div
       className={cn(
@@ -92,9 +95,15 @@ function ComboboxClear({ className, children, ...props }: ComboboxClearProps) {
 // Combobox Trigger (chevron button)
 // ============================================================================
 
-type ComboboxTriggerProps = ComponentPropsWithoutRef<typeof BaseCombobox.Trigger>;
+type ComboboxTriggerProps = ComponentPropsWithoutRef<
+  typeof BaseCombobox.Trigger
+>;
 
-function ComboboxTrigger({ className, children, ...props }: ComboboxTriggerProps) {
+function ComboboxTrigger({
+  className,
+  children,
+  ...props
+}: ComboboxTriggerProps) {
   return (
     <BaseCombobox.Trigger
       className={cn(
@@ -119,7 +128,11 @@ type ComboboxContentProps = {
   sideOffset?: number;
 };
 
-function ComboboxContent({ children, className, sideOffset = 4 }: ComboboxContentProps) {
+function ComboboxContent({
+  children,
+  className,
+  sideOffset = 4,
+}: ComboboxContentProps) {
   return (
     <BaseCombobox.Portal>
       <BaseCombobox.Positioner className="outline-none" sideOffset={sideOffset}>
@@ -203,11 +216,20 @@ function ComboboxItem<T>({ className, ...props }: ComboboxItemProps<T>) {
 // Combobox Item Indicator
 // ============================================================================
 
-type ComboboxItemIndicatorProps = ComponentPropsWithoutRef<typeof BaseCombobox.ItemIndicator>;
+type ComboboxItemIndicatorProps = ComponentPropsWithoutRef<
+  typeof BaseCombobox.ItemIndicator
+>;
 
-function ComboboxItemIndicator({ className, children, ...props }: ComboboxItemIndicatorProps) {
+function ComboboxItemIndicator({
+  className,
+  children,
+  ...props
+}: ComboboxItemIndicatorProps) {
   return (
-    <BaseCombobox.ItemIndicator className={cn("col-start-1", className)} {...props}>
+    <BaseCombobox.ItemIndicator
+      className={cn("col-start-1", className)}
+      {...props}
+    >
       {children ?? <Check className="size-3" />}
     </BaseCombobox.ItemIndicator>
   );

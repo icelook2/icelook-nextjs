@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import type { InvitationWithInviter } from "@/lib/queries";
@@ -35,12 +35,7 @@ export function PendingInvitations({
 
   return (
     <SettingsGroup
-      title={
-        <>
-          <Clock className="inline h-4 w-4 text-muted" />{" "}
-          {t("pending_invitations")} ({invitations.length})
-        </>
-      }
+      title={`${t("pending_invitations")} (${invitations.length})`}
     >
       {invitations.map((invitation, index) => (
         <InvitationRow

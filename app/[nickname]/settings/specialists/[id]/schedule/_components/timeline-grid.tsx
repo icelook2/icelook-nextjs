@@ -14,6 +14,7 @@ interface TimelineGridProps {
   canManage: boolean;
   onAddWorkingDay?: (date: string) => void;
   onEditWorkingDay?: (workingDay: WorkingDayWithBreaks) => void;
+  onAddBreak?: (workingDayId: string) => void;
   onEditBreak?: (breakData: WorkingDayWithBreaks["breaks"][number]) => void;
   onViewAppointment?: (appointment: Appointment) => void;
   className?: string;
@@ -30,6 +31,7 @@ export function TimelineGrid({
   canManage,
   onAddWorkingDay,
   onEditWorkingDay,
+  onAddBreak,
   onEditBreak,
   onViewAppointment,
   className,
@@ -39,7 +41,13 @@ export function TimelineGrid({
   return (
     <div className={cn("flex flex-col", className)}>
       {/* Header with day names */}
-      <TimelineHeader dates={dates} />
+      <TimelineHeader
+        dates={dates}
+        workingDays={workingDays}
+        canManage={canManage}
+        onEditWorkingDay={onEditWorkingDay}
+        onAddBreak={onAddBreak}
+      />
 
       {/* Grid body - uses page scroll */}
       <div className="flex">
@@ -48,8 +56,8 @@ export function TimelineGrid({
           <TimeColumn timeSlots={timeSlots} />
         </div>
 
-        {/* Day columns with gap spacing */}
-        <div className="flex flex-1 gap-2 pr-2" style={{ height: gridHeight }}>
+        {/* Day columns */}
+        <div className="flex flex-1" style={{ height: gridHeight }}>
           {dates.map((date) => (
             <DayColumn
               key={date.toISOString()}
@@ -59,7 +67,6 @@ export function TimelineGrid({
               config={config}
               canManage={canManage}
               onAddWorkingDay={onAddWorkingDay}
-              onEditWorkingDay={onEditWorkingDay}
               onEditBreak={onEditBreak}
               onViewAppointment={onViewAppointment}
             />

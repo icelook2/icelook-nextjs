@@ -48,10 +48,10 @@ export function BreakBlock({
     // biome-ignore lint/a11y/noStaticElementInteractions: role is conditionally set based on canManage
     <div
       className={cn(
-        "absolute inset-x-2 z-10 rounded border transition-colors",
-        "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800",
+        "absolute inset-x-2 rounded border transition-colors",
+        "bg-orange-100/50 border-orange-200/50 dark:bg-orange-900/10 dark:border-orange-700/30",
         canManage &&
-          "cursor-pointer hover:bg-orange-100 dark:hover:bg-orange-900/30",
+          "cursor-pointer hover:bg-orange-100/70 dark:hover:bg-orange-900/20",
         className,
       )}
       style={{

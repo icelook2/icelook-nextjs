@@ -1,5 +1,5 @@
 import { toDateString } from "./date-utils";
-import { timesOverlap } from "./time-utils";
+import { timesOverlap, timeToMinutes } from "./time-utils";
 import type {
   Appointment,
   WorkingDay,
@@ -168,6 +168,72 @@ export function getAppointmentStatusColor(status: Appointment["status"]): {
         text: "text-gray-500 dark:text-gray-400",
       };
   }
+}
+
+/**
+ * Get appointment color based on time (past, current, future)
+ */
+export function getAppointmentTimeColor(
+  date: string,
+  startTime: string,
+  endTime: string,
+): {
+  bg: string;
+  border: string;
+  text: string;
+  type: "past" | "current" | "future";
+} {
+  const now = new Date();
+  const todayStr = toDateString(now);
+
+  // Different day comparison
+  if (date < todayStr) {
+    return {
+      bg: "bg-muted/50 dark:bg-muted/30",
+      border: "border-border",
+      text: "text-muted-foreground",
+      type: "past",
+    };
+  }
+  if (date > todayStr) {
+    return {
+      bg: "bg-accent-soft dark:bg-accent-soft",
+      border: "border-accent/50",
+      text: "text-accent",
+      type: "future",
+    };
+  }
+
+  // Same day - compare times
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMinutes = timeToMinutes(startTime);
+  const endMinutes = timeToMinutes(endTime);
+
+  if (endMinutes <= nowMinutes) {
+    // Past appointment
+    return {
+      bg: "bg-muted/50 dark:bg-muted/30",
+      border: "border-border",
+      text: "text-muted-foreground",
+      type: "past",
+    };
+  }
+  if (startMinutes <= nowMinutes && nowMinutes < endMinutes) {
+    // Current appointment (in progress)
+    return {
+      bg: "bg-accent dark:bg-accent",
+      border: "border-accent",
+      text: "text-white dark:text-white",
+      type: "current",
+    };
+  }
+  // Future appointment
+  return {
+    bg: "bg-accent-soft dark:bg-accent-soft",
+    border: "border-accent/50",
+    text: "text-accent",
+    type: "future",
+  };
 }
 
 /**

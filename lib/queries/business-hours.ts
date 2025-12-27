@@ -1,10 +1,30 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/supabase/database.types";
 
-export type BusinessHours =
-  Database["public"]["Tables"]["beauty_page_business_hours"]["Row"];
-export type SpecialHours =
-  Database["public"]["Tables"]["beauty_page_special_hours"]["Row"];
+// TODO: These types should come from Database["public"]["Tables"] once
+// the business hours tables are created in the Supabase schema
+export type BusinessHours = {
+  id: string;
+  beauty_page_id: string;
+  day_of_week: number;
+  is_open: boolean;
+  open_time: string | null;
+  close_time: string | null;
+  timezone: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SpecialHours = {
+  id: string;
+  beauty_page_id: string;
+  date: string;
+  name: string | null;
+  is_open: boolean;
+  open_time: string | null;
+  close_time: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type EffectiveHours = {
   isOpen: boolean;

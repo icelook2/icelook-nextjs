@@ -13,75 +13,71 @@ import { updateProfileName } from "../_actions";
 import { createTranslatedNameSchema } from "../schemas";
 
 interface ProfileSectionProps {
- initialName: string;
+  initialName: string;
 }
 
 export function ProfileSection({ initialName }: ProfileSectionProps) {
- const t = useTranslations("settings");
- const tValidation = useTranslations("validation");
- const router = useRouter();
- const [isPending, startTransition] = useTransition();
- const [serverError, setServerError] = useState<string | null>(null);
- const [saveSuccess, setSaveSuccess] = useState(false);
+  const t = useTranslations("settings");
+  const tValidation = useTranslations("validation");
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
- const formSchema = useMemo(() => {
- const nameSchema = createTranslatedNameSchema((key) => tValidation(key));
- return z.object({ name: nameSchema });
- }, [tValidation]);
+  const formSchema = useMemo(() => {
+    const nameSchema = createTranslatedNameSchema((key) => tValidation(key));
+    return z.object({ name: nameSchema });
+  }, [tValidation]);
 
- type FormData = z.infer<typeof formSchema>;
+  type FormData = z.infer<typeof formSchema>;
 
- const {
- register,
- handleSubmit,
- formState: { errors, isDirty },
- } = useForm<FormData>({
- resolver: zodResolver(formSchema),
- defaultValues: { name: initialName },
- });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isDirty },
+  } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { name: initialName },
+  });
 
- function onSubmit(data: FormData) {
- setServerError(null);
- setSaveSuccess(false);
+  function onSubmit(data: FormData) {
+    setServerError(null);
+    setSaveSuccess(false);
 
- startTransition(async () => {
- const result = await updateProfileName(data.name);
- if (result.success) {
- setSaveSuccess(true);
- router.refresh();
- setTimeout(() => setSaveSuccess(false), 3000);
- } else {
- setServerError(result.error);
- }
- });
- }
+    startTransition(async () => {
+      const result = await updateProfileName(data.name);
+      if (result.success) {
+        setSaveSuccess(true);
+        router.refresh();
+        setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        setServerError(result.error);
+      }
+    });
+  }
 
- const error = errors.name?.message || serverError;
+  const error = errors.name?.message || serverError;
 
- return (
- <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
- <Field.Root>
- <Field.Label>{t("name_label")}</Field.Label>
- <Input
- type="text"
- placeholder={t("name_placeholder")}
- autoComplete="name"
- state={error ? "error" : "default"}
- {...register("name")}
- />
- <Field.Error>{error}</Field.Error>
- </Field.Root>
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <Field.Root>
+        <Field.Label>{t("name_label")}</Field.Label>
+        <Input
+          type="text"
+          placeholder={t("name_placeholder")}
+          autoComplete="name"
+          state={error ? "error" : "default"}
+          {...register("name")}
+        />
+        <Field.Error>{error}</Field.Error>
+      </Field.Root>
 
- <div className="flex items-center gap-3">
- <Button type="submit" loading={isPending} disabled={!isDirty} size="sm">
- {t("save")}
- </Button>
- {saveSuccess && (
- <span className="text-sm">
- {t("saved")}
- </span>
- )}
- </div>
- </form>
- );
+      <div className="flex items-center gap-3">
+        <Button type="submit" loading={isPending} disabled={!isDirty} size="sm">
+          {t("save")}
+        </Button>
+        {saveSuccess && <span className="text-sm">{t("saved")}</span>}
+      </div>
+    </form>
+  );
 }

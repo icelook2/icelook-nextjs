@@ -13,12 +13,7 @@ interface TimeColumnProps {
  */
 export function TimeColumn({ timeSlots, className }: TimeColumnProps) {
   return (
-    <div
-      className={cn(
-        "sticky left-0 z-10 w-16 shrink-0 bg-background",
-        className,
-      )}
-    >
+    <div className={cn("w-16 shrink-0 bg-background", className)}>
       {timeSlots.map((slot) => (
         <div
           key={`${slot.hour}-${slot.minute}`}

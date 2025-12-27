@@ -85,13 +85,22 @@ export function ScheduleView({
     setWorkingDayDialog({ open: true, mode: "edit", workingDay });
   }
 
-  // Handler for editing break (or creating new one)
+  // Handler for editing break
   function handleEditBreak(breakData: WorkingDayBreak) {
     setBreakDialog({
       open: true,
       mode: "edit",
       breakData,
       workingDayId: breakData.working_day_id,
+    });
+  }
+
+  // Handler for adding a new break
+  function handleAddBreak(workingDayId: string) {
+    setBreakDialog({
+      open: true,
+      mode: "create",
+      workingDayId,
     });
   }
 
@@ -135,6 +144,7 @@ export function ScheduleView({
         canManage={canManage}
         onAddWorkingDay={handleAddWorkingDay}
         onEditWorkingDay={handleEditWorkingDay}
+        onAddBreak={handleAddBreak}
         onEditBreak={handleEditBreak}
         onViewAppointment={handleViewAppointment}
       />

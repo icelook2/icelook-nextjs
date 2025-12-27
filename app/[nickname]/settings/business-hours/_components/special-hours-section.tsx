@@ -129,7 +129,9 @@ export function SpecialHoursSection({
         onOpenChange={(open) => !open && handleDeleteCancel()}
       >
         <AlertDialog.Portal open={deleteConfirm !== null}>
-          <AlertDialog.Title>{t("special_hours.delete_title")}</AlertDialog.Title>
+          <AlertDialog.Title>
+            {t("special_hours.delete_title")}
+          </AlertDialog.Title>
           <AlertDialog.Description>
             {t("special_hours.delete_description", {
               date: deleteConfirm
@@ -183,9 +185,7 @@ function SpecialHoursRow({ item, onEdit, onDelete }: SpecialHoursRowProps) {
 
       {/* Name */}
       <div className="min-w-0 flex-1">
-        <span className="truncate text-sm text-muted">
-          {item.name || "—"}
-        </span>
+        <span className="truncate text-sm text-muted">{item.name || "—"}</span>
       </div>
 
       {/* Status / Time */}
@@ -315,9 +315,7 @@ function SpecialHoursDialog({
     <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
       <Dialog.Portal open={open} className="bg-background">
         <Dialog.Header onClose={onClose}>
-          {mode === "create"
-            ? t("special_hours.add")
-            : t("special_hours.edit")}
+          {mode === "create" ? t("special_hours.add") : t("special_hours.edit")}
         </Dialog.Header>
 
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -426,11 +424,7 @@ function SpecialHoursDialog({
             <Button type="button" variant="secondary" onClick={onClose}>
               {t("cancel")}
             </Button>
-            <Button
-              type="submit"
-              disabled={isPending}
-              loading={isPending}
-            >
+            <Button type="submit" disabled={isPending} loading={isPending}>
               {t("save")}
             </Button>
           </Dialog.Footer>

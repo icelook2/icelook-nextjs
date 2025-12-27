@@ -9,7 +9,9 @@ import { cn } from "@/lib/utils/cn";
 // AlertDialog Root
 // ============================================================================
 
-type AlertDialogRootProps = ComponentPropsWithoutRef<typeof BaseAlertDialog.Root>;
+type AlertDialogRootProps = ComponentPropsWithoutRef<
+  typeof BaseAlertDialog.Root
+>;
 
 function AlertDialogRoot({ children, ...props }: AlertDialogRootProps) {
   return <BaseAlertDialog.Root {...props}>{children}</BaseAlertDialog.Root>;
@@ -24,7 +26,9 @@ type AlertDialogTriggerProps = ComponentPropsWithoutRef<
 >;
 
 function AlertDialogTrigger({ children, ...props }: AlertDialogTriggerProps) {
-  return <BaseAlertDialog.Trigger {...props}>{children}</BaseAlertDialog.Trigger>;
+  return (
+    <BaseAlertDialog.Trigger {...props}>{children}</BaseAlertDialog.Trigger>
+  );
 }
 
 // ============================================================================
@@ -53,7 +57,7 @@ function AlertDialogPortal({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px]"
+                className="fixed inset-0 bg-black/50 backdrop-blur-[2px]"
               />
             }
           />
@@ -65,8 +69,8 @@ function AlertDialogPortal({
                 exit={{ opacity: 0, scale: 0.95, y: 8 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 className={cn(
-                  "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2",
-                  "rounded-2xl bg-background p-6 shadow-xl",
+                  "fixed left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2",
+                  "rounded-2xl bg-surface p-6 shadow-xl",
                   "focus:outline-none",
                   className,
                 )}

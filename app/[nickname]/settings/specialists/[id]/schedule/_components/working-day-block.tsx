@@ -44,9 +44,8 @@ export function WorkingDayBlock({
     // biome-ignore lint/a11y/noStaticElementInteractions: role is conditionally set based on canManage
     <div
       className={cn(
-        "absolute inset-x-1 rounded-lg border transition-colors",
-        "bg-accent-soft/50 border-accent/20",
-        canManage && "cursor-pointer hover:bg-accent-soft/70",
+        "absolute inset-x-0 transition-colors",
+        canManage && "cursor-pointer hover:bg-accent/10",
         className,
       )}
       style={{
@@ -65,12 +64,6 @@ export function WorkingDayBlock({
       }
       role={canManage ? "button" : undefined}
       tabIndex={canManage ? 0 : undefined}
-    >
-      <div className="p-2">
-        <p className="text-xs font-medium text-accent">
-          {startTime} - {endTime}
-        </p>
-      </div>
-    </div>
+    />
   );
 }

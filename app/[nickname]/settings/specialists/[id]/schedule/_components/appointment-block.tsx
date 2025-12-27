@@ -2,7 +2,7 @@
 
 import { Clock, User } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
-import { getAppointmentStatusColor } from "../_lib/schedule-utils";
+import { getAppointmentTimeColor } from "../_lib/schedule-utils";
 import { normalizeTime } from "../_lib/time-utils";
 import type { Appointment, GridConfig } from "../_lib/types";
 
@@ -25,7 +25,11 @@ export function AppointmentBlock({
 }: AppointmentBlockProps) {
   const startTime = normalizeTime(appointment.start_time);
   const endTime = normalizeTime(appointment.end_time);
-  const statusColors = getAppointmentStatusColor(appointment.status);
+  const timeColors = getAppointmentTimeColor(
+    appointment.date,
+    startTime,
+    endTime,
+  );
 
   // Calculate position as percentage
   const totalMinutes = (config.endHour - config.startHour) * 60;
@@ -49,11 +53,12 @@ export function AppointmentBlock({
     <button
       type="button"
       className={cn(
-        "absolute inset-x-2 z-20 overflow-hidden rounded border text-left transition-colors",
-        statusColors.bg,
-        statusColors.border,
+        "absolute inset-x-2 overflow-hidden rounded border text-left transition-colors",
+        timeColors.bg,
+        timeColors.border,
         "cursor-pointer hover:brightness-95 dark:hover:brightness-110",
-        appointment.status === "cancelled" && "opacity-50",
+        timeColors.type === "past" && "opacity-60",
+        appointment.status === "cancelled" && "opacity-40",
         className,
       )}
       style={{
@@ -64,7 +69,7 @@ export function AppointmentBlock({
     >
       <div className="flex h-full flex-col p-1.5">
         {/* Client name - always show */}
-        <div className={cn("flex items-center gap-1", statusColors.text)}>
+        <div className={cn("flex items-center gap-1", timeColors.text)}>
           <User className="h-3 w-3 shrink-0" />
           <span className="truncate text-xs font-medium">
             {appointment.client_name}
@@ -76,7 +81,7 @@ export function AppointmentBlock({
           <p
             className={cn(
               "mt-0.5 truncate text-xs",
-              statusColors.text,
+              timeColors.text,
               "opacity-80",
             )}
           >
@@ -89,7 +94,7 @@ export function AppointmentBlock({
           <div
             className={cn(
               "mt-auto flex items-center gap-1",
-              statusColors.text,
+              timeColors.text,
               "opacity-70",
             )}
           >

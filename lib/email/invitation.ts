@@ -1,46 +1,46 @@
 import { sendEmail } from "./client";
 
 interface SendInvitationEmailParams {
- to: string;
- inviterName: string;
- beautyPageName: string;
- roles: ("admin" | "specialist")[];
- token: string;
+  to: string;
+  inviterName: string;
+  beautyPageName: string;
+  roles: ("admin" | "specialist")[];
+  token: string;
 }
 
 function getRolesText(roles: ("admin" | "specialist")[]): string {
- if (roles.includes("admin") && roles.includes("specialist")) {
- return "Admin & Specialist";
- }
- if (roles.includes("admin")) {
- return "Admin";
- }
- return "Specialist";
+  if (roles.includes("admin") && roles.includes("specialist")) {
+    return "Admin & Specialist";
+  }
+  if (roles.includes("admin")) {
+    return "Admin";
+  }
+  return "Specialist";
 }
 
 function getBaseUrl(): string {
- if (process.env.NEXT_PUBLIC_IL_APP_URL) {
- return process.env.NEXT_PUBLIC_IL_APP_URL;
- }
- if (process.env.VERCEL_URL) {
- return `https://${process.env.VERCEL_URL}`;
- }
- return "http://localhost:3000";
+  if (process.env.NEXT_PUBLIC_IL_APP_URL) {
+    return process.env.NEXT_PUBLIC_IL_APP_URL;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return "http://localhost:3000";
 }
 
 export async function sendInvitationEmail({
- to,
- inviterName,
- beautyPageName,
- roles,
- token,
+  to,
+  inviterName,
+  beautyPageName,
+  roles,
+  token,
 }: SendInvitationEmailParams): Promise<void> {
- const baseUrl = getBaseUrl();
- const inviteUrl = `${baseUrl}/invite/${token}`;
- const rolesText = getRolesText(roles);
+  const baseUrl = getBaseUrl();
+  const inviteUrl = `${baseUrl}/invite/${token}`;
+  const rolesText = getRolesText(roles);
 
- // Plain HTML template
- const html = `
+  // Plain HTML template
+  const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -75,13 +75,13 @@ export async function sendInvitationEmail({
 </html>
  `.trim();
 
- const result = await sendEmail({
- to,
- subject: `${inviterName} invited you to join ${beautyPageName}`,
- html,
- });
+  const result = await sendEmail({
+    to,
+    subject: `${inviterName} invited you to join ${beautyPageName}`,
+    html,
+  });
 
- if (!result.success) {
- throw new Error(result.error ?? "Failed to send invitation email");
- }
+  if (!result.success) {
+    throw new Error(result.error ?? "Failed to send invitation email");
+  }
 }

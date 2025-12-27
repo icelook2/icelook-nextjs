@@ -33,10 +33,11 @@ export function TimezoneSelector({
   const timezoneFieldId = useId();
 
   // Get all IANA timezones
-  const timezones = getAllTimezones()
+  const timezones = getAllTimezones();
 
   // Find the initial timezone option
-  const initialTimezone = timezones.find((tz) => tz.value === currentTimezone) ?? null
+  const initialTimezone =
+    timezones.find((tz) => tz.value === currentTimezone) ?? null;
 
   const {
     control,
@@ -117,7 +118,12 @@ export function TimezoneSelector({
         />
 
         <div className="flex justify-start">
-          <Button type="submit" loading={isPending} disabled={!isDirty} size="sm">
+          <Button
+            type="submit"
+            loading={isPending}
+            disabled={!isDirty}
+            size="sm"
+          >
             {t("save")}
           </Button>
         </div>

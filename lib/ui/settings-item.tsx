@@ -48,16 +48,14 @@ export function SettingsItem({
     </div>
   );
 
-  const containerClasses = cn(
-    "block transition-colors",
-    {
-      "rounded-xl border border-border bg-surface p-4 hover:bg-black/5 dark:hover:bg-white/5":
-        variant === "card",
-      "p-4": variant === "inline",
-      "px-4 py-4": variant === "grouped",
-      "border-b border-border last:border-b-0": variant === "grouped" && !noBorder,
-    }
-  );
+  const containerClasses = cn("block transition-colors", {
+    "rounded-xl border border-border bg-surface p-4 hover:bg-black/5 dark:hover:bg-white/5":
+      variant === "card",
+    "p-4": variant === "inline",
+    "px-4 py-4": variant === "grouped",
+    "border-b border-border last:border-b-0":
+      variant === "grouped" && !noBorder,
+  });
 
   if (disabled) {
     return (

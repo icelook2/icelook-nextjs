@@ -8,28 +8,28 @@ import { Button } from "@/lib/ui/button";
 import { Paper } from "@/lib/ui/paper";
 
 export function LogoutSection() {
- const t = useTranslations("settings");
- const [isPending, startTransition] = useTransition();
+  const t = useTranslations("settings");
+  const [isPending, startTransition] = useTransition();
 
- function handleLogout() {
- startTransition(async () => {
- await signOut();
- });
- }
+  function handleLogout() {
+    startTransition(async () => {
+      await signOut();
+    });
+  }
 
- return (
- <Paper>
- <div className="p-4">
- <Button
- variant="ghost"
- onClick={handleLogout}
- loading={isPending}
- className="w-full justify-center"
- >
- <LogOut className="mr-2 h-4 w-4" />
- {t("logout_button")}
- </Button>
- </div>
- </Paper>
- );
+  return (
+    <Paper>
+      <div className="p-4">
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          loading={isPending}
+          className="w-full justify-center"
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          {t("logout_button")}
+        </Button>
+      </div>
+    </Paper>
+  );
 }

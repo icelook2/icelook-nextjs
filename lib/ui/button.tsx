@@ -1,77 +1,46 @@
 "use client";
 
 import { Button as BaseButton } from "@base-ui/react/button";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
+import { buttonVariants } from "./button-variants";
 
-export const buttonVariants = cva(
- "inline-flex items-center justify-center gap-1 font-medium text-sm transition-colors duration-150 cursor-pointer focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
- {
- variants: {
- variant: {
- primary:
- "rounded-2xl bg-accent text-white hover:bg-accent/90 focus-visible:ring-2 focus-visible:ring-accent",
- secondary:
- "rounded-2xl border border-border bg-background text-foreground hover:bg-surface focus-visible:ring-2 focus-visible:ring-accent",
- ghost:
- "bg-transparent hover:bg-surface disabled:hover:bg-transparent rounded-2xl text-foreground",
- danger:
- "rounded-2xl bg-danger text-white hover:bg-danger/90 focus-visible:ring-2 focus-visible:ring-danger",
- link: "bg-transparent p-0 text-accent hover:underline",
- "link-primary": "bg-transparent p-0 text-foreground hover:underline",
- },
- size: {
- default: "px-6 py-3",
- sm: "px-4 py-2 text-xs",
- lg: "px-8 py-4 text-base",
- },
- },
- compoundVariants: [
- {
- variant: ["link", "link-primary"],
- className: "px-0 py-0",
- },
- ],
- defaultVariants: {
- variant: "primary",
- size: "default",
- },
- },
-);
+// Re-export for backwards compatibility
+export { buttonVariants } from "./button-variants";
 
 type ButtonProps = ComponentPropsWithoutRef<typeof BaseButton> &
- VariantProps<typeof buttonVariants> & {
- loading?: boolean;
- children: ReactNode;
- };
+  VariantProps<typeof buttonVariants> & {
+    loading?: boolean;
+    children: ReactNode;
+  };
 
 export function Button({
- variant,
- size,
- loading = false,
- disabled,
- className,
- children,
- render,
- ...props
+  variant,
+  size,
+  loading = false,
+  disabled,
+  className,
+  children,
+  render,
+  ...props
 }: ButtonProps) {
- const isDisabled = disabled || loading;
+  const isDisabled = disabled || loading;
 
- return (
- <BaseButton
- disabled={isDisabled}
- focusableWhenDisabled={loading}
- className={cn(buttonVariants({ variant, size }), className)}
- render={render}
- nativeButton={render === undefined}
- {...props}
- >
- {loading && (
- <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
- )}
- {children}
- </BaseButton>
- );
+  return (
+    <BaseButton
+      disabled={isDisabled}
+      focusableWhenDisabled={loading}
+      className={cn(buttonVariants({ variant, size }), className)}
+      render={render}
+      nativeButton={!render}
+      {...props}
+    >
+      {loading && (
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+      )}
+      {children}
+    </BaseButton>
+  );
 }

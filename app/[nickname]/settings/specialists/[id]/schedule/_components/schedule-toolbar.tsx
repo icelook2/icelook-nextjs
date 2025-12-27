@@ -35,7 +35,7 @@ export function ScheduleToolbar({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-between gap-4 border-b border-border bg-background px-4 py-3",
+        "flex flex-wrap items-center justify-between gap-4 bg-background px-4 py-3",
         className,
       )}
     >

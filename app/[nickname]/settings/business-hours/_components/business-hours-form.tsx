@@ -105,9 +105,7 @@ export function BusinessHoursForm({
           >
             {t("save")}
           </Button>
-          {serverError && (
-            <p className="text-sm text-danger">{serverError}</p>
-          )}
+          {serverError && <p className="text-sm text-danger">{serverError}</p>}
         </div>
       </SettingsGroup>
     </form>
@@ -138,16 +136,8 @@ function DayRow({ index, control, dayName, isOpen }: DayRowProps) {
         render={({ field }) => (
           <Field.Root name={`hours.${index}.isOpen`}>
             <Field.Label className="flex cursor-pointer items-center gap-3">
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
-              <span
-                className={cn(
-                  "font-medium",
-                  !isOpen && "text-muted",
-                )}
-              >
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
+              <span className={cn("font-medium", !isOpen && "text-muted")}>
                 {dayName}
               </span>
             </Field.Label>
@@ -162,8 +152,14 @@ function DayRow({ index, control, dayName, isOpen }: DayRowProps) {
             name={`hours.${index}.openTime`}
             control={control}
             render={({ field }) => (
-              <Field.Root name={`hours.${index}.openTime`} direction="row" gap="sm">
-                <Field.Label className="text-sm text-muted">{t("from")}</Field.Label>
+              <Field.Root
+                name={`hours.${index}.openTime`}
+                direction="row"
+                gap="sm"
+              >
+                <Field.Label className="text-sm text-muted">
+                  {t("from")}
+                </Field.Label>
                 <Input
                   type="time"
                   value={field.value}
@@ -178,8 +174,14 @@ function DayRow({ index, control, dayName, isOpen }: DayRowProps) {
             name={`hours.${index}.closeTime`}
             control={control}
             render={({ field }) => (
-              <Field.Root name={`hours.${index}.closeTime`} direction="row" gap="sm">
-                <Field.Label className="text-sm text-muted">{t("to")}</Field.Label>
+              <Field.Root
+                name={`hours.${index}.closeTime`}
+                direction="row"
+                gap="sm"
+              >
+                <Field.Label className="text-sm text-muted">
+                  {t("to")}
+                </Field.Label>
                 <Input
                   type="time"
                   value={field.value}

@@ -5,62 +5,62 @@
 
 /* Define CSS variables that change based on theme */
 :root {
- /* Light theme (default) - Threads-inspired */
- --theme-background: #f9f9f9;
- --theme-surface: #ffffff;
- --theme-text: #000000;
- --theme-foreground: #000000;
- --theme-muted: #6b7280;
- --theme-border: #efefef;
- --theme-accent: #0066ff;
- --theme-accent-soft: #e6f2ff;
- --theme-danger: #dc2626;
- --theme-danger-soft: #fee2e2;
+  /* Light theme (default) - Threads-inspired */
+  --theme-background: #f9f9f9;
+  --theme-surface: #ffffff;
+  --theme-text: #000000;
+  --theme-foreground: #000000;
+  --theme-muted: #6b7280;
+  --theme-border: #efefef;
+  --theme-accent: #0066ff;
+  --theme-accent-soft: #e6f2ff;
+  --theme-danger: #dc2626;
+  --theme-danger-soft: #fee2e2;
 }
 
 .dark {
- /* Dark theme overrides - Threads-inspired */
- --theme-background: #101010;
- --theme-surface: #1a1a1a;
- --theme-text: #ffffff;
- --theme-foreground: #ffffff;
- --theme-muted: #9ca3af;
- --theme-border: #262626;
- --theme-accent: #3b82f6;
- --theme-accent-soft: #1e3a5f;
- --theme-danger: #ef4444;
- --theme-danger-soft: #7f1d1d;
+  /* Dark theme overrides - Threads-inspired */
+  --theme-background: #101010;
+  --theme-surface: #1a1a1a;
+  --theme-text: #ffffff;
+  --theme-foreground: #ffffff;
+  --theme-muted: #9ca3af;
+  --theme-border: #262626;
+  --theme-accent: #3b82f6;
+  --theme-accent-soft: #1e3a5f;
+  --theme-danger: #ef4444;
+  --theme-danger-soft: #7f1d1d;
 }
 
 /* Map CSS variables to Tailwind colors using inline */
 @theme inline {
- --color-background: var(--theme-background);
- --color-surface: var(--theme-surface);
- --color-text: var(--theme-text);
- --color-foreground: var(--theme-foreground);
- --color-muted: var(--theme-muted);
- --color-border: var(--theme-border);
- --color-accent: var(--theme-accent);
- --color-accent-soft: var(--theme-accent-soft);
- --color-danger: var(--theme-danger);
- --color-danger-soft: var(--theme-danger-soft);
+  --color-background: var(--theme-background);
+  --color-surface: var(--theme-surface);
+  --color-text: var(--theme-text);
+  --color-foreground: var(--theme-foreground);
+  --color-muted: var(--theme-muted);
+  --color-border: var(--theme-border);
+  --color-accent: var(--theme-accent);
+  --color-accent-soft: var(--theme-accent-soft);
+  --color-danger: var(--theme-danger);
+  --color-danger-soft: var(--theme-danger-soft);
 }
 
 @theme {
- /* Fonts */
- --font-family-sans: var(--font-geist-sans);
- --font-family-mono: var(--font-geist-mono);
+  /* Fonts */
+  --font-family-sans: var(--font-geist-sans);
+  --font-family-mono: var(--font-geist-mono);
 }
 
 body {
- font-family: var(--font-family-sans), system-ui, sans-serif;
- background-color: var(--theme-background);
- color: var(--theme-text);
- /* Base UI: Required for iOS Safari 26+ backdrop compatibility */
- position: relative;
+  font-family: var(--font-family-sans), system-ui, sans-serif;
+  background-color: var(--theme-background);
+  color: var(--theme-text);
+  /* Base UI: Required for iOS Safari 26+ backdrop compatibility */
+  position: relative;
 }
 
 .root {
- /* Base UI: Creates stacking context for portal components (Dialog, Popover, Menu) */ isolation: isolate;
+  /* Base UI: Creates stacking context for portal components (Dialog, Popover, Menu) */ isolation: isolate;
   isolation: isolate;
 }

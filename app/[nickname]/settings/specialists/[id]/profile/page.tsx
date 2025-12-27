@@ -1,9 +1,15 @@
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
-import { getBeautyPageAdmins, getBeautyPageByNickname } from "@/lib/queries";
+import {
+  getBeautyPageAdmins,
+  getBeautyPageByNickname,
+  getBeautyPageLabels,
+  getSpecialistLabelIds,
+} from "@/lib/queries";
 import { getSpecialistProfileById } from "@/lib/queries/specialists";
 import { PageHeader } from "@/lib/ui/page-header";
+import { LabelsSection } from "./_components/labels-section";
 import { ProfileForm } from "./_components/profile-form";
 
 interface SpecialistProfilePageProps {
@@ -37,7 +43,11 @@ export default async function SpecialistProfilePage({
     redirect(`/${nickname}`);
   }
 
-  const specialist = await getSpecialistProfileById(id);
+  const [specialist, availableLabels, assignedLabelIds] = await Promise.all([
+    getSpecialistProfileById(id),
+    getBeautyPageLabels(beautyPage.id),
+    getSpecialistLabelIds(id),
+  ]);
 
   if (!specialist) {
     notFound();
@@ -64,6 +74,18 @@ export default async function SpecialistProfilePage({
           beautyPageId={beautyPage.id}
           nickname={nickname}
         />
+
+        {availableLabels.length > 0 && (
+          <div className="mt-6">
+            <LabelsSection
+              specialistId={specialist.id}
+              availableLabels={availableLabels}
+              assignedLabelIds={assignedLabelIds}
+              beautyPageId={beautyPage.id}
+              nickname={nickname}
+            />
+          </div>
+        )}
       </main>
     </>
   );
