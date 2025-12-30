@@ -48,3 +48,25 @@ export function createGuestInfoSchema(messages: GuestInfoValidationMessages) {
 export type GuestInfoFormData = z.infer<
   ReturnType<typeof createGuestInfoSchema>
 >;
+
+/** Translations for authenticated user validation messages */
+export interface AuthUserValidationMessages {
+  notesTooLong: string;
+}
+
+/**
+ * Create a validation schema for authenticated users.
+ * Only notes (optional) is needed since name, email, and phone
+ * come from the user's profile or are not required.
+ *
+ * @param messages - Translated validation error messages
+ * @returns Zod schema for authenticated user booking
+ */
+export function createAuthUserSchema(messages: AuthUserValidationMessages) {
+  return z.object({
+    notes: z.string().max(500, messages.notesTooLong).optional(),
+  });
+}
+
+/** Type inferred from the auth user schema */
+export type AuthUserFormData = z.infer<ReturnType<typeof createAuthUserSchema>>;

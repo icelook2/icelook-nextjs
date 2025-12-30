@@ -2,10 +2,11 @@
 
 import { Calendar, Clock, Mail, Phone, Scissors, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useMemo, useState, useTransition } from "react";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
+import { formatPrice } from "@/lib/utils/price-range";
 import {
   cancelAppointment,
   completeAppointment,
@@ -16,6 +17,73 @@ import { parseDate } from "../_lib/date-utils";
 import { getAppointmentStatusColor } from "../_lib/schedule-utils";
 import { normalizeTime } from "../_lib/time-utils";
 import type { Appointment } from "../_lib/types";
+
+// ============================================================================
+// Types for service metadata stored in client_notes
+// ============================================================================
+
+interface ServiceMetadata {
+  service_ids: string[];
+  services: Array<{
+    id: string;
+    name: string;
+    price_cents: number;
+    duration_minutes: number;
+  }>;
+}
+
+interface ParsedNotes {
+  userNotes: string | null;
+  serviceMetadata: ServiceMetadata | null;
+}
+
+// ============================================================================
+// Utility to parse client notes
+// ============================================================================
+
+/**
+ * Parse client_notes field to separate user notes from service metadata JSON.
+ *
+ * The booking system stores service metadata in client_notes as JSON:
+ * - If user has notes: "User notes\n\n---\n{JSON}"
+ * - If no user notes: "{JSON}"
+ */
+function parseClientNotes(notes: string | null): ParsedNotes {
+  if (!notes) {
+    return { userNotes: null, serviceMetadata: null };
+  }
+
+  const trimmed = notes.trim();
+
+  // Check if it's pure JSON (no user notes)
+  if (trimmed.startsWith("{")) {
+    try {
+      const metadata = JSON.parse(trimmed) as ServiceMetadata;
+      return { userNotes: null, serviceMetadata: metadata };
+    } catch {
+      // Not valid JSON, treat as user notes
+      return { userNotes: notes, serviceMetadata: null };
+    }
+  }
+
+  // Try to split on separator
+  const separator = "\n\n---\n";
+  const sepIndex = notes.indexOf(separator);
+  if (sepIndex !== -1) {
+    const userNotes = notes.slice(0, sepIndex).trim();
+    const jsonPart = notes.slice(sepIndex + separator.length).trim();
+    try {
+      const metadata = JSON.parse(jsonPart) as ServiceMetadata;
+      return { userNotes: userNotes || null, serviceMetadata: metadata };
+    } catch {
+      // JSON parsing failed, return original notes
+      return { userNotes: notes, serviceMetadata: null };
+    }
+  }
+
+  // No separator found, treat as user notes
+  return { userNotes: notes, serviceMetadata: null };
+}
 
 interface AppointmentDetailDialogProps {
   open: boolean;
@@ -38,20 +106,28 @@ export function AppointmentDetailDialog({
   canManage,
 }: AppointmentDetailDialogProps) {
   const t = useTranslations("schedule");
+  const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const statusColors = getAppointmentStatusColor(appointment.status);
-  const formattedDate = parseDate(appointment.date).toLocaleDateString(
-    "en-US",
-    {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    },
+  const formattedDate = parseDate(appointment.date).toLocaleDateString(locale, {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  // Parse client notes to separate user notes from service metadata
+  const { userNotes, serviceMetadata } = useMemo(
+    () => parseClientNotes(appointment.client_notes),
+    [appointment.client_notes],
   );
+
+  // Check if we have multiple services
+  const hasMultipleServices =
+    serviceMetadata?.services && serviceMetadata.services.length > 1;
 
   function handleStatusChange(
     action: "confirm" | "complete" | "cancel" | "no_show",
@@ -132,18 +208,26 @@ export function AppointmentDetailDialog({
             <h3 className="mb-3 font-medium">{t("client")}</h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-muted" />
+                <User className="size-4 text-muted" />
                 <span>{appointment.client_name}</span>
               </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="h-4 w-4 text-muted" />
-                <span>{appointment.client_phone}</span>
-              </div>
+              {appointment.client_phone && (
+                <a
+                  href={`tel:${appointment.client_phone}`}
+                  className="flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <Phone className="size-4" />
+                  {appointment.client_phone}
+                </a>
+              )}
               {appointment.client_email && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted" />
-                  <span>{appointment.client_email}</span>
-                </div>
+                <a
+                  href={`mailto:${appointment.client_email}`}
+                  className="flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <Mail className="size-4" />
+                  {appointment.client_email}
+                </a>
               )}
             </div>
           </div>
@@ -152,16 +236,40 @@ export function AppointmentDetailDialog({
           <div className="rounded-lg bg-surface p-4">
             <h3 className="mb-3 font-medium">{t("service")}</h3>
             <div className="space-y-2">
+              {/* Show itemized services if multiple, otherwise show combined name */}
+              {hasMultipleServices ? (
+                <div className="space-y-1.5">
+                  {serviceMetadata.services.map((service) => (
+                    <div
+                      key={service.id}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Scissors className="size-4 text-muted" />
+                        <span>{service.name}</span>
+                      </div>
+                      <span className="text-muted">
+                        {formatPrice(
+                          service.price_cents,
+                          appointment.service_currency,
+                          locale,
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm">
+                  <Scissors className="size-4 text-muted" />
+                  <span>{appointment.service_name}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 text-sm">
-                <Scissors className="h-4 w-4 text-muted" />
-                <span>{appointment.service_name}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="h-4 w-4 text-muted" />
+                <Calendar className="size-4 text-muted" />
                 <span>{formattedDate}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Clock className="h-4 w-4 text-muted" />
+                <Clock className="size-4 text-muted" />
                 <span>
                   {normalizeTime(appointment.start_time)} -{" "}
                   {normalizeTime(appointment.end_time)}
@@ -174,25 +282,30 @@ export function AppointmentDetailDialog({
           <div className="flex items-center justify-between rounded-lg bg-surface p-4">
             <span className="font-medium">{t("total")}</span>
             <span className="text-lg font-semibold">
-              {appointment.service_currency}{" "}
-              {(appointment.service_price_cents / 100).toFixed(2)}
+              {formatPrice(
+                appointment.service_price_cents,
+                appointment.service_currency,
+                locale,
+              )}
             </span>
           </div>
 
-          {/* Notes */}
-          {(appointment.client_notes || appointment.specialist_notes) && (
+          {/* Notes - only show actual user notes, not JSON metadata */}
+          {(userNotes || appointment.specialist_notes) && (
             <div className="rounded-lg bg-surface p-4">
               <h3 className="mb-3 font-medium">{t("notes")}</h3>
-              {appointment.client_notes && (
+              {userNotes && (
                 <div className="mb-2">
-                  <p className="text-xs text-muted">Client note:</p>
-                  <p className="text-sm">{appointment.client_notes}</p>
+                  <p className="text-xs text-muted">{t("client_note")}:</p>
+                  <p className="whitespace-pre-wrap text-sm">{userNotes}</p>
                 </div>
               )}
               {appointment.specialist_notes && (
                 <div>
-                  <p className="text-xs text-muted">Specialist note:</p>
-                  <p className="text-sm">{appointment.specialist_notes}</p>
+                  <p className="text-xs text-muted">{t("specialist_note")}:</p>
+                  <p className="whitespace-pre-wrap text-sm">
+                    {appointment.specialist_notes}
+                  </p>
                 </div>
               )}
             </div>

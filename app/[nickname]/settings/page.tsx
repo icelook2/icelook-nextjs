@@ -1,4 +1,5 @@
 import {
+  Ban,
   Calendar,
   Clock,
   CreditCard,
@@ -106,6 +107,15 @@ export default async function BeautyPageSettings({
       description: t("nav.business_hours_description"),
       iconClassName:
         "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
+      disabled: false,
+    },
+    {
+      href: `/${nickname}/settings/cancellation-policy`,
+      icon: Ban,
+      title: t("nav.cancellation_policy"),
+      description: t("nav.cancellation_policy_description"),
+      iconClassName:
+        "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400",
       disabled: false,
     },
     {

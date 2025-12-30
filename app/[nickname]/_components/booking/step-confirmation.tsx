@@ -3,20 +3,26 @@
 /**
  * Confirmation Step
  *
- * Shows booking summary and collects guest information.
- * Validates input before allowing booking submission.
+ * Shows structured booking summary (Who, When, Where, What, Price, Duration)
+ * and collects guest information for the booking.
+ *
+ * For authenticated users with a profile, only asks for phone and notes.
+ * For guests (unauthenticated), asks for name, phone, email, and notes.
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Clock, Loader2, User } from "lucide-react";
+import { ChevronLeft, Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
 import { formatDuration, formatPrice } from "@/lib/utils/price-range";
+import type { BeautyPageInfo } from "./booking-dialog";
 import { useBooking } from "./booking-context";
 import {
+  createAuthUserSchema,
   createGuestInfoSchema,
+  type AuthUserFormData,
   type GuestInfoFormData,
   type GuestInfoValidationMessages,
 } from "./_lib/booking-schemas";
@@ -27,10 +33,12 @@ interface StepConfirmationProps {
     title: string;
     subtitle: string;
     summary: {
-      specialist: string;
-      dateTime: string;
-      services: string;
-      total: string;
+      who: string;
+      when: string;
+      where: string;
+      what: string;
+      price: string;
+      duration: string;
     };
     form: {
       name: string;
@@ -46,15 +54,21 @@ interface StepConfirmationProps {
     submit: string;
     submitting: string;
   };
+  cancelLabel: string;
+  beautyPageInfo: BeautyPageInfo;
   durationLabels: {
     min: string;
     hour: string;
   };
+  onCancel: () => void;
 }
 
 export function StepConfirmation({
   translations,
+  cancelLabel,
+  beautyPageInfo,
   durationLabels,
+  onCancel,
 }: StepConfirmationProps) {
   const {
     specialist,
@@ -67,22 +81,27 @@ export function StepConfirmation({
     error,
     submitBooking,
     setGuestInfo,
-    currentUserId,
+    goBack,
+    currentUserProfile,
   } = useBooking();
 
-  // Create validation schema with translations
-  const schema = useMemo(
+  // Determine if user is authenticated with profile data
+  const isAuthenticated = !!currentUserProfile?.name;
+
+  // Create validation schema based on auth status
+  const guestSchema = useMemo(
     () => createGuestInfoSchema(translations.validation),
     [translations.validation],
   );
 
-  // Form setup
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid },
-  } = useForm<GuestInfoFormData>({
-    resolver: zodResolver(schema),
+  const authSchema = useMemo(
+    () => createAuthUserSchema(translations.validation),
+    [translations.validation],
+  );
+
+  // Form for guest users
+  const guestForm = useForm<GuestInfoFormData>({
+    resolver: zodResolver(guestSchema),
     mode: "onChange",
     defaultValues: {
       name: "",
@@ -92,8 +111,17 @@ export function StepConfirmation({
     },
   });
 
-  // Handle form submission
-  const onSubmit = async (data: GuestInfoFormData) => {
+  // Form for authenticated users (only notes field)
+  const authForm = useForm<AuthUserFormData>({
+    resolver: zodResolver(authSchema),
+    mode: "onChange",
+    defaultValues: {
+      notes: "",
+    },
+  });
+
+  // Handle form submission for guests
+  const onGuestSubmit = async (data: GuestInfoFormData) => {
     setGuestInfo({
       name: data.name,
       phone: data.phone,
@@ -103,7 +131,23 @@ export function StepConfirmation({
     await submitBooking();
   };
 
-  // Calculate end time and format display values
+  // Handle form submission for authenticated users
+  const onAuthSubmit = async (data: AuthUserFormData) => {
+    setGuestInfo({
+      name: currentUserProfile?.name ?? "",
+      // Phone not required for authenticated users
+      email: currentUserProfile?.email || undefined,
+      notes: data.notes || undefined,
+    });
+    await submitBooking();
+  };
+
+  // Get form validity based on auth status
+  const formIsValid = isAuthenticated
+    ? authForm.formState.isValid
+    : guestForm.formState.isValid;
+
+  // Calculate formatted values
   const formattedDate = useMemo(() => {
     if (!date) return "";
     return date.toLocaleDateString(undefined, {
@@ -130,180 +174,220 @@ export function StepConfirmation({
     return formatDuration(specialist.totalDurationMinutes, durationLabels);
   }, [specialist, durationLabels]);
 
-  const serviceNames = useMemo(
-    () => selectedServices.map((s) => s.name).join(", "),
-    [selectedServices],
-  );
-
   if (!specialist || !date || !time) {
     return null;
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          {translations.title}
-        </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {translations.subtitle}
-        </p>
-      </div>
-
-      {/* Booking Summary */}
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-        {/* Specialist */}
-        <div className="flex items-center gap-3 pb-3">
-          <Avatar
-            url={specialist.avatarUrl}
-            name={specialist.displayName}
-            size="md"
-          />
-          <div>
-            <div className="font-medium text-gray-900 dark:text-gray-100">
-              {specialist.displayName}
+    <div className="flex flex-col">
+      {/* Content */}
+      <div className="space-y-6 px-4 pb-4">
+        {/* Booking Summary */}
+        <div className="space-y-4">
+          {/* Who */}
+          <SummaryRow label={translations.summary.who}>
+            <div className="flex items-center gap-2">
+              <Avatar
+                url={specialist.avatarUrl}
+                name={specialist.displayName}
+                size="sm"
+              />
+              <span className="font-medium text-foreground">
+                {specialist.displayName}
+              </span>
             </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {translations.summary.specialist}
-            </div>
-          </div>
-        </div>
+          </SummaryRow>
 
-        <div className="border-t border-gray-200 pt-3 dark:border-gray-700">
-          <div className="space-y-2 text-sm">
-            {/* Date & Time */}
-            <div className="flex items-start gap-3">
-              <Calendar className="mt-0.5 h-4 w-4 text-gray-400" />
-              <div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">
-                  {formattedDate}
-                </div>
-                <div className="text-gray-500 dark:text-gray-400">
-                  {formattedTime}
-                </div>
+          {/* When */}
+          <SummaryRow label={translations.summary.when}>
+            <div>
+              <div className="font-medium text-foreground">{formattedDate}</div>
+              <div className="text-sm text-muted">
+                {formattedTime} ({formattedDuration})
               </div>
             </div>
+          </SummaryRow>
 
-            {/* Services */}
-            <div className="flex items-start gap-3">
-              <Clock className="mt-0.5 h-4 w-4 text-gray-400" />
+          {/* Where */}
+          <SummaryRow label={translations.summary.where}>
+            <div className="flex items-center gap-2">
+              <Avatar
+                url={beautyPageInfo.avatarUrl}
+                name={beautyPageInfo.name}
+                size="sm"
+              />
               <div>
-                <div className="font-medium text-gray-900 dark:text-gray-100">
-                  {serviceNames}
+                <div className="font-medium text-foreground">
+                  {beautyPageInfo.name}
                 </div>
-                <div className="text-gray-500 dark:text-gray-400">
-                  {formattedDuration}
-                </div>
+                {beautyPageInfo.address && (
+                  <div className="text-sm text-muted">
+                    {beautyPageInfo.address}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          </SummaryRow>
+
+          {/* What */}
+          <SummaryRow label={translations.summary.what}>
+            <div className="space-y-1">
+              {selectedServices.map((service) => {
+                // Get the price for this service from the specialist's assignment
+                const assignment = service.assignments.find(
+                  (a) => a.member_id === specialist.memberId,
+                );
+                const priceCents = assignment?.price_cents ?? 0;
+                return (
+                  <div
+                    key={service.id}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="text-foreground">{service.name}</span>
+                    <span className="text-sm text-muted">
+                      {formatPrice(priceCents, currency, locale)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </SummaryRow>
+
+          {/* Price */}
+          <SummaryRow label={translations.summary.price}>
+            <span className="font-semibold text-foreground">{formattedPrice}</span>
+          </SummaryRow>
         </div>
 
-        {/* Total */}
-        <div className="mt-3 flex items-center justify-between border-t border-gray-200 pt-3 dark:border-gray-700">
-          <span className="font-medium text-gray-900 dark:text-gray-100">
-            {translations.summary.total}
-          </span>
-          <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {formattedPrice}
-          </span>
-        </div>
-      </div>
-
-      {/* Guest Info Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Name */}
-        <div>
-          <label
-            htmlFor="name"
-            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        {/* Form - different for authenticated vs guest users */}
+        {isAuthenticated ? (
+          // Authenticated user - no form fields needed, just submit
+          <form
+            id="booking-form"
+            onSubmit={authForm.handleSubmit(onAuthSubmit)}
           >
-            {translations.form.name} *
-          </label>
-          <input
-            {...register("name")}
-            id="name"
-            type="text"
-            placeholder={translations.form.namePlaceholder}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-          />
-          {errors.name && (
-            <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>
-          )}
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label
-            htmlFor="phone"
-            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            {/* Error message */}
+            {error && (
+              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                {error}
+              </div>
+            )}
+          </form>
+        ) : (
+          // Guest user form - name, phone, email, notes
+          <form
+            id="booking-form"
+            onSubmit={guestForm.handleSubmit(onGuestSubmit)}
+            className="space-y-4"
           >
-            {translations.form.phone} *
-          </label>
-          <input
-            {...register("phone")}
-            id="phone"
-            type="tel"
-            placeholder={translations.form.phonePlaceholder}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-          />
-          {errors.phone && (
-            <p className="mt-1 text-xs text-red-500">{errors.phone.message}</p>
-          )}
-        </div>
+            {/* Name */}
+            <div>
+              <label
+                htmlFor="name"
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
+                {translations.form.name} *
+              </label>
+              <input
+                {...guestForm.register("name")}
+                id="name"
+                type="text"
+                placeholder={translations.form.namePlaceholder}
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              {guestForm.formState.errors.name && (
+                <p className="mt-1 text-xs text-red-500">
+                  {guestForm.formState.errors.name.message}
+                </p>
+              )}
+            </div>
 
-        {/* Email (optional) */}
-        <div>
-          <label
-            htmlFor="email"
-            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
-            {translations.form.email}
-          </label>
-          <input
-            {...register("email")}
-            id="email"
-            type="email"
-            placeholder={translations.form.emailPlaceholder}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-          />
-          {errors.email && (
-            <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
-          )}
-        </div>
+            {/* Phone */}
+            <div>
+              <label
+                htmlFor="phone"
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
+                {translations.form.phone} *
+              </label>
+              <input
+                {...guestForm.register("phone")}
+                id="phone"
+                type="tel"
+                placeholder={translations.form.phonePlaceholder}
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              {guestForm.formState.errors.phone && (
+                <p className="mt-1 text-xs text-red-500">
+                  {guestForm.formState.errors.phone.message}
+                </p>
+              )}
+            </div>
 
-        {/* Notes (optional) */}
-        <div>
-          <label
-            htmlFor="notes"
-            className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
-            {translations.form.notes}
-          </label>
-          <textarea
-            {...register("notes")}
-            id="notes"
-            rows={3}
-            placeholder={translations.form.notesPlaceholder}
-            className="w-full resize-none rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-          />
-          {errors.notes && (
-            <p className="mt-1 text-xs text-red-500">{errors.notes.message}</p>
-          )}
-        </div>
+            {/* Email (optional) */}
+            <div>
+              <label
+                htmlFor="email"
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
+                {translations.form.email}
+              </label>
+              <input
+                {...guestForm.register("email")}
+                id="email"
+                type="email"
+                placeholder={translations.form.emailPlaceholder}
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              {guestForm.formState.errors.email && (
+                <p className="mt-1 text-xs text-red-500">
+                  {guestForm.formState.errors.email.message}
+                </p>
+              )}
+            </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
-            {error}
-          </div>
+            {/* Notes (optional) */}
+            <div>
+              <label
+                htmlFor="notes"
+                className="mb-1.5 block text-sm font-medium text-foreground"
+              >
+                {translations.form.notes}
+              </label>
+              <textarea
+                {...guestForm.register("notes")}
+                id="notes"
+                rows={3}
+                placeholder={translations.form.notesPlaceholder}
+                className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              {guestForm.formState.errors.notes && (
+                <p className="mt-1 text-xs text-red-500">
+                  {guestForm.formState.errors.notes.message}
+                </p>
+              )}
+            </div>
+
+            {/* Error message */}
+            {error && (
+              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                {error}
+              </div>
+            )}
+          </form>
         )}
+      </div>
 
-        {/* Submit button */}
+      {/* Footer with actions */}
+      <div className="flex items-center justify-between border-t border-border px-4 py-3">
+        <Button variant="ghost" onClick={goBack}>
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          Back
+        </Button>
         <Button
           type="submit"
-          className="w-full"
-          disabled={!isValid || isSubmitting}
+          form="booking-form"
+          disabled={!formIsValid || isSubmitting}
         >
           {isSubmitting ? (
             <>
@@ -314,7 +398,27 @@ export function StepConfirmation({
             translations.submit
           )}
         </Button>
-      </form>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Summary Row
+// ============================================================================
+
+interface SummaryRowProps {
+  label: string;
+  children: React.ReactNode;
+}
+
+function SummaryRow({ label, children }: SummaryRowProps) {
+  return (
+    <div className="flex items-start gap-4">
+      <div className="w-24 shrink-0 pt-1 text-xs uppercase tracking-wide text-muted">
+        {label}
+      </div>
+      <div className="flex-1">{children}</div>
     </div>
   );
 }

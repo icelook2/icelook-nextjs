@@ -168,6 +168,179 @@ export async function getWorkingDaysForRange(
   }
 }
 
+/**
+ * Working day with specialist ID - used for multi-specialist queries
+ */
+export interface WorkingDayWithSpecialist {
+  date: string;
+  specialistId: string;
+}
+
+/**
+ * Get working days for multiple specialists (for date-first booking flow).
+ * Returns all dates where at least one specialist is working,
+ * along with which specialists work on each date.
+ */
+export async function getWorkingDaysForAllSpecialists(
+  specialistIds: string[],
+  startDate: string,
+  endDate: string,
+): Promise<ActionResult<{ dates: string[]; dateSpecialistMap: Map<string, string[]> }>> {
+  try {
+    if (specialistIds.length === 0) {
+      return { success: true, data: { dates: [], dateSpecialistMap: new Map() } };
+    }
+
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("working_days")
+      .select("date, specialist_id")
+      .in("specialist_id", specialistIds)
+      .gte("date", startDate)
+      .lte("date", endDate);
+
+    if (error) {
+      console.error("Error fetching working days for all specialists:", error);
+      return { success: false, error: "Failed to fetch working days" };
+    }
+
+    // Build a map of date -> specialist IDs
+    const dateSpecialistMap = new Map<string, string[]>();
+    for (const row of data ?? []) {
+      const existing = dateSpecialistMap.get(row.date) ?? [];
+      existing.push(row.specialist_id);
+      dateSpecialistMap.set(row.date, existing);
+    }
+
+    // Get unique sorted dates
+    const dates = Array.from(dateSpecialistMap.keys()).sort();
+
+    return { success: true, data: { dates, dateSpecialistMap } };
+  } catch (error) {
+    console.error("Error in getWorkingDaysForAllSpecialists:", error);
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
+/**
+ * Get availability data for multiple specialists on a single date.
+ * Returns combined time slots with which specialists are available at each slot.
+ * Used for date-first booking flow where user selects time before specialist.
+ */
+export async function getAvailabilityForMultipleSpecialists(
+  specialistIds: string[],
+  date: string,
+): Promise<ActionResult<AvailabilityData[]>> {
+  try {
+    if (specialistIds.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    const supabase = await createClient();
+
+    // Fetch working days with breaks for all specialists
+    const { data: workingDaysRaw, error: workingDaysError } = await supabase
+      .from("working_days")
+      .select(`
+        id,
+        specialist_id,
+        date,
+        start_time,
+        end_time,
+        working_day_breaks (
+          id,
+          start_time,
+          end_time
+        )
+      `)
+      .in("specialist_id", specialistIds)
+      .eq("date", date);
+
+    if (workingDaysError) {
+      console.error("Error fetching working days:", workingDaysError);
+      return { success: false, error: "Failed to fetch availability" };
+    }
+
+    // Fetch appointments for all specialists on this date
+    const { data: appointmentsRaw, error: appointmentsError } = await supabase
+      .from("appointments")
+      .select("id, specialist_id, start_time, end_time, status")
+      .in("specialist_id", specialistIds)
+      .eq("date", date)
+      .in("status", ["pending", "confirmed"]);
+
+    if (appointmentsError) {
+      console.error("Error fetching appointments:", appointmentsError);
+      return { success: false, error: "Failed to fetch appointments" };
+    }
+
+    // Fetch booking settings for all specialists
+    const { data: settingsRaw } = await supabase
+      .from("specialist_booking_settings")
+      .select(
+        "specialist_id, auto_confirm, min_booking_notice_hours, max_days_ahead, cancellation_notice_hours",
+      )
+      .in("specialist_id", specialistIds);
+
+    // Build availability data per specialist
+    const result: AvailabilityData[] = [];
+
+    for (const specId of specialistIds) {
+      const workingDay = workingDaysRaw?.find((wd) => wd.specialist_id === specId);
+      const appointments = appointmentsRaw?.filter((apt) => apt.specialist_id === specId) ?? [];
+      const settings = settingsRaw?.find((s) => s.specialist_id === specId);
+
+      const workingDays: WorkingDayData[] = workingDay
+        ? [
+            {
+              date: workingDay.date,
+              startTime: normalizeTime(workingDay.start_time),
+              endTime: normalizeTime(workingDay.end_time),
+              breaks: (
+                (workingDay.working_day_breaks as Array<{
+                  start_time: string;
+                  end_time: string;
+                }>) ?? []
+              ).map((brk) => ({
+                startTime: normalizeTime(brk.start_time),
+                endTime: normalizeTime(brk.end_time),
+              })),
+            },
+          ]
+        : [];
+
+      const appointmentData: AppointmentData[] = appointments.map((apt) => ({
+        id: apt.id,
+        startTime: normalizeTime(apt.start_time),
+        endTime: normalizeTime(apt.end_time),
+        status: apt.status as "pending" | "confirmed",
+      }));
+
+      const bookingSettings: SpecialistBookingSettings | null = settings
+        ? {
+            autoConfirm: settings.auto_confirm,
+            minBookingNoticeHours: settings.min_booking_notice_hours,
+            maxDaysAhead: settings.max_days_ahead,
+            cancellationNoticeHours: settings.cancellation_notice_hours,
+          }
+        : null;
+
+      result.push({
+        specialistId: specId,
+        workingDays,
+        appointments: appointmentData,
+        bookingSettings,
+      });
+    }
+
+    return { success: true, data: result };
+  } catch (error) {
+    console.error("Error in getAvailabilityForMultipleSpecialists:", error);
+    return { success: false, error: "An unexpected error occurred" };
+  }
+}
+
 // ============================================================================
 // Helpers
 // ============================================================================

@@ -55,10 +55,19 @@ export async function createBooking(
       };
     }
 
-    // Get specialist info from member ID
+    // Get specialist info from member ID (including profile for full_name fallback)
     const { data: specialist, error: specialistError } = await supabase
       .from("beauty_page_specialists")
-      .select("id, display_name, member_id")
+      .select(`
+        id,
+        display_name,
+        member_id,
+        beauty_page_members!inner (
+          profiles!inner (
+            full_name
+          )
+        )
+      `)
       .eq("member_id", specialistMemberId)
       .single();
 
@@ -230,23 +239,32 @@ export async function createBooking(
       ? `${clientInfo.notes}\n\n---\n${JSON.stringify(serviceMetadata)}`
       : JSON.stringify(serviceMetadata);
 
+    // Get specialist display name with fallback to profile full_name
+    // Supabase returns nested data - beauty_page_members is a single object due to !inner
+    const memberData = specialist.beauty_page_members as unknown as {
+      profiles: { full_name: string | null };
+    };
+    const profileFullName = memberData?.profiles?.full_name;
+    const specialistDisplayName =
+      specialist.display_name ?? profileFullName ?? "Specialist";
+
     // Create the appointment
     // Note: Using first service as primary service_id for foreign key
     // Full service list is stored in client_notes as JSON
     const { data: appointment, error: createError } = await supabase
       .from("appointments")
       .insert({
+        beauty_page_id: beautyPageId,
         specialist_id: specialist.id,
         service_id: serviceIds[0], // Primary service for FK
         client_id: clientId ?? null,
-        specialist_display_name:
-          specialist.display_name ?? "Specialist",
+        specialist_display_name: specialistDisplayName,
         service_name: combinedServiceName,
         service_price_cents: totalPriceCents,
         service_currency: "UAH", // Default for now, could come from beauty page settings
         service_duration_minutes: totalDurationMinutes,
         client_name: clientInfo.name,
-        client_phone: clientInfo.phone,
+        client_phone: clientInfo.phone ?? null,
         client_email: clientInfo.email ?? null,
         date,
         start_time: startTime,

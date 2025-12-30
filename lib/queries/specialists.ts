@@ -1,5 +1,6 @@
 import type { Tables } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
+import { getBulkSpecialistLabels, type SpecialistLabel } from "./labels";
 
 // ============================================================================
 // Types derived from Supabase generated types
@@ -27,8 +28,12 @@ export type ServiceAssignment = Tables<"specialist_service_assignments"> & {
 // Re-export for backwards compatibility
 export type SpecialistServiceAssignmentWithService = ServiceAssignment;
 
+/** Label for display on specialist list */
+export type SpecialistListLabel = Pick<SpecialistLabel, "id" | "name" | "color">;
+
 export type SpecialistWithMember = SpecialistProfile & {
   beauty_page_members: BeautyPageMember;
+  labels: SpecialistListLabel[];
 };
 
 export type SpecialistWithAssignments = SpecialistWithMember & {
@@ -83,12 +88,18 @@ export async function getBeautyPageSpecialistProfiles(
     return [];
   }
 
+  // Fetch labels for all specialists
+  const specialistIds = (profiles ?? []).map((p) => p.id);
+  const labelsMap = await getBulkSpecialistLabels(specialistIds);
+
   // Combine the data
   return (profiles ?? []).map((profile) => {
     const member = members.find((m) => m.id === profile.member_id);
+    const labels = labelsMap.get(profile.id) ?? [];
     return {
       ...profile,
       beauty_page_members: member!,
+      labels: labels.map((l) => ({ id: l.id, name: l.name, color: l.color })),
     };
   }) as SpecialistWithMember[];
 }
@@ -142,25 +153,31 @@ export async function getSpecialistProfileById(
     return null;
   }
 
-  // Get service assignments - the table uses member_id
-  const { data: assignments, error: assignmentsError } = await supabase
-    .from("specialist_service_assignments")
-    .select("*, services (*, service_groups (id, name))")
-    .eq("member_id", profile.member_id);
+  // Get service assignments and labels in parallel
+  const [assignmentsResult, labelsMap] = await Promise.all([
+    supabase
+      .from("specialist_service_assignments")
+      .select("*, services (*, service_groups (id, name))")
+      .eq("member_id", profile.member_id),
+    getBulkSpecialistLabels([profileId]),
+  ]);
 
-  if (assignmentsError) {
+  if (assignmentsResult.error) {
     console.error("Error fetching assignments:", {
-      message: assignmentsError.message,
-      code: assignmentsError.code,
-      details: assignmentsError.details,
-      hint: assignmentsError.hint,
+      message: assignmentsResult.error.message,
+      code: assignmentsResult.error.code,
+      details: assignmentsResult.error.details,
+      hint: assignmentsResult.error.hint,
     });
   }
+
+  const labels = labelsMap.get(profileId) ?? [];
 
   return {
     ...profile,
     beauty_page_members: member,
-    specialist_service_assignments: assignments ?? [],
+    specialist_service_assignments: assignmentsResult.data ?? [],
+    labels: labels.map((l) => ({ id: l.id, name: l.name, color: l.color })),
   } as SpecialistWithAssignments;
 }
 

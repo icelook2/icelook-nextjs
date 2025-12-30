@@ -23,6 +23,7 @@ import type {
   BookingResult,
   BookingState,
   BookingStep,
+  CurrentUserProfile,
   GuestInfo,
 } from "./_lib/booking-types";
 
@@ -56,6 +57,19 @@ interface BookingContextValue extends BookingState {
   currency: string;
   locale: string;
   currentUserId?: string;
+  currentUserProfile?: CurrentUserProfile;
+}
+
+/** Initial state for starting at a specific step */
+export interface BookingInitialState {
+  /** Skip to this step */
+  step: BookingStep;
+  /** Pre-selected specialist */
+  specialist: AvailableSpecialist;
+  /** Pre-selected date */
+  date: Date;
+  /** Pre-selected time */
+  time: string;
 }
 
 interface BookingProviderProps {
@@ -67,7 +81,10 @@ interface BookingProviderProps {
   currency: string;
   locale: string;
   currentUserId?: string;
+  currentUserProfile?: CurrentUserProfile;
   onClose: () => void;
+  /** Optional initial state for skipping to a specific step */
+  initialState?: BookingInitialState;
 }
 
 // ============================================================================
@@ -101,23 +118,35 @@ export function BookingProvider({
   currency,
   locale,
   currentUserId,
+  currentUserProfile,
   onClose,
+  initialState,
 }: BookingProviderProps) {
-  // Determine initial step based on number of specialists
-  const initialStep: BookingStep =
-    availableSpecialists.length > 1 ? "specialist" : "date";
+  // Determine initial step based on initialState or number of specialists
+  const computedInitialStep: BookingStep = initialState
+    ? initialState.step
+    : availableSpecialists.length > 1
+      ? "specialist"
+      : "date";
 
-  // Initial specialist if only one available
-  const initialSpecialist =
-    availableSpecialists.length === 1 ? availableSpecialists[0] : null;
+  // Initial specialist from initialState or if only one available
+  const computedInitialSpecialist: AvailableSpecialist | null = initialState
+    ? initialState.specialist
+    : availableSpecialists.length === 1
+      ? availableSpecialists[0]
+      : null;
+
+  // Initial date and time from initialState
+  const computedInitialDate = initialState?.date ?? null;
+  const computedInitialTime = initialState?.time ?? null;
 
   // State
-  const [step, setStep] = useState<BookingStep>(initialStep);
+  const [step, setStep] = useState<BookingStep>(computedInitialStep);
   const [specialist, setSpecialist] = useState<AvailableSpecialist | null>(
-    initialSpecialist,
+    computedInitialSpecialist,
   );
-  const [date, setDate] = useState<Date | null>(null);
-  const [time, setTime] = useState<string | null>(null);
+  const [date, setDate] = useState<Date | null>(computedInitialDate);
+  const [time, setTime] = useState<string | null>(computedInitialTime);
   const [guestInfo, setGuestInfoState] = useState<GuestInfo | null>(null);
   const [result, setResult] = useState<BookingResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -235,15 +264,15 @@ export function BookingProvider({
 
   // Reset
   const reset = useCallback(() => {
-    setStep(initialStep);
-    setSpecialist(initialSpecialist);
-    setDate(null);
-    setTime(null);
+    setStep(computedInitialStep);
+    setSpecialist(computedInitialSpecialist);
+    setDate(computedInitialDate);
+    setTime(computedInitialTime);
     setGuestInfoState(null);
     setResult(null);
     setIsSubmitting(false);
     setError(null);
-  }, [initialStep, initialSpecialist]);
+  }, [computedInitialStep, computedInitialSpecialist, computedInitialDate, computedInitialTime]);
 
   // Context value
   const value: BookingContextValue = useMemo(
@@ -283,6 +312,7 @@ export function BookingProvider({
       currency,
       locale,
       currentUserId,
+      currentUserProfile,
     }),
     [
       step,
@@ -309,6 +339,7 @@ export function BookingProvider({
       currency,
       locale,
       currentUserId,
+      currentUserProfile,
     ],
   );
 

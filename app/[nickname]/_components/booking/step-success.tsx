@@ -8,6 +8,7 @@
  */
 
 import { Calendar, CheckCircle, Clock } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
@@ -26,7 +27,8 @@ interface StepSuccessProps {
       dateTime: string;
       services: string;
     };
-    done: string;
+    viewAppointment: string;
+    close: string;
   };
   durationLabels: {
     min: string;
@@ -95,7 +97,7 @@ export function StepSuccess({
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 py-4">
+    <div className="flex flex-col items-center gap-6 px-4 py-4">
       {/* Success icon */}
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
         <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
@@ -166,10 +168,15 @@ export function StepSuccess({
         </div>
       </div>
 
-      {/* Done button */}
-      <Button onClick={onClose} className="w-full">
-        {translations.done}
-      </Button>
+      {/* Action buttons */}
+      <div className="flex w-full flex-col gap-2">
+        <Link href="/appointments" className="w-full">
+          <Button className="w-full">{translations.viewAppointment}</Button>
+        </Link>
+        <Button variant="ghost" onClick={onClose} className="w-full">
+          {translations.close}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -7,21 +7,35 @@
  * Manages step navigation and renders appropriate step components.
  */
 
-import { ChevronLeft, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useCallback } from "react";
 import type { ProfileService } from "@/lib/queries/beauty-page-profile";
 import { Dialog } from "@/lib/ui/dialog";
-import { BookingProvider, useBooking } from "./booking-context";
+import {
+  BookingProvider,
+  useBooking,
+  type BookingInitialState,
+} from "./booking-context";
 import { StepConfirmation } from "./step-confirmation";
 import { StepDateSelect } from "./step-date-select";
 import { StepSpecialistSelect } from "./step-specialist-select";
 import { StepSuccess } from "./step-success";
 import { StepTimeSelect } from "./step-time-select";
-import type { AvailableSpecialist, BookingStep } from "./_lib/booking-types";
+import type {
+  AvailableSpecialist,
+  BookingStep,
+  CurrentUserProfile,
+} from "./_lib/booking-types";
 
 // ============================================================================
 // Types
 // ============================================================================
+
+export interface BeautyPageInfo {
+  name: string;
+  avatarUrl: string | null;
+  address: string | null;
+}
 
 export interface BookingDialogProps {
   open: boolean;
@@ -34,19 +48,26 @@ export interface BookingDialogProps {
   selectedServices: ProfileService[];
   availableSpecialists: AvailableSpecialist[];
   currentUserId?: string;
+  /** Profile info of authenticated user (name, email) */
+  currentUserProfile?: CurrentUserProfile;
   translations: BookingDialogTranslations;
+  beautyPageInfo: BeautyPageInfo;
   durationLabels: {
     min: string;
     hour: string;
   };
+  /** Optional initial state for skipping to a specific step */
+  initialState?: BookingInitialState;
 }
 
 export interface BookingDialogTranslations {
   dialogTitle: string;
+  cancel: string;
   steps: {
     specialist: {
       title: string;
       subtitle: string;
+      nextButton: string;
     };
     date: {
       title: string;
@@ -56,22 +77,28 @@ export interface BookingDialogTranslations {
       today: string;
       loading: string;
       noAvailability: string;
+      nextButton: string;
     };
     time: {
       title: string;
       subtitle: string;
       loading: string;
       noSlots: string;
-      unavailable: string;
+      morning: string;
+      afternoon: string;
+      evening: string;
+      nextButton: string;
     };
     confirm: {
       title: string;
       subtitle: string;
       summary: {
-        specialist: string;
-        dateTime: string;
-        services: string;
-        total: string;
+        who: string;
+        when: string;
+        where: string;
+        what: string;
+        price: string;
+        duration: string;
       };
       form: {
         name: string;
@@ -105,7 +132,8 @@ export interface BookingDialogTranslations {
         dateTime: string;
         services: string;
       };
-      done: string;
+      viewAppointment: string;
+      close: string;
     };
   };
 }
@@ -125,8 +153,11 @@ export function BookingDialog({
   selectedServices,
   availableSpecialists,
   currentUserId,
+  currentUserProfile,
   translations,
+  beautyPageInfo,
   durationLabels,
+  initialState,
 }: BookingDialogProps) {
   const handleClose = useCallback(() => {
     onOpenChange(false);
@@ -143,10 +174,13 @@ export function BookingDialog({
           currency={currency}
           locale={locale}
           currentUserId={currentUserId}
+          currentUserProfile={currentUserProfile}
           onClose={handleClose}
+          initialState={initialState}
         >
           <BookingDialogContent
             translations={translations}
+            beautyPageInfo={beautyPageInfo}
             durationLabels={durationLabels}
             onClose={handleClose}
           />
@@ -162,6 +196,7 @@ export function BookingDialog({
 
 interface BookingDialogContentProps {
   translations: BookingDialogTranslations;
+  beautyPageInfo: BeautyPageInfo;
   durationLabels: {
     min: string;
     hour: string;
@@ -171,91 +206,40 @@ interface BookingDialogContentProps {
 
 function BookingDialogContent({
   translations,
+  beautyPageInfo,
   durationLabels,
   onClose,
 }: BookingDialogContentProps) {
-  const { step, canGoBack, goBack } = useBooking();
-
-  // Get step title for header
-  const stepTitle = getStepTitle(step, translations);
+  const { step } = useBooking();
 
   return (
-    <div className="flex flex-col max-h-[85vh]">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          {canGoBack && step !== "success" && (
-            <button
-              type="button"
-              onClick={goBack}
-              className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-          )}
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            {stepTitle}
+    <div className="flex max-h-[85vh] flex-col">
+      {/* Header - only show for non-success steps */}
+      {step !== "success" && (
+        <div className="flex items-center justify-between px-4 py-3">
+          <h2 className="text-lg font-semibold text-foreground">
+            {translations.dialogTitle}
           </h2>
-        </div>
-
-        {step !== "success" && (
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+            className="rounded-lg p-1.5 text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>
-        )}
-      </div>
-
-      {/* Step progress indicator */}
-      {step !== "success" && (
-        <StepProgressIndicator currentStep={step} />
+        </div>
       )}
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto">
         <StepContent
           step={step}
           translations={translations}
+          beautyPageInfo={beautyPageInfo}
           durationLabels={durationLabels}
           onClose={onClose}
         />
       </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// Step Progress Indicator
-// ============================================================================
-
-interface StepProgressIndicatorProps {
-  currentStep: BookingStep;
-}
-
-function StepProgressIndicator({ currentStep }: StepProgressIndicatorProps) {
-  const steps: BookingStep[] = ["date", "time", "confirm"];
-  const currentIndex = steps.indexOf(currentStep);
-
-  // Don't show for specialist step
-  if (currentStep === "specialist") {
-    return null;
-  }
-
-  return (
-    <div className="flex items-center justify-center gap-2 border-b border-gray-200 px-4 py-2 dark:border-gray-700">
-      {steps.map((s, index) => (
-        <div
-          key={s}
-          className={`h-1.5 flex-1 max-w-12 rounded-full transition-colors ${
-            index <= currentIndex
-              ? "bg-green-500"
-              : "bg-gray-200 dark:bg-gray-700"
-          }`}
-        />
-      ))}
     </div>
   );
 }
@@ -267,6 +251,7 @@ function StepProgressIndicator({ currentStep }: StepProgressIndicatorProps) {
 interface StepContentProps {
   step: BookingStep;
   translations: BookingDialogTranslations;
+  beautyPageInfo: BeautyPageInfo;
   durationLabels: {
     min: string;
     hour: string;
@@ -277,6 +262,7 @@ interface StepContentProps {
 function StepContent({
   step,
   translations,
+  beautyPageInfo,
   durationLabels,
   onClose,
 }: StepContentProps) {
@@ -285,21 +271,38 @@ function StepContent({
       return (
         <StepSpecialistSelect
           translations={translations.steps.specialist}
+          cancelLabel={translations.cancel}
           durationLabels={durationLabels}
+          onCancel={onClose}
         />
       );
 
     case "date":
-      return <StepDateSelect translations={translations.steps.date} />;
+      return (
+        <StepDateSelect
+          translations={translations.steps.date}
+          cancelLabel={translations.cancel}
+          onCancel={onClose}
+        />
+      );
 
     case "time":
-      return <StepTimeSelect translations={translations.steps.time} />;
+      return (
+        <StepTimeSelect
+          translations={translations.steps.time}
+          cancelLabel={translations.cancel}
+          onCancel={onClose}
+        />
+      );
 
     case "confirm":
       return (
         <StepConfirmation
           translations={translations.steps.confirm}
+          cancelLabel={translations.cancel}
+          beautyPageInfo={beautyPageInfo}
           durationLabels={durationLabels}
+          onCancel={onClose}
         />
       );
 
@@ -314,29 +317,5 @@ function StepContent({
 
     default:
       return null;
-  }
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function getStepTitle(
-  step: BookingStep,
-  translations: BookingDialogTranslations,
-): string {
-  switch (step) {
-    case "specialist":
-      return translations.steps.specialist.title;
-    case "date":
-      return translations.steps.date.title;
-    case "time":
-      return translations.steps.time.title;
-    case "confirm":
-      return translations.steps.confirm.title;
-    case "success":
-      return translations.steps.success.title;
-    default:
-      return translations.dialogTitle;
   }
 }

@@ -38,7 +38,7 @@ export function HeroSection({
   const gradient = gradients[gradientIndex];
 
   return (
-    <section className="mx-auto max-w-2xl px-4 pb-6">
+    <section className="px-4 pb-6 lg:px-6 xl:px-8">
       {/* Logo, type badge, and status */}
       <div className="flex items-start gap-4">
         {/* Logo/Avatar */}

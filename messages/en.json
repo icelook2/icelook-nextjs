@@ -492,6 +492,8 @@
     "mark_completed": "Mark Completed",
     "mark_no_show": "No Show",
     "close": "Close",
+    "client_note": "Client note",
+    "specialist_note": "Specialist note",
     "no_hours_set": "No hours set",
     "service": "Service",
     "total": "Total",
@@ -758,11 +760,35 @@
       "book_now": "Book Now",
       "clear_selection": "Clear selection"
     },
+    "booking_layout": {
+      "date_time": "Date & Time",
+      "select_specialist_first": "Select a specialist to see available dates",
+      "select_specialist_for_time": "Select a specialist to see available time slots for this date",
+      "confirmation": {
+        "title": "Booking Summary",
+        "services": "Services",
+        "specialist": "Specialist",
+        "date_time": "Date & Time",
+        "total": "Total",
+        "book_button": "Book Appointment",
+        "select_services": "Select services to begin",
+        "select_specialist": "Select a specialist",
+        "select_date_time": "Choose date and time"
+      },
+      "tabs": {
+        "services": "Services",
+        "specialists": "Specialists",
+        "date_time": "Date",
+        "book": "Book"
+      }
+    },
     "booking": {
       "dialog_title": "Book Appointment",
+      "cancel": "Cancel",
       "specialist": {
         "title": "Choose Specialist",
-        "subtitle": "Select who will perform your services"
+        "subtitle": "Select who will perform your services",
+        "next_button": "Next: Select Date"
       },
       "date": {
         "title": "Select Date",
@@ -771,23 +797,29 @@
         "weekday_names": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
         "today": "Today",
         "loading": "Loading availability...",
-        "no_availability": "No available dates this month"
+        "no_availability": "No available dates this month",
+        "next_button": "Next: Select Time"
       },
       "time": {
         "title": "Select Time",
         "subtitle": "Choose a time slot",
         "loading": "Loading time slots...",
         "no_slots": "No available slots",
-        "unavailable": "Unavailable"
+        "morning": "Morning",
+        "afternoon": "Afternoon",
+        "evening": "Evening",
+        "next_button": "Next: Confirmation"
       },
       "confirm": {
         "title": "Confirm Booking",
         "subtitle": "Review and complete your booking",
         "summary": {
-          "specialist": "Specialist",
-          "date_time": "Date & Time",
-          "services": "Services",
-          "total": "Total"
+          "who": "Who",
+          "when": "When",
+          "where": "Where",
+          "what": "What",
+          "price": "Price",
+          "duration": "Duration"
         },
         "form": {
           "name": "Your Name",
@@ -821,7 +853,8 @@
           "date_time": "Date & Time",
           "services": "Services"
         },
-        "done": "Done"
+        "view_appointment": "View Appointment",
+        "close": "Close"
       }
     }
   },
@@ -851,6 +884,8 @@
       "labels_description": "Create labels to categorize specialists",
       "schedule": "Schedule",
       "schedule_description": "Set working hours and availability",
+      "cancellation_policy": "Cancellation Policy",
+      "cancellation_policy_description": "Set rules for cancellations and no-shows",
       "billing": "Billing",
       "billing_description": "Manage payments and subscriptions"
     }
@@ -948,7 +983,18 @@
     "cannot_cancel": "Cannot cancel within {hours} hours of appointment",
     "not_authenticated": "You must be logged in to view appointments",
     "view_specialist": "View Specialist",
-    "at": "at"
+    "at": "at",
+    "date_time": "Date & Time",
+    "specialist": "Specialist",
+    "duration": "Duration",
+    "price": "Price",
+    "status_label": "Status",
+    "notes": "Notes",
+    "service": "Service",
+    "beauty_page": "Location",
+    "min": "min",
+    "hour": "h",
+    "close": "Close"
   },
   "team": {
     "page_title": "Team",
@@ -1289,11 +1335,31 @@
       "save_failed": "Failed to save changes"
     }
   },
+  "cancellation_policy_settings": {
+    "page_title": "Cancellation Policy",
+    "policy": {
+      "title": "Cancellation Policy",
+      "description": "Set rules for client cancellations and no-shows",
+      "enable_label": "Enable cancellation policy",
+      "enable_description": "Block clients who cancel or miss too many appointments",
+      "max_cancellations_label": "Maximum cancellations",
+      "max_cancellations_description": "How many cancellations before blocking",
+      "period_days_label": "Tracking period (days)",
+      "period_days_description": "Time window for counting cancellations",
+      "block_duration_label": "Block duration (days)",
+      "block_duration_description": "How long to block the client",
+      "no_show_multiplier_label": "No-show multiplier",
+      "no_show_multiplier_description": "No-shows count as this many cancellations"
+    },
+    "save": "Save Changes",
+    "saved": "Changes saved"
+  },
   "labels": {
     "page_title": "Labels",
     "title": "Labels",
     "description": "Create labels to categorize and organize specialists",
     "add_label": "Add Label",
+    "edit": "Edit",
     "create_label_title": "Create Label",
     "edit_label_title": "Edit Label",
     "delete_label_title": "Delete Label",

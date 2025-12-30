@@ -59,6 +59,7 @@ export type Database = {
     Tables: {
       appointments: {
         Row: {
+          beauty_page_id: string | null;
           cancelled_at: string | null;
           client_email: string | null;
           client_id: string | null;
@@ -83,6 +84,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          beauty_page_id?: string | null;
           cancelled_at?: string | null;
           client_email?: string | null;
           client_id?: string | null;
@@ -107,6 +109,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          beauty_page_id?: string | null;
           cancelled_at?: string | null;
           client_email?: string | null;
           client_id?: string | null;
@@ -131,6 +134,12 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "appointments_beauty_page_id_fkey";
+            columns: ["beauty_page_id"];
+            referencedRelation: "beauty_pages";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "appointments_client_id_fkey";
             columns: ["client_id"];
@@ -327,6 +336,49 @@ export type Database = {
             foreignKeyName: "beauty_pages_type_id_fkey";
             columns: ["type_id"];
             referencedRelation: "beauty_page_types";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      cancellation_policies: {
+        Row: {
+          beauty_page_id: string;
+          block_duration_days: number;
+          created_at: string;
+          id: string;
+          is_enabled: boolean;
+          max_cancellations: number;
+          no_show_multiplier: number;
+          period_days: number;
+          updated_at: string;
+        };
+        Insert: {
+          beauty_page_id: string;
+          block_duration_days?: number;
+          created_at?: string;
+          id?: string;
+          is_enabled?: boolean;
+          max_cancellations?: number;
+          no_show_multiplier?: number;
+          period_days?: number;
+          updated_at?: string;
+        };
+        Update: {
+          beauty_page_id?: string;
+          block_duration_days?: number;
+          created_at?: string;
+          id?: string;
+          is_enabled?: boolean;
+          max_cancellations?: number;
+          no_show_multiplier?: number;
+          period_days?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_policies_beauty_page_id_fkey";
+            columns: ["beauty_page_id"];
+            referencedRelation: "beauty_pages";
             referencedColumns: ["id"];
           },
         ];

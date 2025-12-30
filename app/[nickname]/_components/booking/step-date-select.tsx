@@ -5,9 +5,10 @@
  *
  * Displays a calendar for selecting a booking date.
  * Only days when the specialist works are selectable.
+ * Calendar remains visible during loading to prevent layout jumping.
  */
 
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/lib/ui/button";
 import { cn } from "@/lib/utils/cn";
@@ -23,25 +24,33 @@ interface StepDateSelectProps {
     today: string;
     loading: string;
     noAvailability: string;
+    nextButton: string;
   };
+  cancelLabel: string;
+  onCancel: () => void;
 }
 
-export function StepDateSelect({ translations }: StepDateSelectProps) {
-  const { specialist, selectDate, timezone } = useBooking();
+export function StepDateSelect({
+  translations,
+  cancelLabel,
+  onCancel,
+}: StepDateSelectProps) {
+  const { specialist, date, selectDate, goBack, canGoBack } = useBooking();
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [workingDays, setWorkingDays] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(date);
 
   // Fetch working days when month changes
   useEffect(() => {
-    if (!specialist) return;
+    if (!specialist) {
+      console.log("[StepDateSelect] No specialist available");
+      return;
+    }
 
     const fetchWorkingDays = async () => {
       setIsLoading(true);
-      setError(null);
 
-      // Calculate start and end of current month view
       const year = currentMonth.getFullYear();
       const month = currentMonth.getMonth();
       const firstDay = new Date(year, month, 1);
@@ -50,16 +59,25 @@ export function StepDateSelect({ translations }: StepDateSelectProps) {
       const startDate = formatDateToYYYYMMDD(firstDay);
       const endDate = formatDateToYYYYMMDD(lastDay);
 
+      console.log("[StepDateSelect] Fetching working days:", {
+        specialistId: specialist.specialistId,
+        memberId: specialist.memberId,
+        startDate,
+        endDate,
+      });
+
       const result = await getWorkingDaysForRange(
         specialist.specialistId,
         startDate,
         endDate,
       );
 
+      console.log("[StepDateSelect] Working days result:", result);
+
       if (result.success) {
-        setWorkingDays(new Set(result.data));
-      } else {
-        setError(result.error);
+        const newWorkingDays = new Set(result.data);
+        console.log("[StepDateSelect] Setting workingDays:", Array.from(newWorkingDays));
+        setWorkingDays(newWorkingDays);
       }
 
       setIsLoading(false);
@@ -68,13 +86,25 @@ export function StepDateSelect({ translations }: StepDateSelectProps) {
     fetchWorkingDays();
   }, [specialist, currentMonth]);
 
+  // Debug: Log when workingDays changes
+  useEffect(() => {
+    console.log("[StepDateSelect] workingDays state updated:", {
+      size: workingDays.size,
+      dates: Array.from(workingDays),
+    });
+  }, [workingDays]);
+
   // Navigation handlers
   const goToPreviousMonth = useCallback(() => {
-    setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    setCurrentMonth(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
+    );
   }, []);
 
   const goToNextMonth = useCallback(() => {
-    setCurrentMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    setCurrentMonth(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
+    );
   }, []);
 
   // Check if previous month is allowed (not before today's month)
@@ -89,6 +119,8 @@ export function StepDateSelect({ translations }: StepDateSelectProps) {
 
   // Generate calendar days
   const calendarDays = useMemo(() => {
+    console.log("[StepDateSelect] Generating calendar days, workingDays size:", workingDays.size);
+
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
@@ -109,148 +141,178 @@ export function StepDateSelect({ translations }: StepDateSelectProps) {
 
     // Add days of month
     for (let day = 1; day <= lastDay.getDate(); day++) {
-      const date = new Date(year, month, day);
-      const dateStr = formatDateToYYYYMMDD(date);
-      const isPast = date < today;
+      const dateObj = new Date(year, month, day);
+      const dateStr = formatDateToYYYYMMDD(dateObj);
+      const isPast = dateObj < today;
       const isWorking = workingDays.has(dateStr);
+
+      // Debug specific days
+      if (day === 30 || day === 22) {
+        console.log(`[StepDateSelect] Day ${day}:`, {
+          dateStr,
+          isPast,
+          isWorking,
+          workingDaysHas: workingDays.has(dateStr),
+          workingDaysSize: workingDays.size,
+        });
+      }
       const isToday =
-        date.getFullYear() === today.getFullYear() &&
-        date.getMonth() === today.getMonth() &&
-        date.getDate() === today.getDate();
+        dateObj.getFullYear() === today.getFullYear() &&
+        dateObj.getMonth() === today.getMonth() &&
+        dateObj.getDate() === today.getDate();
+      const isSelected =
+        selectedDate &&
+        dateObj.getFullYear() === selectedDate.getFullYear() &&
+        dateObj.getMonth() === selectedDate.getMonth() &&
+        dateObj.getDate() === selectedDate.getDate();
 
       days.push({
         type: "day",
-        date,
+        date: dateObj,
         dateStr,
         day,
         isPast,
         isWorking,
         isToday,
+        isSelected: !!isSelected,
         isSelectable: !isPast && isWorking,
       });
     }
 
     return days;
-  }, [currentMonth, workingDays]);
+  }, [currentMonth, workingDays, selectedDate]);
 
-  // Handle date selection
-  const handleSelectDate = useCallback(
-    (date: Date) => {
-      selectDate(date);
-    },
-    [selectDate],
-  );
+  // Handle date click (just select, don't advance)
+  const handleDateClick = useCallback((dateObj: Date) => {
+    setSelectedDate(dateObj);
+  }, []);
+
+  // Handle next button click
+  const handleNext = useCallback(() => {
+    if (selectedDate) {
+      selectDate(selectedDate);
+    }
+  }, [selectedDate, selectDate]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          {translations.title}
-        </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {translations.subtitle}
-        </p>
-      </div>
-
-      {/* Month navigation */}
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={goToPreviousMonth}
-          disabled={!canGoPrevious}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-
-        <span className="font-medium text-gray-900 dark:text-gray-100">
-          {translations.monthNames[currentMonth.getMonth()]}{" "}
-          {currentMonth.getFullYear()}
-        </span>
-
-        <Button variant="ghost" size="sm" onClick={goToNextMonth}>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Loading state */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-          <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-            {translations.loading}
+    <div className="flex flex-col">
+      {/* Content */}
+      <div className="px-4 pb-4">
+        {/* Month navigation */}
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-base font-semibold text-foreground">
+            {translations.monthNames[currentMonth.getMonth()]}{" "}
+            {currentMonth.getFullYear()}
           </span>
-        </div>
-      )}
 
-      {/* Calendar grid */}
-      {!isLoading && (
-        <div className="rounded-lg border border-gray-200 p-2 dark:border-gray-700">
+          <div className="flex items-center">
+            <button
+              type="button"
+              onClick={goToPreviousMonth}
+              disabled={!canGoPrevious}
+              className={cn(
+                "rounded-full p-2.5 transition-colors",
+                canGoPrevious
+                  ? "text-foreground hover:bg-accent-soft/50"
+                  : "cursor-not-allowed text-muted/40",
+              )}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={goToNextMonth}
+              className="rounded-full p-2.5 text-foreground transition-colors hover:bg-accent-soft/50"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Calendar grid - fixed height to prevent jumping */}
+        <div className="min-h-[280px]">
           {/* Weekday headers */}
-          <div className="mb-2 grid grid-cols-7 gap-1">
+          <div className="mb-2 grid grid-cols-7">
             {translations.weekdayNames.map((day) => (
               <div
                 key={day}
-                className="py-1 text-center text-xs font-medium text-gray-500 dark:text-gray-400"
+                className="py-2 text-center text-xs font-medium text-muted"
               >
                 {day}
               </div>
             ))}
           </div>
 
-          {/* Days grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {calendarDays.map((item, index) => {
-              if (item.type === "empty") {
-                return <div key={`empty-${index}`} className="aspect-square" />;
-              }
+          {/* Days grid with loading overlay */}
+          <div className="relative">
+            <div
+              className={cn(
+                "grid grid-cols-7 gap-x-1 transition-opacity duration-150",
+                isLoading && "opacity-50",
+              )}
+            >
+              {calendarDays.map((item, index) => {
+                if (item.type === "empty") {
+                  return <div key={`empty-${index}`} />;
+                }
 
-              return (
-                <button
-                  key={item.dateStr}
-                  type="button"
-                  disabled={!item.isSelectable}
-                  onClick={() => handleSelectDate(item.date)}
-                  className={cn(
-                    "aspect-square rounded-md text-sm transition-colors",
-                    // Base states
-                    item.isSelectable &&
-                      "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700",
-                    !item.isSelectable &&
-                      "cursor-not-allowed text-gray-300 dark:text-gray-600",
-                    // Working day indicator
-                    item.isWorking &&
-                      !item.isPast &&
-                      "bg-green-50 font-medium text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30",
-                    // Today indicator
-                    item.isToday &&
-                      "ring-2 ring-inset ring-gray-400 dark:ring-gray-500",
-                    // Past days
-                    item.isPast && "text-gray-300 dark:text-gray-600",
-                  )}
-                >
-                  {item.day}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Legend */}
-          <div className="mt-3 flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-            <div className="flex items-center gap-1.5">
-              <div className="h-3 w-3 rounded bg-green-50 dark:bg-green-900/20" />
-              <span>Available</span>
+                return (
+                  <button
+                    key={item.dateStr}
+                    type="button"
+                    disabled={!item.isSelectable || isLoading}
+                    onClick={() => handleDateClick(item.date)}
+                    className={cn(
+                      "flex items-center justify-center rounded-2xl px-2 py-3 text-sm transition-all",
+                      // Selected state - highest priority
+                      item.isSelected
+                        ? "bg-accent font-semibold text-white"
+                        : [
+                            // Default: non-working days - subtle text
+                            "text-muted/50",
+                            // Working days - visible and clickable
+                            item.isWorking &&
+                              !item.isPast &&
+                              "cursor-pointer bg-foreground/10 text-foreground hover:bg-foreground/20",
+                            // Past days - very subtle
+                            item.isPast && "cursor-not-allowed text-muted/30",
+                            // Today indicator
+                            item.isToday && "font-semibold text-accent",
+                          ],
+                    )}
+                  >
+                    {item.day}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
-      )}
 
-      {/* No availability message */}
-      {!isLoading && workingDays.size === 0 && (
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-          {translations.noAvailability}
-        </p>
-      )}
+        {/* No availability message */}
+        {!isLoading && workingDays.size === 0 && (
+          <p className="mt-2 text-center text-sm text-muted">
+            {translations.noAvailability}
+          </p>
+        )}
+      </div>
+
+      {/* Footer with actions */}
+      <div className="flex items-center justify-between border-t border-border px-4 py-3">
+        <Button variant="ghost" onClick={canGoBack ? goBack : onCancel}>
+          {canGoBack ? (
+            <>
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Back
+            </>
+          ) : (
+            cancelLabel
+          )}
+        </Button>
+        <Button onClick={handleNext} disabled={!selectedDate}>
+          {translations.nextButton}
+        </Button>
+      </div>
     </div>
   );
 }
@@ -269,6 +331,7 @@ type CalendarDay =
       isPast: boolean;
       isWorking: boolean;
       isToday: boolean;
+      isSelected: boolean;
       isSelectable: boolean;
     };
 

@@ -58,9 +58,16 @@ export interface TimeSlot {
 /** Guest information for booking without authentication */
 export interface GuestInfo {
   name: string;
-  phone: string;
+  /** Phone is required for guests, optional for authenticated users */
+  phone?: string;
   email?: string;
   notes?: string;
+}
+
+/** Authenticated user profile for booking */
+export interface CurrentUserProfile {
+  name: string;
+  email: string | null;
 }
 
 // ============================================================================
@@ -133,9 +140,17 @@ export interface AppointmentData {
 
 /** Response from getAvailabilityData */
 export interface AvailabilityData {
+  /** Specialist ID (included when fetching for multiple specialists) */
+  specialistId?: string;
   workingDays: WorkingDayData[];
   appointments: AppointmentData[];
   bookingSettings: SpecialistBookingSettings | null;
+}
+
+/** Time slot with specialist availability mapping */
+export interface AggregatedTimeSlot extends TimeSlot {
+  /** Specialist IDs that have this slot available */
+  availableSpecialistIds: string[];
 }
 
 /** Input for creating a booking */
@@ -151,7 +166,8 @@ export interface CreateBookingInput {
   endTime: string;
   clientInfo: {
     name: string;
-    phone: string;
+    /** Phone is optional for authenticated users */
+    phone?: string;
     email?: string;
     notes?: string;
   };

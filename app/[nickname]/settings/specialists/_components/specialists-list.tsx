@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { SpecialistWithMember } from "@/lib/queries/specialists";
 import { Avatar } from "@/lib/ui/avatar";
+import { LabelBadge } from "@/lib/ui/label-badge";
 import { SettingsRow } from "@/lib/ui/settings-group";
 
 interface SpecialistsListProps {
@@ -71,7 +72,7 @@ function SpecialistRow({
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <Avatar url={avatarUrl} name={displayName} size="md" />
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <p className="truncate font-medium">{displayName}</p>
               {specialist.is_active ? (
                 <span className="inline-flex shrink-0 items-center gap-1 rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-500/20 dark:text-green-400">
@@ -84,6 +85,14 @@ function SpecialistRow({
                   {t("inactive")}
                 </span>
               )}
+              {specialist.labels.map((label) => (
+                <LabelBadge
+                  key={label.id}
+                  name={label.name}
+                  color={label.color}
+                  size="sm"
+                />
+              ))}
             </div>
             <p className="truncate text-xs text-muted">
               {userProfile?.email ?? t("no_email")}

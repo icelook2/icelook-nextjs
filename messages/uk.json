@@ -492,6 +492,8 @@
     "mark_completed": "Завершити",
     "mark_no_show": "Не з'явився",
     "close": "Закрити",
+    "client_note": "Примітка клієнта",
+    "specialist_note": "Примітка спеціаліста",
     "no_hours_set": "Години не встановлено",
     "service": "Послуга",
     "total": "Всього",
@@ -758,11 +760,35 @@
       "book_now": "Записатися",
       "clear_selection": "Очистити вибір"
     },
+    "booking_layout": {
+      "date_time": "Дата і час",
+      "select_specialist_first": "Оберіть спеціаліста, щоб побачити доступні дати",
+      "select_specialist_for_time": "Оберіть спеціаліста, щоб побачити доступні слоти для цієї дати",
+      "confirmation": {
+        "title": "Деталі запису",
+        "services": "Послуги",
+        "specialist": "Спеціаліст",
+        "date_time": "Дата і час",
+        "total": "Всього",
+        "book_button": "Записатися",
+        "select_services": "Оберіть послуги",
+        "select_specialist": "Оберіть спеціаліста",
+        "select_date_time": "Оберіть дату і час"
+      },
+      "tabs": {
+        "services": "Послуги",
+        "specialists": "Майстри",
+        "date_time": "Дата",
+        "book": "Запис"
+      }
+    },
     "booking": {
       "dialog_title": "Записатися на прийом",
+      "cancel": "Скасувати",
       "specialist": {
         "title": "Оберіть спеціаліста",
-        "subtitle": "Виберіть, хто буде виконувати ваші послуги"
+        "subtitle": "Виберіть, хто буде виконувати ваші послуги",
+        "next_button": "Далі: Обрати дату"
       },
       "date": {
         "title": "Оберіть дату",
@@ -771,23 +797,29 @@
         "weekday_names": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"],
         "today": "Сьогодні",
         "loading": "Завантаження доступних дат...",
-        "no_availability": "Немає доступних дат у цьому місяці"
+        "no_availability": "Немає доступних дат у цьому місяці",
+        "next_button": "Далі: Обрати час"
       },
       "time": {
         "title": "Оберіть час",
         "subtitle": "Виберіть зручний час",
         "loading": "Завантаження слотів часу...",
         "no_slots": "Немає доступних слотів",
-        "unavailable": "Недоступно"
+        "morning": "Ранок",
+        "afternoon": "День",
+        "evening": "Вечір",
+        "next_button": "Далі: Підтвердження"
       },
       "confirm": {
         "title": "Підтвердження запису",
         "subtitle": "Перевірте та завершіть запис",
         "summary": {
-          "specialist": "Спеціаліст",
-          "date_time": "Дата та час",
-          "services": "Послуги",
-          "total": "Всього"
+          "who": "Хто",
+          "when": "Коли",
+          "where": "Де",
+          "what": "Що",
+          "price": "Ціна",
+          "duration": "Тривалість"
         },
         "form": {
           "name": "Ваше ім'я",
@@ -821,7 +853,8 @@
           "date_time": "Дата та час",
           "services": "Послуги"
         },
-        "done": "Готово"
+        "view_appointment": "Переглянути запис",
+        "close": "Закрити"
       }
     }
   },
@@ -851,6 +884,8 @@
       "labels_description": "Створюйте мітки для категоризації спеціалістів",
       "schedule": "Розклад",
       "schedule_description": "Встановіть робочі години та доступність",
+      "cancellation_policy": "Політика скасування",
+      "cancellation_policy_description": "Встановіть правила для скасувань та неявок",
       "billing": "Оплата",
       "billing_description": "Керуйте платежами та підписками"
     }
@@ -948,7 +983,18 @@
     "cannot_cancel": "Неможливо скасувати менш ніж за {hours} годин до запису",
     "not_authenticated": "Ви повинні увійти, щоб переглянути записи",
     "view_specialist": "Переглянути спеціаліста",
-    "at": "о"
+    "at": "о",
+    "date_time": "Дата і час",
+    "specialist": "Спеціаліст",
+    "duration": "Тривалість",
+    "price": "Ціна",
+    "status_label": "Статус",
+    "notes": "Примітки",
+    "service": "Послуга",
+    "beauty_page": "Місце",
+    "min": "хв",
+    "hour": "год",
+    "close": "Закрити"
   },
   "team": {
     "page_title": "Команда",
@@ -1289,11 +1335,31 @@
       "save_failed": "Не вдалося зберегти зміни"
     }
   },
+  "cancellation_policy_settings": {
+    "page_title": "Політика скасування",
+    "policy": {
+      "title": "Політика скасування",
+      "description": "Встановіть правила для скасувань та неявок клієнтів",
+      "enable_label": "Увімкнути політику скасування",
+      "enable_description": "Блокувати клієнтів, які занадто часто скасовують або пропускають записи",
+      "max_cancellations_label": "Максимум скасувань",
+      "max_cancellations_description": "Скільки скасувань до блокування",
+      "period_days_label": "Період відстеження (днів)",
+      "period_days_description": "Часове вікно для підрахунку скасувань",
+      "block_duration_label": "Тривалість блокування (днів)",
+      "block_duration_description": "На скільки днів блокувати клієнта",
+      "no_show_multiplier_label": "Множник неявки",
+      "no_show_multiplier_description": "Неявка рахується як стільки скасувань"
+    },
+    "save": "Зберегти зміни",
+    "saved": "Зміни збережено"
+  },
   "labels": {
     "page_title": "Мітки",
     "title": "Мітки",
     "description": "Створюйте мітки для категоризації та організації спеціалістів",
     "add_label": "Додати мітку",
+    "edit": "Редагувати",
     "create_label_title": "Створити мітку",
     "edit_label_title": "Редагувати мітку",
     "delete_label_title": "Видалити мітку",

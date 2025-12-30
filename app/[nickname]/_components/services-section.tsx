@@ -15,8 +15,10 @@ import type { DurationLabels } from "@/lib/utils/price-range";
 import { BookingBar, type BookingBarTranslations } from "./booking-bar";
 import {
   BookingDialog,
+  type BeautyPageInfo,
   type BookingDialogTranslations,
 } from "./booking/booking-dialog";
+import type { CurrentUserProfile } from "./booking/_lib/booking-types";
 import { ServiceGroupCard } from "./service-group-card";
 import {
   ServiceSelectionProvider,
@@ -43,8 +45,12 @@ interface ServicesSectionProps {
   nickname: string;
   /** Timezone of the beauty page */
   timezone: string;
+  /** Beauty page info for booking confirmation */
+  beautyPageInfo: BeautyPageInfo;
   /** Current user ID if authenticated */
   currentUserId?: string;
+  /** Current user profile (name, email) if authenticated */
+  currentUserProfile?: CurrentUserProfile;
 }
 
 // ============================================================================
@@ -64,7 +70,9 @@ export function ServicesSection({
   beautyPageId,
   nickname,
   timezone,
+  beautyPageInfo,
   currentUserId,
+  currentUserProfile,
 }: ServicesSectionProps) {
   // Filter groups that have at least one service with assignments
   const groupsWithServices = serviceGroups.filter((group) =>
@@ -121,7 +129,9 @@ export function ServicesSection({
         beautyPageId={beautyPageId}
         nickname={nickname}
         timezone={timezone}
+        beautyPageInfo={beautyPageInfo}
         currentUserId={currentUserId}
+        currentUserProfile={currentUserProfile}
       />
     </ServiceSelectionProvider>
   );
@@ -140,7 +150,9 @@ interface BookingIntegrationProps {
   beautyPageId: string;
   nickname: string;
   timezone: string;
+  beautyPageInfo: BeautyPageInfo;
   currentUserId?: string;
+  currentUserProfile?: CurrentUserProfile;
 }
 
 /**
@@ -156,7 +168,9 @@ function BookingIntegration({
   beautyPageId,
   nickname,
   timezone,
+  beautyPageInfo,
   currentUserId,
+  currentUserProfile,
 }: BookingIntegrationProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const {
@@ -205,7 +219,9 @@ function BookingIntegration({
         selectedServices={selectedServices}
         availableSpecialists={availableSpecialists}
         currentUserId={currentUserId}
+        currentUserProfile={currentUserProfile}
         translations={bookingDialogTranslations}
+        beautyPageInfo={beautyPageInfo}
         durationLabels={durationLabels}
       />
     </>

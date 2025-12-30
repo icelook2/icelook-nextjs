@@ -302,11 +302,19 @@ export async function getBeautyPageProfile(
             duration_minutes: number;
             beauty_page_members: {
               id: string;
-              beauty_page_specialists: Array<{
-                id: string;
-                display_name: string | null;
-                avatar_url: string | null;
-              }> | null;
+              // Can be array or single object depending on Supabase relationship detection
+              beauty_page_specialists:
+                | Array<{
+                    id: string;
+                    display_name: string | null;
+                    avatar_url: string | null;
+                  }>
+                | {
+                    id: string;
+                    display_name: string | null;
+                    avatar_url: string | null;
+                  }
+                | null;
               profiles: {
                 full_name: string | null;
               } | null;
@@ -319,9 +327,23 @@ export async function getBeautyPageProfile(
         display_order: service.display_order,
         assignments: (service.specialist_service_assignments ?? []).map(
           (assignment) => {
-            const specialistProfile =
-              assignment.beauty_page_members?.beauty_page_specialists?.[0];
+            // Handle both array (one-to-many) and object (one-to-one) return types
+            const specialistsData =
+              assignment.beauty_page_members?.beauty_page_specialists;
+            const specialistProfile = Array.isArray(specialistsData)
+              ? specialistsData[0]
+              : specialistsData;
             const profile = assignment.beauty_page_members?.profiles;
+
+            // Debug: Log if specialist profile is missing
+            if (!specialistProfile) {
+              console.warn(
+                "[beauty-page-profile] Missing specialist profile for member_id:",
+                assignment.member_id,
+                "beauty_page_members:",
+                JSON.stringify(assignment.beauty_page_members, null, 2),
+              );
+            }
 
             return {
               id: assignment.id,
@@ -343,20 +365,18 @@ export async function getBeautyPageProfile(
 
   // Filter active specialists and extract their IDs for rating lookup
   const activeMembers = (membersData ?? []).filter((member) => {
-    const specialistProfile = (
-      member.beauty_page_specialists as unknown as Array<{
-        is_active: boolean;
-      }>
-    )?.[0];
+    const specialistProfile = member.beauty_page_specialists as unknown as {
+      is_active: boolean;
+    } | null;
     return specialistProfile?.is_active !== false;
   });
 
   // Get specialist IDs for bulk rating stats fetch
   const specialistIds = activeMembers
     .map((member) => {
-      const specialistProfile = (
-        member.beauty_page_specialists as unknown as Array<{ id: string }>
-      )?.[0];
+      const specialistProfile = member.beauty_page_specialists as unknown as {
+        id: string;
+      } | null;
       return specialistProfile?.id;
     })
     .filter((id): id is string => id !== undefined);
@@ -369,15 +389,13 @@ export async function getBeautyPageProfile(
 
   // Transform specialists with rating data and labels
   const specialists: ProfileSpecialist[] = activeMembers.map((member) => {
-    const specialistProfile = (
-      member.beauty_page_specialists as unknown as Array<{
-        id: string;
-        display_name: string | null;
-        avatar_url: string | null;
-        bio: string | null;
-        is_active: boolean;
-      }>
-    )?.[0];
+    const specialistProfile = member.beauty_page_specialists as unknown as {
+      id: string;
+      display_name: string | null;
+      avatar_url: string | null;
+      bio: string | null;
+      is_active: boolean;
+    } | null;
     const profile = member.profiles as unknown as {
       full_name: string | null;
     } | null;
