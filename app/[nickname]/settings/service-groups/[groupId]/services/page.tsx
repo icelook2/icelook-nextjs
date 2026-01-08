@@ -1,10 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getProfile } from "@/lib/auth/session";
-import {
-  getBeautyPageByNickname,
-  getBeautyPageSpecialists,
-  getServiceGroupById,
-} from "@/lib/queries";
+import { getBeautyPageByNickname, getServiceGroupById } from "@/lib/queries";
 import { PageHeader } from "@/lib/ui/page-header";
 import { ServicesList } from "./_components";
 
@@ -30,10 +26,7 @@ export default async function GroupServicesPage({
     redirect(`/${nickname}`);
   }
 
-  const [serviceGroup, specialists] = await Promise.all([
-    getServiceGroupById(groupId),
-    getBeautyPageSpecialists(beautyPage.id),
-  ]);
+  const serviceGroup = await getServiceGroupById(groupId);
 
   if (!serviceGroup || serviceGroup.beauty_page_id !== beautyPage.id) {
     notFound();
@@ -53,7 +46,6 @@ export default async function GroupServicesPage({
           serviceGroup={serviceGroup}
           beautyPageId={beautyPage.id}
           nickname={nickname}
-          specialists={specialists}
         />
       </main>
     </>

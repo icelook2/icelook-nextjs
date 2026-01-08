@@ -4,13 +4,17 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageProfile } from "@/lib/queries/beauty-page-profile";
-import { Button } from "@/lib/ui/button";
+import { getActiveSpecialOffers } from "@/lib/queries/special-offers";
 import { PageHeader } from "@/lib/ui/page-header";
-import { calculateOpenStatus } from "@/lib/utils/open-status";
-import { BookingLayoutSection } from "./_components/booking-layout-section";
+import {
+  calculateOpenStatusFromWorkingDays,
+  formatWorkingStatusMessage,
+} from "@/lib/utils/open-status";
+import { BeautyPageBookingWrapper } from "./_components/beauty-page-booking-wrapper";
 import { ContactSection } from "./_components/contact-section";
-import { HeroSection } from "./_components/hero-section";
-import { HoursSection } from "./_components/hours-section";
+import { HeroWithReviews } from "./_components/hero-with-reviews";
+import { ServicesSection } from "./_components/services-section";
+import { SpecialOffersSection } from "./_components/special-offers-section";
 
 interface BeautyPageProps {
   params: Promise<{ nickname: string }>;
@@ -19,6 +23,7 @@ interface BeautyPageProps {
 export default async function BeautyPage({ params }: BeautyPageProps) {
   const { nickname } = await params;
   const t = await getTranslations("beauty_page");
+  const tBooking = await getTranslations("booking");
 
   const profile = await getBeautyPageProfile(nickname);
 
@@ -26,21 +31,199 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
     notFound();
   }
 
+  // Fetch special offers for this beauty page
+  const specialOffers = await getActiveSpecialOffers(profile.info.id);
+
   const currentUser = await getProfile();
   const isOwner = currentUser?.id === profile.info.owner_id;
-
-  const openStatus = calculateOpenStatus(
-    profile.businessHours,
-    profile.timezone,
-  );
-
-  // Day names for hours section
-  const dayNames = t.raw("day_names") as string[];
 
   // Duration labels for services
   const durationLabels = {
     min: t("duration_min"),
     hour: t("duration_hour"),
+  };
+
+  // Month names for calendar
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  // Weekday names for calendar (starting from Monday)
+  const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  // Beauty page info for booking
+  const beautyPageInfo = {
+    name: profile.info.name,
+    avatarUrl: profile.info.logo_url,
+    address: profile.info.address,
+  };
+
+  // Creator info for booking
+  const creatorInfo = {
+    displayName: profile.info.creator_display_name ?? profile.info.name,
+    avatarUrl: profile.info.creator_avatar_url ?? profile.info.logo_url,
+  };
+
+  // Working status (only if working days are scheduled)
+  const workingStatus =
+    profile.workingDays.length > 0
+      ? (() => {
+          const status = calculateOpenStatusFromWorkingDays(
+            profile.workingDays,
+            profile.timezone,
+          );
+          const dayNames = t.raw("day_names") as string[];
+          const statusMessage = formatWorkingStatusMessage(
+            status,
+            (key, params) => t(`working_status.${key}`, params),
+            dayNames,
+          );
+          return {
+            isOpen: status.isOpen,
+            statusMessage,
+          };
+        })()
+      : undefined;
+
+  // Current user profile for booking
+  const currentUserProfile = currentUser
+    ? {
+        name: currentUser.full_name ?? "",
+        email: currentUser.email ?? null,
+      }
+    : undefined;
+
+  // Booking translations
+  const bookingTranslations = {
+    bookingBar: {
+      serviceSelected: tBooking("services_count", { count: 1 }),
+      servicesSelected: tBooking("services_count", { count: 2 }).replace(
+        "2",
+        "{count}",
+      ),
+      bookNow: tBooking("book_now"),
+      clearSelection: "Clear selection",
+    },
+    bookingDialog: {
+      dialogTitle: tBooking("title"),
+      cancel: tBooking("close"),
+      steps: {
+        date: {
+          title: tBooking("step_datetime"),
+          subtitle: tBooking("select_date"),
+          monthNames,
+          weekdayNames,
+          today: "Today",
+          loading: "Loading...",
+          noAvailability: tBooking("no_working_day"),
+          nextButton: tBooking("continue"),
+        },
+        time: {
+          title: tBooking("step_datetime"),
+          subtitle: tBooking("select_time"),
+          loading: "Loading...",
+          noSlots: tBooking("no_available_slots"),
+          morning: "Morning",
+          afternoon: "Afternoon",
+          evening: "Evening",
+          nextButton: tBooking("continue"),
+        },
+        confirm: {
+          title: tBooking("step_confirmation"),
+          subtitle: tBooking("booking_summary"),
+          summary: {
+            who: "Who",
+            when: "When",
+            where: "Where",
+            what: "What",
+            price: tBooking("price"),
+            duration: tBooking("duration"),
+          },
+          form: {
+            name: tBooking("guest_name"),
+            namePlaceholder: tBooking("guest_name_placeholder"),
+            phone: tBooking("guest_phone"),
+            phonePlaceholder: tBooking("guest_phone_placeholder"),
+            email: "Email",
+            emailPlaceholder: "your@email.com",
+            notes: tBooking("notes"),
+            notesPlaceholder: tBooking("notes_placeholder"),
+          },
+          validation: {
+            nameTooShort: "Name is too short",
+            nameTooLong: "Name is too long",
+            phoneTooShort: tBooking("phone_too_short"),
+            phoneTooLong: tBooking("phone_too_long"),
+            phoneInvalidFormat: "Invalid phone format",
+            emailInvalid: "Invalid email address",
+            notesTooLong: "Notes are too long",
+          },
+          visitPreferences: {
+            title: tBooking("confirm.visit_preferences.title"),
+            subtitle: tBooking("confirm.visit_preferences.subtitle"),
+            communicationLabel: tBooking(
+              "confirm.visit_preferences.communication_label",
+            ),
+            communicationQuiet: tBooking(
+              "confirm.visit_preferences.communication_quiet",
+            ),
+            communicationFriendly: tBooking(
+              "confirm.visit_preferences.communication_friendly",
+            ),
+            communicationChatty: tBooking(
+              "confirm.visit_preferences.communication_chatty",
+            ),
+            accessibilityLabel: tBooking(
+              "confirm.visit_preferences.accessibility_label",
+            ),
+            accessibilityWheelchair: tBooking(
+              "confirm.visit_preferences.accessibility_wheelchair",
+            ),
+            accessibilityHearing: tBooking(
+              "confirm.visit_preferences.accessibility_hearing",
+            ),
+            accessibilityVision: tBooking(
+              "confirm.visit_preferences.accessibility_vision",
+            ),
+            accessibilitySensory: tBooking(
+              "confirm.visit_preferences.accessibility_sensory",
+            ),
+            allergiesLabel: tBooking(
+              "confirm.visit_preferences.allergies_label",
+            ),
+            allergiesPlaceholder: tBooking(
+              "confirm.visit_preferences.allergies_placeholder",
+            ),
+          },
+          submit: tBooking("confirm_booking"),
+          submitting: "Booking...",
+        },
+        success: {
+          title: tBooking("success_title"),
+          confirmedMessage: tBooking("success_message"),
+          pendingMessage: tBooking("success_pending_message"),
+          appointmentId: "Booking ID",
+          summary: {
+            specialist: "Specialist",
+            dateTime: tBooking("date_time"),
+            services: tBooking("services"),
+          },
+          viewAppointment: tBooking("view_appointments"),
+          close: tBooking("done"),
+        },
+      },
+    },
   };
 
   return (
@@ -49,140 +232,90 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
         title={profile.info.name}
         subtitle={`@${profile.info.slug}`}
         backHref="/"
-        containerClassName="px-4 lg:px-6 xl:px-8"
+        containerClassName="mx-auto max-w-2xl"
       >
         {isOwner && (
-          <Link href={`/${profile.info.slug}/settings`}>
-            <Button variant="ghost" size="sm">
-              <Settings className="h-4 w-4" />
-              {t("settings")}
-            </Button>
+          <Link
+            href={`/${profile.info.slug}/settings`}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent-soft/50"
+            aria-label={t("settings")}
+          >
+            <Settings className="h-5 w-5" />
           </Link>
         )}
       </PageHeader>
 
-      <HeroSection
-        info={profile.info}
-        openStatus={openStatus}
-        translations={{
-          openNow: t("open_now"),
-          closed: t("closed"),
-          closesAt: t.raw("closes_at"),
-          opensAt: t.raw("opens_at"),
-          verified: {
-            title: t("verified.title"),
-            description: t("verified.description"),
-          },
-        }}
-      />
-
-      <main className="space-y-6 px-4 pb-8 lg:px-6 xl:px-8">
-        {/* Booking layout - Desktop: 4-column grid, Mobile: Tab-based */}
-        <BookingLayoutSection
-          serviceGroups={profile.serviceGroups}
-          specialists={profile.specialists}
-          beautyPageId={profile.info.id}
-          nickname={profile.info.slug}
-          timezone={profile.timezone}
-          currency="UAH"
-          locale="uk-UA"
-          durationLabels={durationLabels}
-          layoutTranslations={{
-            services: {
-              title: t("services"),
-            },
-            specialists: {
-              title: t("specialists"),
-              fallbackName: t("specialist_fallback"),
-            },
-            dateTime: {
-              title: t("booking_layout.date_time"),
-              selectSpecialistFirst: t("booking_layout.select_specialist_first"),
-              selectSpecialistForTime: t("booking_layout.select_specialist_for_time"),
-              calendar: {
-                monthNames: t.raw("booking.date.month_names") as string[],
-                weekdayNames: t.raw("booking.date.weekday_names") as string[],
-                today: t("booking.date.today"),
-                noAvailability: t("booking.date.no_availability"),
+      <BeautyPageBookingWrapper
+        beautyPageId={profile.info.id}
+        nickname={nickname}
+        timezone={profile.timezone}
+        currency="UAH"
+        locale="uk-UA"
+        serviceGroups={profile.serviceGroups}
+        currentUserId={currentUser?.id}
+        currentUserProfile={currentUserProfile}
+        beautyPageInfo={beautyPageInfo}
+        creatorInfo={creatorInfo}
+        durationLabels={durationLabels}
+        translations={bookingTranslations}
+      >
+        <main className="mx-auto max-w-2xl space-y-6 px-4 pb-24">
+          <HeroWithReviews
+            info={profile.info}
+            ratingStats={profile.ratingStats}
+            workingStatus={workingStatus}
+            translations={{
+              verified: {
+                title: t("verified.title"),
+                description: t("verified.description"),
               },
-              time: {
-                morning: t("booking.time.morning"),
-                afternoon: t("booking.time.afternoon"),
-                evening: t("booking.time.evening"),
-                noSlots: t("booking.time.no_slots"),
+              reviews: t("reviews"),
+              reviewsDialog: {
+                title: t("reviews_title", { name: profile.info.name }),
+                basedOnReviews: t("reviews_based_on", {
+                  count: profile.ratingStats.totalReviews,
+                }),
+                noReviewsYet: t("no_reviews_yet"),
+                anonymous: t("anonymous"),
               },
-            },
-            confirmation: {
-              title: t("booking_layout.confirmation.title"),
-              services: t("booking_layout.confirmation.services"),
-              specialist: t("booking_layout.confirmation.specialist"),
-              dateTime: t("booking_layout.confirmation.date_time"),
-              total: t("booking_layout.confirmation.total"),
-              bookButton: t("booking_layout.confirmation.book_button"),
-              selectServices: t("booking_layout.confirmation.select_services"),
-              selectSpecialist: t("booking_layout.confirmation.select_specialist"),
-              selectDateTime: t("booking_layout.confirmation.select_date_time"),
-            },
-            form: {
-              name: t("booking.confirm.form.name"),
-              namePlaceholder: t("booking.confirm.form.name_placeholder"),
-              phone: t("booking.confirm.form.phone"),
-              phonePlaceholder: t("booking.confirm.form.phone_placeholder"),
-              email: t("booking.confirm.form.email"),
-              emailPlaceholder: t("booking.confirm.form.email_placeholder"),
-              notes: t("booking.confirm.form.notes"),
-              notesPlaceholder: t("booking.confirm.form.notes_placeholder"),
-            },
-            validation: {
-              nameTooShort: t("booking.confirm.validation.name_too_short"),
-              nameTooLong: t("booking.confirm.validation.name_too_long"),
-              phoneTooShort: t("booking.confirm.validation.phone_too_short"),
-              phoneTooLong: t("booking.confirm.validation.phone_too_long"),
-              phoneInvalidFormat: t("booking.confirm.validation.phone_invalid_format"),
-              emailInvalid: t("booking.confirm.validation.email_invalid"),
-              notesTooLong: t("booking.confirm.validation.notes_too_long"),
-            },
-            success: {
-              title: t("booking.success.title"),
-              confirmedMessage: t("booking.success.confirmed_message"),
-              pendingMessage: t("booking.success.pending_message"),
-            },
-            tabs: {
-              services: t("booking_layout.tabs.services"),
-              specialists: t("booking_layout.tabs.specialists"),
-              dateTime: t("booking_layout.tabs.date_time"),
-              book: t("booking_layout.tabs.book"),
-            },
-          }}
-          currentUserId={currentUser?.id}
-          currentUserProfile={
-            currentUser?.full_name
-              ? { name: currentUser.full_name, email: currentUser.email }
-              : undefined
-          }
-        />
+            }}
+          />
 
-        <HoursSection
-          businessHours={profile.businessHours}
-          timezone={profile.timezone}
-          translations={{
-            title: t("hours"),
-            today: t("today"),
-            closed: t("closed"),
-            seeFullSchedule: t("see_full_schedule"),
-            dayNames,
-          }}
-        />
+          {/* Special Offers */}
+          {specialOffers.length > 0 && (
+            <SpecialOffersSection
+              offers={specialOffers}
+              currency="UAH"
+              locale="uk-UA"
+              translations={{
+                title: t("special_offers"),
+                today: t("today"),
+                tomorrow: t("tomorrow"),
+                bookNow: t("book_now"),
+              }}
+            />
+          )}
 
-        <ContactSection
-          contact={profile.info}
-          translations={{
-            title: t("contact"),
-            viewOnMap: t("view_on_map"),
-            visitInstagram: t("visit_instagram"),
-          }}
-        />
-      </main>
+          {/* Services with selection */}
+          <ServicesSection
+            serviceGroups={profile.serviceGroups}
+            title={t("services")}
+            emptyMessage={t("no_services_description")}
+            currency="UAH"
+            locale="uk-UA"
+            durationLabels={durationLabels}
+          />
+
+          <ContactSection
+            contact={profile.info}
+            translations={{
+              title: t("contact"),
+              viewOnMap: t("view_on_map"),
+              visitInstagram: t("visit_instagram"),
+            }}
+          />
+        </main>
+      </BeautyPageBookingWrapper>
     </>
   );
 }

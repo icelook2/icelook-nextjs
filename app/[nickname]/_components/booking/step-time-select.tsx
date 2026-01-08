@@ -1,21 +1,20 @@
 "use client";
 
 /**
- * Time Selection Step
+ * Time Selection Step (Solo Creator Model)
  *
  * Displays available time slots for the selected date.
- * Only shows available slots, grouped by time of day.
- * Slots are styled as capsules for easy selection.
+ * Uses beautyPageId to fetch availability (not specialist).
  */
 
-import { ChevronLeft, Clock, Loader2 } from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/lib/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { getAvailabilityData } from "./_actions/availability.actions";
-import { useBooking } from "./booking-context";
 import type { TimeSlot } from "./_lib/booking-types";
 import { formatSlotTime, generateAvailableSlots } from "./_lib/slot-generation";
+import { useBooking } from "./booking-context";
 
 interface StepTimeSelectProps {
   translations: {
@@ -28,23 +27,20 @@ interface StepTimeSelectProps {
     evening: string;
     nextButton: string;
   };
-  cancelLabel: string;
-  onCancel: () => void;
 }
 
-export function StepTimeSelect({
-  translations,
-  cancelLabel,
-  onCancel,
-}: StepTimeSelectProps) {
-  const { specialist, date, time, selectTime, goBack, timezone } = useBooking();
+export function StepTimeSelect({ translations }: StepTimeSelectProps) {
+  const { beautyPageId, totalDurationMinutes, date, time, selectTime, timezone } =
+    useBooking();
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTime, setSelectedTime] = useState<string | null>(time);
 
   // Fetch availability and generate slots when date changes
   useEffect(() => {
-    if (!specialist || !date) return;
+    if (!date) {
+      return;
+    }
 
     const fetchAndGenerateSlots = async () => {
       setIsLoading(true);
@@ -52,7 +48,7 @@ export function StepTimeSelect({
       const dateStr = formatDateToYYYYMMDD(date);
 
       const result = await getAvailabilityData({
-        specialistId: specialist.specialistId,
+        beautyPageId,
         startDate: dateStr,
         endDate: dateStr,
       });
@@ -72,7 +68,7 @@ export function StepTimeSelect({
       const generatedSlots = generateAvailableSlots({
         workingDay,
         appointments,
-        serviceDurationMinutes: specialist.totalDurationMinutes,
+        serviceDurationMinutes: totalDurationMinutes,
         slotIntervalMinutes: 30,
         minNoticeHours: bookingSettings?.minBookingNoticeHours ?? 0,
         date,
@@ -84,7 +80,7 @@ export function StepTimeSelect({
     };
 
     fetchAndGenerateSlots();
-  }, [specialist, date, timezone]);
+  }, [beautyPageId, totalDurationMinutes, date, timezone]);
 
   // Filter to only available slots and group by time of day
   const slotGroups = useMemo(() => {
@@ -114,16 +110,6 @@ export function StepTimeSelect({
     [slots],
   );
 
-  // Format selected date for display
-  const formattedDate = useMemo(() => {
-    if (!date) return "";
-    return date.toLocaleDateString(undefined, {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    });
-  }, [date]);
-
   // Handle slot click
   const handleSlotClick = useCallback((slotTime: string) => {
     setSelectedTime(slotTime);
@@ -140,11 +126,6 @@ export function StepTimeSelect({
     <div className="flex flex-col">
       {/* Content */}
       <div className="px-4 pb-4">
-        {/* Date display */}
-        <div className="mb-4 text-center">
-          <p className="text-sm text-muted">{formattedDate}</p>
-        </div>
-
         {/* Loading state */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
@@ -192,11 +173,7 @@ export function StepTimeSelect({
       </div>
 
       {/* Footer with actions */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-3">
-        <Button variant="ghost" onClick={goBack}>
-          <ChevronLeft className="mr-1 h-4 w-4" />
-          Back
-        </Button>
+      <div className="flex justify-end border-t border-border px-4 py-3">
         <Button onClick={handleNext} disabled={!selectedTime}>
           {translations.nextButton}
         </Button>

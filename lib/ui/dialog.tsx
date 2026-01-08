@@ -62,7 +62,7 @@ function DialogPortal({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="fixed inset-0 backdrop-blur-[2px]"
+                className="fixed inset-0 bg-black/70 backdrop-blur-[2px]"
               />
             }
           />
@@ -96,31 +96,70 @@ function DialogPortal({
 
 interface DialogHeaderProps {
   children: ReactNode;
+  subtitle?: string;
   onClose?: () => void;
+  onBack?: () => void;
   showCloseButton?: boolean;
+  showBackButton?: boolean;
   className?: string;
 }
 
 function DialogHeader({
   children,
+  subtitle,
   onClose,
+  onBack,
   showCloseButton = true,
+  showBackButton = false,
   className,
 }: DialogHeaderProps) {
   return (
     <div
       className={cn(
-        "border-b border-border px-6 py-4 flex items-center justify-between",
+        "border-b border-border px-4 py-3 flex items-center gap-3",
         className,
       )}
     >
-      <BaseDialog.Title className="text-lg font-semibold">
-        {children}
-      </BaseDialog.Title>
+      {/* Back button */}
+      {showBackButton && onBack ? (
+        <button
+          type="button"
+          onClick={onBack}
+          className="-ml-1 rounded-lg p-1.5 text-muted hover:bg-surface-hover hover:text-foreground"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+        </button>
+      ) : showBackButton ? (
+        <div className="w-8" />
+      ) : null}
+
+      {/* Title and subtitle */}
+      <div className="min-w-0 flex-1">
+        <BaseDialog.Title className="text-lg font-semibold">
+          {children}
+        </BaseDialog.Title>
+        {subtitle && (
+          <p className="text-sm text-muted">{subtitle}</p>
+        )}
+      </div>
+
+      {/* Close button */}
       {showCloseButton && (
         <BaseDialog.Close
           onClick={onClose}
-          className="transition-colors p-1 -mr-1 rounded-lg"
+          className="-mr-1 rounded-lg p-1.5 text-muted hover:bg-surface-hover hover:text-foreground"
         >
           <X className="h-5 w-5" />
         </BaseDialog.Close>

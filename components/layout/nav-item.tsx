@@ -26,7 +26,7 @@ export function NavItem({ href, icon: Icon, label, className }: NavItemProps) {
       title={label}
       className={cn(
         "group flex h-14 w-14 items-center justify-center rounded-2xl transition-all hover:bg-surface",
-        isActive ? "text-white" : "text-neutral-600 hover:text-white",
+        isActive ? "text-accent" : "text-muted hover:text-foreground",
         className,
       )}
     >
@@ -57,6 +57,7 @@ export function BottomNavItem({
       href={href}
       className={cn(
         "flex flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 transition-colors",
+        isActive ? "text-accent" : "text-muted",
         className,
       )}
     >

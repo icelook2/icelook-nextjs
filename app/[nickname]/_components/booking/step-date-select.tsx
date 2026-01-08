@@ -1,11 +1,10 @@
 "use client";
 
 /**
- * Date Selection Step
+ * Date Selection Step (Solo Creator Model)
  *
  * Displays a calendar for selecting a booking date.
- * Only days when the specialist works are selectable.
- * Calendar remains visible during loading to prevent layout jumping.
+ * Uses beautyPageId to fetch working days (not specialist).
  */
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -26,16 +25,10 @@ interface StepDateSelectProps {
     noAvailability: string;
     nextButton: string;
   };
-  cancelLabel: string;
-  onCancel: () => void;
 }
 
-export function StepDateSelect({
-  translations,
-  cancelLabel,
-  onCancel,
-}: StepDateSelectProps) {
-  const { specialist, date, selectDate, goBack, canGoBack } = useBooking();
+export function StepDateSelect({ translations }: StepDateSelectProps) {
+  const { beautyPageId, date, selectDate } = useBooking();
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [workingDays, setWorkingDays] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
@@ -43,11 +36,6 @@ export function StepDateSelect({
 
   // Fetch working days when month changes
   useEffect(() => {
-    if (!specialist) {
-      console.log("[StepDateSelect] No specialist available");
-      return;
-    }
-
     const fetchWorkingDays = async () => {
       setIsLoading(true);
 
@@ -59,24 +47,14 @@ export function StepDateSelect({
       const startDate = formatDateToYYYYMMDD(firstDay);
       const endDate = formatDateToYYYYMMDD(lastDay);
 
-      console.log("[StepDateSelect] Fetching working days:", {
-        specialistId: specialist.specialistId,
-        memberId: specialist.memberId,
-        startDate,
-        endDate,
-      });
-
       const result = await getWorkingDaysForRange(
-        specialist.specialistId,
+        beautyPageId,
         startDate,
         endDate,
       );
 
-      console.log("[StepDateSelect] Working days result:", result);
-
       if (result.success) {
         const newWorkingDays = new Set(result.data);
-        console.log("[StepDateSelect] Setting workingDays:", Array.from(newWorkingDays));
         setWorkingDays(newWorkingDays);
       }
 
@@ -84,15 +62,7 @@ export function StepDateSelect({
     };
 
     fetchWorkingDays();
-  }, [specialist, currentMonth]);
-
-  // Debug: Log when workingDays changes
-  useEffect(() => {
-    console.log("[StepDateSelect] workingDays state updated:", {
-      size: workingDays.size,
-      dates: Array.from(workingDays),
-    });
-  }, [workingDays]);
+  }, [beautyPageId, currentMonth]);
 
   // Navigation handlers
   const goToPreviousMonth = useCallback(() => {
@@ -119,8 +89,6 @@ export function StepDateSelect({
 
   // Generate calendar days
   const calendarDays = useMemo(() => {
-    console.log("[StepDateSelect] Generating calendar days, workingDays size:", workingDays.size);
-
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
@@ -128,7 +96,9 @@ export function StepDateSelect({
 
     // Get day of week for first day (0 = Sunday, adjust for Monday start)
     let startDayOfWeek = firstDay.getDay() - 1;
-    if (startDayOfWeek === -1) startDayOfWeek = 6;
+    if (startDayOfWeek === -1) {
+      startDayOfWeek = 6;
+    }
 
     const days: CalendarDay[] = [];
     const today = new Date();
@@ -146,16 +116,6 @@ export function StepDateSelect({
       const isPast = dateObj < today;
       const isWorking = workingDays.has(dateStr);
 
-      // Debug specific days
-      if (day === 30 || day === 22) {
-        console.log(`[StepDateSelect] Day ${day}:`, {
-          dateStr,
-          isPast,
-          isWorking,
-          workingDaysHas: workingDays.has(dateStr),
-          workingDaysSize: workingDays.size,
-        });
-      }
       const isToday =
         dateObj.getFullYear() === today.getFullYear() &&
         dateObj.getMonth() === today.getMonth() &&
@@ -263,7 +223,7 @@ export function StepDateSelect({
                     disabled={!item.isSelectable || isLoading}
                     onClick={() => handleDateClick(item.date)}
                     className={cn(
-                      "flex items-center justify-center rounded-2xl px-2 py-3 text-sm transition-all",
+                      "flex items-center justify-center rounded-2xl px-2 py-3 text-sm",
                       // Selected state - highest priority
                       item.isSelected
                         ? "bg-accent font-semibold text-white"
@@ -276,8 +236,6 @@ export function StepDateSelect({
                               "cursor-pointer bg-foreground/10 text-foreground hover:bg-foreground/20",
                             // Past days - very subtle
                             item.isPast && "cursor-not-allowed text-muted/30",
-                            // Today indicator
-                            item.isToday && "font-semibold text-accent",
                           ],
                     )}
                   >
@@ -298,17 +256,7 @@ export function StepDateSelect({
       </div>
 
       {/* Footer with actions */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-3">
-        <Button variant="ghost" onClick={canGoBack ? goBack : onCancel}>
-          {canGoBack ? (
-            <>
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back
-            </>
-          ) : (
-            cancelLabel
-          )}
-        </Button>
+      <div className="flex justify-end border-t border-border px-4 py-3">
         <Button onClick={handleNext} disabled={!selectedDate}>
           {translations.nextButton}
         </Button>

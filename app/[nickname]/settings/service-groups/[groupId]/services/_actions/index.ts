@@ -149,6 +149,8 @@ export async function deleteServiceGroup(input: {
 export async function createService(input: {
   serviceGroupId: string;
   name: string;
+  priceCents: number;
+  durationMinutes: number;
   nickname: string;
 }): Promise<ActionResult<{ id: string }>> {
   const t = await getTranslations("service_groups");
@@ -159,6 +161,28 @@ export async function createService(input: {
     return {
       success: false,
       error: tValidation("service_name_required"),
+    };
+  }
+
+  // Validate price and duration
+  if (input.priceCents < 100) {
+    return {
+      success: false,
+      error: tValidation("price_too_low"),
+    };
+  }
+
+  if (input.priceCents > 100_000_000) {
+    return {
+      success: false,
+      error: tValidation("price_too_high"),
+    };
+  }
+
+  if (input.durationMinutes < 5) {
+    return {
+      success: false,
+      error: tValidation("duration_too_short"),
     };
   }
 
@@ -186,6 +210,8 @@ export async function createService(input: {
     .insert({
       service_group_id: input.serviceGroupId,
       name: nameValidation.data,
+      price_cents: input.priceCents,
+      duration_minutes: input.durationMinutes,
       display_order: displayOrder,
     })
     .select("id")

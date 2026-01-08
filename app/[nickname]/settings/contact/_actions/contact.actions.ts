@@ -15,7 +15,7 @@ type AuthorizationResult =
 
 /**
  * Verify user can manage contact info for a beauty page
- * User must be owner or admin
+ * User must be owner
  */
 async function verifyCanManageContactInfo(
   beautyPageId: string,
@@ -39,18 +39,6 @@ async function verifyCanManageContactInfo(
     .single();
 
   if (beautyPage?.owner_id === user.id) {
-    return { authorized: true, userId: user.id };
-  }
-
-  // Check if user is admin
-  const { data: member } = await supabase
-    .from("beauty_page_members")
-    .select("roles")
-    .eq("beauty_page_id", beautyPageId)
-    .eq("user_id", user.id)
-    .single();
-
-  if (member?.roles?.includes("admin")) {
     return { authorized: true, userId: user.id };
   }
 

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
-import { getBeautyPageAdmins, getBeautyPageByNickname } from "@/lib/queries";
+import { getBeautyPageByNickname } from "@/lib/queries";
 import { PageHeader } from "@/lib/ui/page-header";
 import { AddressForm, SocialMediaForm } from "./_components/contact-form";
 
@@ -27,12 +27,10 @@ export default async function ContactSettingsPage({
     redirect(`/${nickname}`);
   }
 
-  // Check if user is owner or admin
+  // Solo creator model: only owner can access settings
   const isOwner = profile.id === beautyPage.owner_id;
-  const admins = await getBeautyPageAdmins(beautyPage.id);
-  const userIsAdmin = admins.some((a) => a.user_id === profile.id);
 
-  if (!isOwner && !userIsAdmin) {
+  if (!isOwner) {
     redirect(`/${nickname}`);
   }
 

@@ -10,11 +10,11 @@ import {
   useState,
   useTransition,
 } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/lib/ui/button";
 import { Field } from "@/lib/ui/field";
-import { Input } from "@/lib/ui/input";
+import { OtpInput } from "@/lib/ui/otp-input";
 import { resendOtp, verifyOtp } from "../actions";
 import { createTranslatedSchemas } from "../schemas";
 
@@ -42,11 +42,12 @@ export function OtpStep({ email, redirectTo, onBack }: OtpStepProps) {
   type FormData = z.infer<typeof formSchema>;
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    defaultValues: { code: "" },
   });
 
   useEffect(() => {
@@ -100,15 +101,12 @@ export function OtpStep({ email, redirectTo, onBack }: OtpStepProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Field.Root>
           <Field.Label>{t("otp_label")}</Field.Label>
-          <Input
-            type="text"
-            inputMode="numeric"
-            placeholder={t("otp_placeholder")}
-            autoComplete="one-time-code"
-            autoFocus
-            maxLength={6}
-            state={error ? "error" : "default"}
-            {...register("code")}
+          <Controller
+            name="code"
+            control={control}
+            render={({ field }) => (
+              <OtpInput {...field} autoFocus error={!!error} />
+            )}
           />
           <Field.Error>{error}</Field.Error>
         </Field.Root>

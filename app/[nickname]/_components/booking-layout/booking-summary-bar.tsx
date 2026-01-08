@@ -1,11 +1,14 @@
 "use client";
 
 /**
- * Booking Summary Bar
+ * Booking Summary Bar (Solo Creator Model)
  *
  * Fixed bottom bar that shows booking progress on mobile.
  * Displays price/duration summary and a button to proceed to booking.
  * Uses Portal to render at document.body level for proper stacking.
+ *
+ * Key change from multi-specialist model:
+ * - No specialist display - price comes from selected services
  */
 
 import { AnimatePresence, motion } from "motion/react";
@@ -44,13 +47,11 @@ export function BookingSummaryBar({
 }: BookingSummaryBarProps) {
   const {
     selectedServiceIds,
-    selectedSpecialistId,
     selectedDate,
     selectedTime,
-    getSpecialistPrice,
-    getSpecialistDuration,
     selectedServices,
-    allSpecialists,
+    totalPriceCents,
+    totalDurationMinutes,
   } = useBookingLayout();
 
   // Portal mounting state
@@ -64,23 +65,11 @@ export function BookingSummaryBar({
   // Check if we have any selections to show
   const hasSelections = selectedServiceIds.size > 0;
 
-  // Get price and duration for the selected specialist
-  const price = selectedSpecialistId
-    ? getSpecialistPrice(selectedSpecialistId)
-    : 0;
-  const duration = selectedSpecialistId
-    ? getSpecialistDuration(selectedSpecialistId)
-    : 0;
-
-  // Get specialist name
-  const specialistName = selectedSpecialistId
-    ? (allSpecialists.find((s) => s.member_id === selectedSpecialistId)
-        ?.display_name ?? null)
-    : null;
-
   // Format duration
   const formattedDuration =
-    duration > 0 ? formatDuration(duration, durationLabels) : null;
+    totalDurationMinutes > 0
+      ? formatDuration(totalDurationMinutes, durationLabels)
+      : null;
 
   // Don't render if not mounted or no selections
   if (!mounted || !hasSelections) {
@@ -106,31 +95,26 @@ export function BookingSummaryBar({
                 {selectedServices.length !== 1 ? "s" : ""} selected
               </div>
 
-              {/* Specialist and date/time info */}
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                {specialistName && (
-                  <span className="font-medium">{specialistName}</span>
-                )}
-                {selectedDate && selectedTime && (
-                  <span className="text-muted">
-                    {selectedDate.toLocaleDateString(locale, {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })}{" "}
-                    @ {selectedTime}
-                  </span>
-                )}
-              </div>
+              {/* Date/time info */}
+              {selectedDate && selectedTime && (
+                <div className="mt-0.5 text-sm text-muted">
+                  {selectedDate.toLocaleDateString(locale, {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}{" "}
+                  @ {selectedTime}
+                </div>
+              )}
             </div>
 
             {/* Right: Price and button */}
             <div className="flex items-center gap-3">
               {/* Price and duration */}
-              {price > 0 && (
+              {totalPriceCents > 0 && (
                 <div className="text-right">
                   <div className="text-lg font-semibold text-accent">
-                    {formatPrice(price, currency, locale)}
+                    {formatPrice(totalPriceCents, currency, locale)}
                   </div>
                   {formattedDuration && (
                     <div className="text-xs text-muted">

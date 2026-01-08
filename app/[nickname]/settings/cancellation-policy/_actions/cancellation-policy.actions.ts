@@ -1,19 +1,24 @@
 "use server";
 
+/**
+ * Cancellation Policy Server Actions (Solo Creator Model)
+ *
+ * Simple cancellation policy management for beauty pages.
+ */
+
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getProfile } from "@/lib/auth/session";
-import { getBeautyPageAdmins, getBeautyPageByNickname } from "@/lib/queries";
+import { getBeautyPageByNickname } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 
 const upsertCancellationPolicySchema = z.object({
   beautyPageId: z.string().uuid(),
   nickname: z.string(),
-  isEnabled: z.boolean(),
-  maxCancellations: z.number().int().min(1).max(100),
-  periodDays: z.number().int().min(1).max(365),
-  blockDurationDays: z.number().int().min(1).max(365),
-  noShowMultiplier: z.number().min(1).max(10),
+  allowCancellation: z.boolean(),
+  cancellationNoticeHours: z.number().int().min(0).max(168), // Up to 1 week
+  cancellationFeePercentage: z.number().min(0).max(100),
+  policyText: z.string().max(1000).optional(),
 });
 
 type UpsertCancellationPolicyInput = z.infer<
@@ -43,11 +48,10 @@ export async function upsertCancellationPolicy(
   const {
     beautyPageId,
     nickname,
-    isEnabled,
-    maxCancellations,
-    periodDays,
-    blockDurationDays,
-    noShowMultiplier,
+    allowCancellation,
+    cancellationNoticeHours,
+    cancellationFeePercentage,
+    policyText,
   } = parsed.data;
 
   // Verify user has access to this beauty page
@@ -57,11 +61,10 @@ export async function upsertCancellationPolicy(
     return { success: false, error: "Beauty page not found" };
   }
 
+  // Solo creator model: only owner can manage settings
   const isOwner = profile.id === beautyPage.owner_id;
-  const admins = await getBeautyPageAdmins(beautyPage.id);
-  const isAdmin = admins.some((a) => a.user_id === profile.id);
 
-  if (!isOwner && !isAdmin) {
+  if (!isOwner) {
     return { success: false, error: "Not authorized" };
   }
 
@@ -71,11 +74,10 @@ export async function upsertCancellationPolicy(
   const { error } = await supabase.from("cancellation_policies").upsert(
     {
       beauty_page_id: beautyPageId,
-      is_enabled: isEnabled,
-      max_cancellations: maxCancellations,
-      period_days: periodDays,
-      block_duration_days: blockDurationDays,
-      no_show_multiplier: noShowMultiplier,
+      allow_cancellation: allowCancellation,
+      cancellation_notice_hours: cancellationNoticeHours,
+      cancellation_fee_percentage: cancellationFeePercentage,
+      policy_text: policyText ?? null,
     },
     {
       onConflict: "beauty_page_id",

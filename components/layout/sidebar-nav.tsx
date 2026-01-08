@@ -3,35 +3,41 @@
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { cn } from "@/lib/utils/cn";
-import { mainNavItems } from "./nav-config";
+import { useActiveBeautyPage } from "./active-beauty-page-context";
+import { CreatorAvatarNav } from "./creator-avatar-nav";
+import { getNavItemsForRole, type NavContext } from "./nav-config";
 import { NavItem } from "./nav-item";
 
 interface SidebarNavProps {
   className?: string;
-  beautyPagesCount?: number;
 }
 
-export function SidebarNav({
-  className,
-  beautyPagesCount = 0,
-}: SidebarNavProps) {
+export function SidebarNav({ className }: SidebarNavProps) {
   const t = useTranslations();
+  const { role, activeBeautyPage } = useActiveBeautyPage();
 
-  const visibleItems = useMemo(() => {
-    return mainNavItems.filter((item) => {
-      if (item.requiresBeautyPages) {
-        return beautyPagesCount > 0;
-      }
-      return true;
-    });
-  }, [beautyPagesCount]);
+  const navContext: NavContext = useMemo(
+    () => ({
+      activeNickname: activeBeautyPage?.slug ?? null,
+    }),
+    [activeBeautyPage],
+  );
+
+  const navItems = useMemo(
+    () => getNavItemsForRole(role, navContext),
+    [role, navContext],
+  );
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
-      {visibleItems.map((item) => (
+      {/* Avatar for creators (first item) */}
+      <CreatorAvatarNav />
+
+      {/* Regular nav items */}
+      {navItems.map(({ item, resolvedHref }) => (
         <NavItem
-          key={item.href}
-          href={item.href}
+          key={resolvedHref}
+          href={resolvedHref}
           icon={item.icon}
           label={t(item.labelKey)}
         />

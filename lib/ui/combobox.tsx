@@ -76,6 +76,14 @@ function ComboboxActions({ children, className }: ComboboxActionsProps) {
 
 type ComboboxClearProps = ComponentPropsWithoutRef<typeof BaseCombobox.Clear>;
 
+/**
+ * Clear button for the combobox.
+ *
+ * Note: Base UI's Clear conditionally renders based on whether there's a value.
+ * This can cause hydration mismatches if the value differs between server and
+ * client. For required fields where clearing isn't needed (like timezone),
+ * simply don't include this component.
+ */
 function ComboboxClear({ className, children, ...props }: ComboboxClearProps) {
   return (
     <BaseCombobox.Clear

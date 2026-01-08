@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { MainLayout } from "@/components/layout/main-layout";
 import { getProfile, isOnboardingComplete } from "@/lib/auth/session";
+import { getActiveBeautyPageId } from "@/lib/beauty-page/active-beauty-page";
 import { getUserBeautyPages } from "@/lib/queries";
 
 interface MainLayoutWrapperProps {
@@ -23,10 +24,18 @@ export default async function MainLayoutWrapper({
     redirect("/onboarding");
   }
 
-  const beautyPages = await getUserBeautyPages(profile.id);
+  // Fetch beauty pages and active beauty page ID in parallel
+  const [beautyPages, activeBeautyPageId] = await Promise.all([
+    getUserBeautyPages(profile.id),
+    getActiveBeautyPageId(),
+  ]);
 
   return (
-    <MainLayout beautyPagesCount={beautyPages.length} profile={profile}>
+    <MainLayout
+      profile={profile}
+      beautyPages={beautyPages}
+      initialActiveBeautyPageId={activeBeautyPageId}
+    >
       {children}
     </MainLayout>
   );

@@ -4,11 +4,17 @@ A web-service for managing and booking beauty appointments.
 
 ## Business Model
 
-**Client flow:** Find beauty page by nickname → select services → select specialist → select time → book appointment.
+**Client flow:** Find beauty page by nickname → browse services → select time → book appointment.
 
-**Beauty Page:** Any user can create a beauty page and become its owner. Owners can invite users and create specialists. Users can be part of multiple beauty pages as either **admin** or **specialist**.
+**Beauty Page:** A personal business profile (like Instagram Business). Any user can create a beauty page and become its **creator**. The creator IS the specialist — they manage their own services, schedule, and appointments. Think of it as a solo professional's booking page.
 
-**Services & Pricing:** Beauty pages organize services into service groups. Specialists are assigned to services with individual prices. When specialists have different prices, the beauty page displays a price range (min–max).
+**Creator capabilities:**
+- Create and organize services into service groups
+- Set prices for each service
+- Define working days and hours (can vary by day)
+- Accept or decline appointment requests
+
+**Services & Pricing:** Creators organize their services into service groups and set their own prices. Each service has one price (the creator's price).
 
 For detailed business rules, see `.claude/skills/icelook-business-expert/SKILL.md`.
 
@@ -84,13 +90,12 @@ pnpm test:ui  # Run Playwright with UI
 
 ## Key Entities (Domain Model)
 
-- **User**: Any Icelook user (can be client, owner, admin, or specialist)
-- **Beauty Page**: A page with a unique nickname where services are offered
-- **Specialist**: A user assigned to provide services on a beauty page
-- **Service Group**: Category for organizing services
-- **Service**: What specialists offer (assigned to a service group)
-- **Specialist-Service Assignment**: Links specialist to service with a specific price
-- **Appointment**: Booked time slot between client and specialist
+- **User**: Any Icelook user (can be a client or a creator)
+- **Beauty Page**: A personal business profile with a unique nickname (one creator per page)
+- **Creator**: The user who owns a beauty page and provides services (the creator IS the specialist)
+- **Service Group**: Category for organizing services (e.g., "Hair", "Nails")
+- **Service**: What the creator offers, with a set price
+- **Appointment**: Booked time slot between a client and a creator
 
 ## Conventions
 

@@ -1,31 +1,27 @@
 "use client";
 
 /**
- * Booking Dialog
+ * Booking Dialog (Solo Creator Model)
  *
  * Main container for the multi-step booking flow.
- * Manages step navigation and renders appropriate step components.
+ * Simplified - no specialist selection step.
+ *
+ * Flow: date → time → confirm → success
  */
 
-import { X } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { ProfileService } from "@/lib/queries/beauty-page-profile";
 import { Dialog } from "@/lib/ui/dialog";
+import type { BookingStep, CurrentUserProfile } from "./_lib/booking-types";
 import {
   BookingProvider,
+  type CreatorInfo,
   useBooking,
-  type BookingInitialState,
 } from "./booking-context";
 import { StepConfirmation } from "./step-confirmation";
 import { StepDateSelect } from "./step-date-select";
-import { StepSpecialistSelect } from "./step-specialist-select";
 import { StepSuccess } from "./step-success";
 import { StepTimeSelect } from "./step-time-select";
-import type {
-  AvailableSpecialist,
-  BookingStep,
-  CurrentUserProfile,
-} from "./_lib/booking-types";
 
 // ============================================================================
 // Types
@@ -46,29 +42,23 @@ export interface BookingDialogProps {
   currency: string;
   locale: string;
   selectedServices: ProfileService[];
-  availableSpecialists: AvailableSpecialist[];
+  totalPriceCents: number;
+  totalDurationMinutes: number;
   currentUserId?: string;
-  /** Profile info of authenticated user (name, email) */
   currentUserProfile?: CurrentUserProfile;
   translations: BookingDialogTranslations;
   beautyPageInfo: BeautyPageInfo;
+  creatorInfo: CreatorInfo;
   durationLabels: {
     min: string;
     hour: string;
   };
-  /** Optional initial state for skipping to a specific step */
-  initialState?: BookingInitialState;
 }
 
 export interface BookingDialogTranslations {
   dialogTitle: string;
   cancel: string;
   steps: {
-    specialist: {
-      title: string;
-      subtitle: string;
-      nextButton: string;
-    };
     date: {
       title: string;
       subtitle: string;
@@ -119,6 +109,21 @@ export interface BookingDialogTranslations {
         emailInvalid: string;
         notesTooLong: string;
       };
+      visitPreferences: {
+        title: string;
+        subtitle: string;
+        communicationLabel: string;
+        communicationQuiet: string;
+        communicationFriendly: string;
+        communicationChatty: string;
+        accessibilityLabel: string;
+        accessibilityWheelchair: string;
+        accessibilityHearing: string;
+        accessibilityVision: string;
+        accessibilitySensory: string;
+        allergiesLabel: string;
+        allergiesPlaceholder: string;
+      };
       submit: string;
       submitting: string;
     };
@@ -126,7 +131,6 @@ export interface BookingDialogTranslations {
       title: string;
       confirmedMessage: string;
       pendingMessage: string;
-      appointmentId: string;
       summary: {
         specialist: string;
         dateTime: string;
@@ -146,18 +150,18 @@ export function BookingDialog({
   open,
   onOpenChange,
   beautyPageId,
-  nickname,
   timezone,
   currency,
   locale,
   selectedServices,
-  availableSpecialists,
+  totalPriceCents,
+  totalDurationMinutes,
   currentUserId,
   currentUserProfile,
   translations,
   beautyPageInfo,
+  creatorInfo,
   durationLabels,
-  initialState,
 }: BookingDialogProps) {
   const handleClose = useCallback(() => {
     onOpenChange(false);
@@ -169,14 +173,14 @@ export function BookingDialog({
         <BookingProvider
           beautyPageId={beautyPageId}
           selectedServices={selectedServices}
-          availableSpecialists={availableSpecialists}
+          totalPriceCents={totalPriceCents}
+          totalDurationMinutes={totalDurationMinutes}
           timezone={timezone}
           currency={currency}
           locale={locale}
           currentUserId={currentUserId}
           currentUserProfile={currentUserProfile}
-          onClose={handleClose}
-          initialState={initialState}
+          creatorInfo={creatorInfo}
         >
           <BookingDialogContent
             translations={translations}
@@ -210,24 +214,37 @@ function BookingDialogContent({
   durationLabels,
   onClose,
 }: BookingDialogContentProps) {
-  const { step } = useBooking();
+  const { step, canGoBack, goBack, date } = useBooking();
+
+  // Format date for subtitle (shown on time and confirm steps)
+  const formattedDate = useMemo(() => {
+    if (!date) {
+      return "";
+    }
+    return date.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    });
+  }, [date]);
+
+  // Show subtitle on time and confirm steps
+  const showSubtitle = step === "time" || step === "confirm";
 
   return (
     <div className="flex max-h-[85vh] flex-col">
       {/* Header - only show for non-success steps */}
       {step !== "success" && (
-        <div className="flex items-center justify-between px-4 py-3">
-          <h2 className="text-lg font-semibold text-foreground">
-            {translations.dialogTitle}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        <Dialog.Header
+          subtitle={showSubtitle ? formattedDate : undefined}
+          onClose={onClose}
+          onBack={canGoBack ? goBack : undefined}
+          showBackButton={canGoBack}
+          showCloseButton
+          className="border-b-0"
+        >
+          {translations.dialogTitle}
+        </Dialog.Header>
       )}
 
       {/* Content */}
@@ -267,42 +284,18 @@ function StepContent({
   onClose,
 }: StepContentProps) {
   switch (step) {
-    case "specialist":
-      return (
-        <StepSpecialistSelect
-          translations={translations.steps.specialist}
-          cancelLabel={translations.cancel}
-          durationLabels={durationLabels}
-          onCancel={onClose}
-        />
-      );
-
     case "date":
-      return (
-        <StepDateSelect
-          translations={translations.steps.date}
-          cancelLabel={translations.cancel}
-          onCancel={onClose}
-        />
-      );
+      return <StepDateSelect translations={translations.steps.date} />;
 
     case "time":
-      return (
-        <StepTimeSelect
-          translations={translations.steps.time}
-          cancelLabel={translations.cancel}
-          onCancel={onClose}
-        />
-      );
+      return <StepTimeSelect translations={translations.steps.time} />;
 
     case "confirm":
       return (
         <StepConfirmation
           translations={translations.steps.confirm}
-          cancelLabel={translations.cancel}
           beautyPageInfo={beautyPageInfo}
           durationLabels={durationLabels}
-          onCancel={onClose}
         />
       );
 

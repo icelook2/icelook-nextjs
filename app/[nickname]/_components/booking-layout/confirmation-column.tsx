@@ -1,31 +1,50 @@
 "use client";
 
 /**
- * Confirmation Column
+ * Confirmation Column (Solo Creator Model)
  *
- * 4th column showing dynamic booking summary.
+ * 3rd column showing dynamic booking summary.
  * Updates in real-time as user makes selections.
  * Handles booking directly without opening a dialog.
+ *
+ * Key changes from multi-specialist model:
+ * - No specialist selection or display
+ * - Price/duration come directly from selected services
+ * - Booking submitted to beauty page (creator handles it)
  *
  * For authenticated users: books directly on button click.
  * For guests: shows inline form, then books on submit.
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, Calendar, Clock, User, Scissors, Loader2, CheckCircle } from "lucide-react";
-import { useState, useMemo } from "react";
+import {
+  Calendar,
+  Check,
+  CheckCircle,
+  Clock,
+  Loader2,
+  Scissors,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/lib/ui/button";
-import { formatPrice, formatDuration, type DurationLabels } from "@/lib/utils/price-range";
-import { useBookingLayout } from "./booking-layout-context";
+import {
+  type DurationLabels,
+  formatDuration,
+  formatPrice,
+} from "@/lib/utils/price-range";
 import { createBooking } from "../booking/_actions/booking.actions";
 import {
   createGuestInfoSchema,
   type GuestInfoFormData,
   type GuestInfoValidationMessages,
 } from "../booking/_lib/booking-schemas";
+import type {
+  BookingResult,
+  CurrentUserProfile,
+} from "../booking/_lib/booking-types";
 import { calculateEndTime } from "../booking/_lib/slot-generation";
-import type { BookingResult, CurrentUserProfile } from "../booking/_lib/booking-types";
+import { useBookingLayout } from "./booking-layout-context";
 
 // ============================================================================
 // Types
@@ -35,12 +54,10 @@ interface ConfirmationColumnProps {
   translations: {
     title: string;
     services: string;
-    specialist: string;
     dateTime: string;
     total: string;
     bookButton: string;
     selectServices: string;
-    selectSpecialist: string;
     selectDateTime: string;
   };
   formTranslations: {
@@ -88,20 +105,20 @@ export function ConfirmationColumn({
   const {
     isReadyToBook,
     selectedServiceIds,
-    selectedSpecialistId,
     selectedDate,
     selectedTime,
-    getSpecialistPrice,
-    getSpecialistDuration,
     selectedServices,
-    allSpecialists,
+    totalPriceCents,
+    totalDurationMinutes,
     clearAll,
   } = useBookingLayout();
 
   // Booking state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
+  const [bookingResult, setBookingResult] = useState<BookingResult | null>(
+    null,
+  );
 
   // Form state for guest users
   const isAuthenticated = !!currentUserProfile?.name;
@@ -122,25 +139,14 @@ export function ConfirmationColumn({
     },
   });
 
-  // Get specialist info
-  const specialist = selectedSpecialistId
-    ? allSpecialists.find((s) => s.member_id === selectedSpecialistId)
-    : null;
-
-  // Get price and duration
-  const price = selectedSpecialistId
-    ? getSpecialistPrice(selectedSpecialistId)
-    : 0;
-  const duration = selectedSpecialistId
-    ? getSpecialistDuration(selectedSpecialistId)
-    : 0;
-
   // Format duration
-  const formattedDuration = formatDuration(duration, durationLabels);
+  const formattedDuration = formatDuration(
+    totalDurationMinutes,
+    durationLabels,
+  );
 
   // Check completion status of each step
   const hasServices = selectedServices.length > 0;
-  const hasSpecialist = !!selectedSpecialistId;
   const hasDateTime = !!selectedDate && !!selectedTime;
 
   // Form is valid for booking
@@ -150,7 +156,7 @@ export function ConfirmationColumn({
 
   // Handle booking submission
   async function handleSubmit(formData?: GuestInfoFormData) {
-    if (!isReadyToBook || !selectedSpecialistId || !selectedDate || !selectedTime || !specialist) {
+    if (!isReadyToBook || !selectedDate || !selectedTime) {
       return;
     }
 
@@ -159,7 +165,7 @@ export function ConfirmationColumn({
 
     try {
       // Calculate end time
-      const endTime = calculateEndTime(selectedTime, duration);
+      const endTime = calculateEndTime(selectedTime, totalDurationMinutes);
 
       // Format date as YYYY-MM-DD
       const dateStr = formatDateToYYYYMMDD(selectedDate);
@@ -179,7 +185,6 @@ export function ConfirmationColumn({
 
       const result = await createBooking({
         beautyPageId,
-        specialistMemberId: selectedSpecialistId,
         serviceIds: Array.from(selectedServiceIds),
         date: dateStr,
         startTime: selectedTime,
@@ -231,7 +236,9 @@ export function ConfirmationColumn({
             <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
           </div>
 
-          <h4 className="mb-2 text-lg font-semibold">{successTranslations.title}</h4>
+          <h4 className="mb-2 text-lg font-semibold">
+            {successTranslations.title}
+          </h4>
 
           <p className="mb-6 text-sm text-muted">
             {bookingResult.status === "confirmed"
@@ -239,7 +246,11 @@ export function ConfirmationColumn({
               : successTranslations.pendingMessage}
           </p>
 
-          <Button variant="secondary" onClick={handleBookAnother} className="w-full">
+          <Button
+            variant="secondary"
+            onClick={handleBookAnother}
+            className="w-full"
+          >
             Book another
           </Button>
         </div>
@@ -271,20 +282,6 @@ export function ConfirmationColumn({
                     {service.name}
                   </div>
                 ))}
-              </div>
-            )}
-          </SummaryRow>
-
-          {/* Specialist */}
-          <SummaryRow
-            icon={<User className="h-4 w-4" />}
-            label={translations.specialist}
-            completed={hasSpecialist}
-            placeholder={translations.selectSpecialist}
-          >
-            {specialist && (
-              <div className="text-sm font-medium">
-                {specialist.display_name ?? "Specialist"}
               </div>
             )}
           </SummaryRow>
@@ -322,9 +319,11 @@ export function ConfirmationColumn({
           <span className="text-sm text-muted">{translations.total}</span>
           <div className="text-right">
             <div className="text-lg font-semibold text-accent">
-              {price > 0 ? formatPrice(price, currency, locale) : "—"}
+              {totalPriceCents > 0
+                ? formatPrice(totalPriceCents, currency, locale)
+                : "—"}
             </div>
-            {duration > 0 && (
+            {totalDurationMinutes > 0 && (
               <div className="text-xs text-muted">{formattedDuration}</div>
             )}
           </div>
@@ -440,9 +439,7 @@ function SummaryRow({
       {/* Status icon */}
       <div
         className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-          completed
-            ? "bg-accent/10 text-accent"
-            : "bg-surface-hover text-muted"
+          completed ? "bg-accent/10 text-accent" : "bg-surface-hover text-muted"
         }`}
       >
         {completed ? <Check className="h-3.5 w-3.5" /> : icon}

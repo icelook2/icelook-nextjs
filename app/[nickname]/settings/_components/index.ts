@@ -1,1 +1,1 @@
-export { PendingInvitations } from "./pending-invitations";
+export { TimezoneForm } from "./timezone-form";

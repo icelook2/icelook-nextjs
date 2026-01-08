@@ -1,10 +1,11 @@
 {
   "nav": {
-    "home": "Головна",
     "search": "Пошук",
     "appointments": "Записи",
     "beauty_pages": "Сторінки краси",
-    "settings": "Налаштування"
+    "settings": "Налаштування",
+    "schedule": "Розклад",
+    "switch_beauty_page": "Змінити сторінку"
   },
   "auth": {
     "welcome": "Вітаємо",
@@ -23,7 +24,13 @@
     "rate_limit": "Забагато запитів. Будь ласка, зачекайте.",
     "resend_rate_limit": "Будь ласка, зачекайте перед повторним запитом коду.",
     "code_expired": "Термін дії коду закінчився. Запросіть новий.",
-    "code_invalid": "Невірний код. Перевірте та спробуйте ще раз."
+    "code_invalid": "Невірний код. Перевірте та спробуйте ще раз.",
+    "slogan": "Твої б'юті-сервіси",
+    "legal_agreement": "Продовжуючи, ви погоджуєтесь з",
+    "terms_of_service": "Умовами використання",
+    "privacy_policy": "Політикою конфіденційності",
+    "and": "та",
+    "copyright": "© {year} Icelook. Усі права захищено."
   },
   "onboarding": {
     "title": "Завершіть налаштування профілю",
@@ -63,8 +70,9 @@
     "service_name_required": "Назва послуги обов'язкова",
     "service_name_too_long": "Назва послуги має бути не більше 100 символів",
     "price_invalid": "Введіть коректну ціну",
+    "price_too_low": "Ціна має бути не менше 1 грн",
     "price_too_high": "Ціна занадто висока",
-    "duration_too_short": "Тривалість має бути не менше 15 хвилин",
+    "duration_too_short": "Тривалість має бути не менше 5 хвилин",
     "duration_too_long": "Тривалість має бути не більше 8 годин",
     "contact_too_long": "Контактна інформація занадто довга"
   },
@@ -106,9 +114,6 @@
     "title": "Сторінку не знайдено",
     "go_home": "Повернутися на головну"
   },
-  "home": {
-    "title": "Icelook"
-  },
   "search": {
     "title": "Пошук спеціалістів",
     "subtitle": "Знайдіть свого ідеального спеціаліста",
@@ -122,15 +127,62 @@
   "settings": {
     "title": "Налаштування",
     "subtitle": "Керуйте налаштуваннями облікового запису",
+    "groups": {
+      "account": "Акаунт",
+      "preferences": "Налаштування",
+      "business": "Бізнес"
+    },
+    "nav": {
+      "account": "Акаунт",
+      "account_description": "Керування профілем та електронною поштою",
+      "name": "Імʼя",
+      "email": "Електронна пошта",
+      "preferences": "Налаштування",
+      "preferences_description": "Тема та мова",
+      "visit_preferences": "Побажання до візиту",
+      "visit_preferences_description": "Ваші вподобання для візитів"
+    },
+    "unnamed_user": "Користувач",
+    "not_set": "Не вказано",
+    "name_page_title": "Змінити імʼя",
+    "email_page_title": "Змінити пошту",
+    "account_title": "Акаунт",
+    "account_description": "Керування профілем та електронною поштою",
+    "preferences_title": "Налаштування",
+    "preferences_description": "Тема та мова",
+    "visit_preferences_title": "Побажання до візиту",
+    "visit_preferences_page_description": "Встановіть ваші типові вподобання для візитів",
     "account_group": "Акаунт",
     "preferences_group": "Налаштування",
     "business_group": "Бізнес",
+    "visit_preferences_group": "Побажання до візиту",
+    "visit_preferences_description": "Встановіть ваші типові вподобання для візитів",
+    "communication_label": "Стиль спілкування",
+    "communication_description": "Скільки розмов ви віддаєте перевагу?",
+    "communication_quiet": "Тихо",
+    "communication_quiet_description": "Мінімум розмов",
+    "communication_friendly": "Дружньо",
+    "communication_friendly_description": "Невимушена бесіда вітається",
+    "communication_chatty": "Балакучо",
+    "communication_chatty_description": "Люблю багато спілкуватися",
+    "accessibility_label": "Потреби доступності",
+    "accessibility_description": "Повідомте спеціалістів про ваші потреби",
+    "accessibility_wheelchair": "Доступність для візка",
+    "accessibility_hearing": "Порушення слуху",
+    "accessibility_vision": "Порушення зору",
+    "accessibility_sensory": "Сенсорна чутливість",
+    "allergies_label": "Алергії та чутливості",
+    "allergies_placeholder": "напр., алергія на латекс, чутливість до запахів...",
+    "allergies_max_length": "Максимум 500 символів",
+    "preferences_saved": "Побажання збережено",
+    "preferences_save_failed": "Не вдалося зберегти побажання",
     "profile_section": "Профіль",
     "email_section": "Email",
     "preferences_section": "Налаштування",
     "name_label": "Повне ім'я",
     "name_placeholder": "Введіть ваше ім'я",
     "current_email": "Поточний email",
+    "email_label": "Email",
     "change_email": "Змінити",
     "new_email_label": "Нова email адреса",
     "new_email_placeholder": "Введіть новий email",
@@ -392,6 +444,22 @@
     "USD": "$ USD",
     "EUR": "€ EUR"
   },
+  "time_settings": {
+    "page_title": "Налаштування часу",
+    "timezone": {
+      "title": "Часовий пояс",
+      "description": "Встановіть ваш часовий пояс для записів та розкладу",
+      "label": "Часовий пояс"
+    },
+    "save": "Зберегти",
+    "saved": "Збережено",
+    "errors": {
+      "not_authenticated": "Потрібно увійти в систему",
+      "not_authorized": "У вас немає дозволу на редагування",
+      "validation_failed": "Перевірте введені дані",
+      "save_failed": "Не вдалося зберегти зміни"
+    }
+  },
   "schedule": {
     "title": "Розклад",
     "description": "Керуйте робочими годинами та доступністю",
@@ -415,8 +483,10 @@
     "select_time": "Оберіть час",
     "generate_schedule": "Генерувати розклад",
     "settings": "Налаштування",
-    "timezone": "Часовий пояс",
-    "timezone_description": "Весь час відображається в цьому часовому поясі",
+    "timezone": {
+      "title": "Часовий пояс",
+      "label": "Оберіть часовий пояс"
+    },
     "slot_duration": "Тривалість слота",
     "slot_duration_description": "Мінімальна тривалість запису",
     "minutes": "хв",
@@ -481,6 +551,17 @@
     "client": "Клієнт",
     "phone": "Телефон",
     "notes": "Нотатки",
+    "visit_preferences": "Побажання до візиту",
+    "communication_label": "Спілкування",
+    "communication_quiet": "Віддає перевагу тиші",
+    "communication_friendly": "Дружня бесіда",
+    "communication_chatty": "Любить розмови",
+    "accessibility_wheelchair": "Візок",
+    "accessibility_hearing": "Порушення слуху",
+    "accessibility_vision": "Порушення зору",
+    "accessibility_sensory": "Сенсорна чутливість",
+    "allergies_label": "Алергії",
+    "no_preferences": "Побажань не вказано",
     "status": "Статус",
     "status_pending": "Очікується",
     "status_confirmed": "Підтверджено",
@@ -497,6 +578,10 @@
     "no_hours_set": "Години не встановлено",
     "service": "Послуга",
     "total": "Всього",
+    "unknown_client": "Невідомий клієнт",
+    "no_phone_provided": "Телефон не вказано",
+    "no_contact_info": "Немає контактних даних",
+    "email": "Email",
     "errors": {
       "not_authenticated": "Потрібно увійти в систему",
       "not_authorized": "У вас немає дозволу на цю дію",
@@ -516,8 +601,8 @@
       "hours_outside_business_hours": "Робочі години мають бути в межах годин роботи ({open} - {close})"
     }
   },
-  "business_hours": {
-    "page_title": "Години роботи",
+  "working_hours": {
+    "page_title": "Робочі години",
     "regular_hours": {
       "title": "Звичайний графік",
       "description": "Встановіть щотижневий графік роботи"
@@ -622,7 +707,24 @@
     "phone_invalid_format": "Невірний формат номера телефону",
     "name_too_short": "Ім'я має бути не менше 2 символів",
     "name_too_long": "Ім'я занадто довге",
-    "notes_too_long": "Примітки мають бути не більше 500 символів"
+    "notes_too_long": "Примітки мають бути не більше 500 символів",
+    "confirm": {
+      "visit_preferences": {
+        "title": "Вподобання візиту",
+        "subtitle": "Необов'язково - допоможіть спеціалісту підготуватися",
+        "communication_label": "Стиль спілкування",
+        "communication_quiet": "Тихо",
+        "communication_friendly": "Дружньо",
+        "communication_chatty": "Балакучо",
+        "accessibility_label": "Потреби доступності",
+        "accessibility_wheelchair": "Доступність для інвалідних візків",
+        "accessibility_hearing": "Порушення слуху",
+        "accessibility_vision": "Порушення зору",
+        "accessibility_sensory": "Сенсорна чутливість",
+        "allergies_label": "Алергії та чутливість",
+        "allergies_placeholder": "напр., алергія на латекс, чутливість до ароматів..."
+      }
+    }
   },
   "salon": {
     "profile": {
@@ -719,9 +821,17 @@
     "closed": "Зачинено",
     "closes_at": "Закриється о {time}",
     "opens_at": "Відкриється о {time}",
+    "working_status": {
+      "working_until": "Працюю до {time}",
+      "opens_today": "Починаю о {time}",
+      "opens_tomorrow": "До завтра о {time}!",
+      "opens_on_day": "Побачимось у {day} о {time}!",
+      "no_schedule": "Розклад ще не встановлено",
+      "closed": "Відпочиваю"
+    },
     "services": "Послуги",
     "specialists": "Наші спеціалісти",
-    "hours": "Години роботи",
+    "hours": "Робочі години",
     "contact": "Контакти",
     "view_on_map": "На карті",
     "visit_instagram": "Перейти",
@@ -742,6 +852,7 @@
     "duration_min": "хв",
     "duration_hour": "год",
     "specialist_fallback": "Спеціаліст",
+    "reviews": "відгуків",
     "reviews_label": "Переглянути відгуки",
     "reviews_title": "Відгуки про {name}",
     "reviews_based_on": "На основі {count} відгуків",
@@ -749,6 +860,9 @@
     "review_reply": "Відповідь",
     "anonymous": "Анонім",
     "book": "Записатися",
+    "special_offers": "Спеціальні пропозиції",
+    "tomorrow": "Завтра",
+    "book_now": "Забронювати",
     "verified": {
       "title": "Підтверджений бізнес",
       "description": "Ця сторінка краси була перевірена Icelook як справжній та легітимний бізнес."
@@ -793,7 +907,20 @@
       "date": {
         "title": "Оберіть дату",
         "subtitle": "Виберіть день для запису",
-        "month_names": ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"],
+        "month_names": [
+          "Січень",
+          "Лютий",
+          "Березень",
+          "Квітень",
+          "Травень",
+          "Червень",
+          "Липень",
+          "Серпень",
+          "Вересень",
+          "Жовтень",
+          "Листопад",
+          "Грудень"
+        ],
         "weekday_names": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"],
         "today": "Сьогодні",
         "loading": "Завантаження доступних дат...",
@@ -831,6 +958,21 @@
           "notes": "Примітки (необов'язково)",
           "notes_placeholder": "Особливі побажання або інформація..."
         },
+        "visit_preferences": {
+          "title": "Побажання до візиту",
+          "subtitle": "Необов'язково - допоможіть спеціалісту підготуватися",
+          "communication_label": "Стиль спілкування",
+          "communication_quiet": "Тихо",
+          "communication_friendly": "Дружньо",
+          "communication_chatty": "Балакучо",
+          "accessibility_label": "Потреби доступності",
+          "accessibility_wheelchair": "Доступність для візка",
+          "accessibility_hearing": "Порушення слуху",
+          "accessibility_vision": "Порушення зору",
+          "accessibility_sensory": "Сенсорна чутливість",
+          "allergies_label": "Алергії та чутливості",
+          "allergies_placeholder": "напр., алергія на латекс, чутливість до запахів..."
+        },
         "validation": {
           "name_too_short": "Ім'я має містити щонайменше 2 символи",
           "name_too_long": "Ім'я має містити не більше 100 символів",
@@ -847,7 +989,6 @@
         "title": "Запис підтверджено!",
         "confirmed_message": "Ваш запис підтверджено.",
         "pending_message": "Ваш запис очікує на підтвердження.",
-        "appointment_id": "ID запису",
         "summary": {
           "specialist": "Спеціаліст",
           "date_time": "Дата та час",
@@ -862,14 +1003,30 @@
     "title": "Налаштування сторінки краси",
     "back": "Назад",
     "coming_soon": "Незабаром",
+    "save": "Зберегти",
+    "saved": "Збережено",
     "groups": {
       "services": "Послуги",
       "people": "Команда",
-      "operations": "Операції"
+      "operations": "Операції",
+      "schedule": "Розклад"
+    },
+    "timezone": {
+      "title": "Часовий пояс",
+      "description": "Встановіть ваш часовий пояс для записів та розкладу",
+      "label": "Часовий пояс"
+    },
+    "errors": {
+      "not_authenticated": "Потрібно увійти в систему",
+      "not_authorized": "У вас немає дозволу на редагування",
+      "validation_failed": "Перевірте введені дані",
+      "save_failed": "Не вдалося зберегти зміни"
     },
     "nav": {
       "services": "Послуги та групи",
       "services_description": "Керуйте каталогом послуг та цінами",
+      "special_offers": "Спеціальні пропозиції",
+      "special_offers_description": "Створюйте пропозиції зі знижками",
       "admins": "Адміністратори",
       "admins_description": "Керуйте тими, хто може редагувати сторінку",
       "specialists": "Спеціалісти",
@@ -878,16 +1035,259 @@
       "team_description": "Запрошуйте спеціалістів та керуйте ролями",
       "contact": "Адреса та контакти",
       "contact_description": "Вкажіть адресу та соціальні мережі",
-      "business_hours": "Години роботи",
-      "business_hours_description": "Встановіть години роботи та вихідні",
+      "working_hours": "Робочі години",
+      "working_hours_description": "Налаштуйте свій графік роботи",
       "labels": "Мітки",
       "labels_description": "Створюйте мітки для категоризації спеціалістів",
       "schedule": "Розклад",
-      "schedule_description": "Встановіть робочі години та доступність",
+      "schedule_description": "Керуйте записами та робочими днями",
+      "time_settings": "Налаштування часу",
+      "time_settings_description": "Встановіть часовий пояс та налаштування часу",
       "cancellation_policy": "Політика скасування",
       "cancellation_policy_description": "Встановіть правила для скасувань та неявок",
       "billing": "Оплата",
-      "billing_description": "Керуйте платежами та підписками"
+      "billing_description": "Керуйте платежами та підписками",
+      "analytics": "Аналітика",
+      "analytics_description": "Перегляд показників бізнесу",
+      "clients": "Клієнти",
+      "clients_description": "Перегляд та керування клієнтською базою"
+    }
+  },
+  "clients": {
+    "page_title": "Клієнти",
+    "search_placeholder": "Пошук за ім'ям або телефоном...",
+    "clear_search": "Очистити пошук",
+    "guest_badge": "Гість",
+    "visit": "візит",
+    "visits": "візитів",
+    "loading": "Завантаження...",
+    "end_of_list": "Ви досягли кінця списку",
+    "showing_count": "Показано {shown} з {total}",
+    "empty": {
+      "title": "Ще немає клієнтів",
+      "description": "Клієнти з'являться тут після того, як запишуться до вас",
+      "no_results_title": "Клієнтів не знайдено",
+      "no_results_description": "Спробуйте інший пошуковий запит"
+    },
+    "detail": {
+      "subtitle": "Деталі клієнта",
+      "guest_badge": "Гість"
+    },
+    "contacts": {
+      "title": "Контакт"
+    },
+    "stats": {
+      "title": "Статистика",
+      "total_visits": "Візити",
+      "total_spent": "Всього витрачено",
+      "average_spend": "Сер. чек",
+      "first_visit": "Перший візит",
+      "last_visit": "Останній візит"
+    },
+    "services": {
+      "title": "Вподобані послуги",
+      "showing_count": "{shown} з {total}",
+      "more_services": "+{count} ще послуг",
+      "show_all": "Показати всі послуги",
+      "columns": {
+        "name": "Послуга",
+        "count": "Записів",
+        "total": "Всього"
+      }
+    },
+    "services_page": {
+      "title": "Вподобані послуги",
+      "subtitle": "Послуги, замовлені {client}",
+      "search_placeholder": "Пошук послуг...",
+      "columns": {
+        "name": "Послуга",
+        "count": "Записів",
+        "total": "Сума"
+      },
+      "pagination": {
+        "page": "Сторінка {current} з {total}",
+        "prev": "Попередня",
+        "next": "Наступна"
+      },
+      "empty": "Ще немає замовлених послуг",
+      "no_results": "Послуг за запитом \"{search}\" не знайдено"
+    },
+    "services_table": {
+      "title": "Вподобані послуги (Табличний вигляд)",
+      "search_placeholder": "Пошук послуг...",
+      "columns": {
+        "name": "Назва",
+        "amount": "Кількість",
+        "total": "Сума"
+      },
+      "pagination": {
+        "prev": "Попередня",
+        "next": "Наступна",
+        "page": "Сторінка {current} з {total}"
+      },
+      "empty": "Послуг не знайдено",
+      "no_results": "Жодна послуга не відповідає пошуку"
+    },
+    "service_detail": {
+      "subtitle": "Історія послуги для {client}",
+      "appointments_title": "Записи",
+      "appointments_count": "записів",
+      "view_service_settings": "Переглянути налаштування послуги",
+      "columns": {
+        "date": "Дата",
+        "time": "Час",
+        "price": "Ціна"
+      },
+      "pagination": {
+        "page": "Сторінка {current} з {total}",
+        "prev": "Назад",
+        "next": "Далі"
+      }
+    },
+    "history": {
+      "title": "Історія записів",
+      "showing_count": "{shown} з {total}",
+      "more_appointments": "+{count} ще записів",
+      "show_all": "Показати всі записи",
+      "columns": {
+        "service": "Послуга",
+        "date": "Дата",
+        "price": "Ціна"
+      },
+      "status": {
+        "completed": "Завершено",
+        "cancelled": "Скасовано",
+        "no_show": "Не з'явився",
+        "pending": "Очікує",
+        "confirmed": "Підтверджено"
+      }
+    },
+    "notes": {
+      "title": "Приватні нотатки",
+      "placeholder": "Додайте приватні нотатки про клієнта (наприклад, вподобання, алергії, особливі побажання)...",
+      "saving": "Збереження...",
+      "saved": "Збережено",
+      "hint": "Ці нотатки видно тільки вам"
+    },
+    "appointment_detail": {
+      "title": "Деталі запису",
+      "service": "Послуга",
+      "date": "Дата",
+      "time": "Час",
+      "price": "Ціна",
+      "client_notes": "Нотатки клієнта",
+      "your_notes": "Ваші нотатки",
+      "cancelled_at": "Скасовано {date}",
+      "close": "Закрити",
+      "min": "хв",
+      "hour": "год"
+    },
+    "appointments_page": {
+      "title": "Записи",
+      "subtitle": "Всі записи з {client}",
+      "total_count": "записів",
+      "columns": {
+        "service": "Послуга",
+        "date": "Дата",
+        "price": "Ціна"
+      },
+      "pagination": {
+        "page": "Сторінка {current} з {total}",
+        "prev": "Назад",
+        "next": "Далі"
+      }
+    }
+  },
+  "analytics": {
+    "page_title": "Аналітика",
+    "period": {
+      "today": "Сьогодні",
+      "yesterday": "Вчора",
+      "this_week": "Цей тиждень",
+      "last_7_days": "Останні 7 днів",
+      "this_month": "Цей місяць",
+      "last_30_days": "Останні 30 днів",
+      "this_quarter": "Цей квартал",
+      "last_quarter": "Минулий квартал",
+      "this_year": "Цей рік",
+      "last_year": "Минулий рік",
+      "all_time": "Весь час"
+    },
+    "groups": {
+      "revenue_tickets": "Дохід і чеки",
+      "appointments": "Записи",
+      "clients": "Клієнти",
+      "operations": "Операційні показники"
+    },
+    "info": {
+      "revenue": "Загальний дохід від завершених записів за цей період",
+      "avg_ticket": "Середня сума за один запис",
+      "total_appointments": "Всі записи, заплановані на цей період",
+      "completed": "Успішно завершені записи",
+      "pending": "Заплановані записи, які ще не завершені",
+      "cancelled": "Записи, скасовані клієнтом або вами",
+      "no_show": "Записи, на які клієнт не з'явився",
+      "total_clients": "Унікальні клієнти, які записалися за цей період",
+      "new_clients": "Клієнти, які записалися вперше",
+      "returning_clients": "Клієнти, які відвідували вас раніше",
+      "retention_rate": "Відсоток клієнтів, які повертаються знову",
+      "fill_rate": "Відсоток доступного часу, який був заброньований",
+      "cancellation_rate": "Відсоток скасованих записів",
+      "no_show_rate": "Відсоток записів з неявкою"
+    },
+    "blocks": {
+      "revenue": "Дохід",
+      "appointments": "Записи",
+      "clients": "Клієнти",
+      "services": "Послуги"
+    },
+    "metrics": {
+      "revenue": "Дохід",
+      "appointments": "Записи",
+      "avg_ticket": "Сер. чек",
+      "retention": "Утримання",
+      "fill_rate": "Заповненість",
+      "cancellation_rate": "Скасування",
+      "no_show_rate": "Неявки",
+      "avg_rating": "Сер. рейтинг",
+      "operations": "Операційні показники"
+    },
+    "appointments": {
+      "total": "Записи загалом",
+      "completed": "Завершені",
+      "cancelled": "Скасовані",
+      "no_show": "Неявки",
+      "pending": "Заплановані"
+    },
+    "services": {
+      "title": "Ефективність послуг",
+      "service": "Послуга",
+      "bookings": "Записи",
+      "revenue": "Дохід",
+      "percentage": "% від загалу",
+      "avg_duration": "Сер. тривалість",
+      "bookings_count": "{count, plural, =1 {1 запис} few {# записи} other {# записів}}",
+      "no_data": "Немає даних про послуги"
+    },
+    "clients": {
+      "title": "Клієнти",
+      "total_clients": "Всього клієнтів",
+      "unique_clients": "унікальних клієнтів",
+      "new": "Нові клієнти",
+      "returning": "Повторні клієнти",
+      "top_clients": "Топ клієнти",
+      "visits": "{count, plural, =1 {1 візит} few {# візити} other {# візитів}}"
+    },
+    "trends": {
+      "up": "+{value}% порівняно з минулим періодом",
+      "down": "{value}% порівняно з минулим періодом",
+      "vs_previous": "порівняно з минулим періодом",
+      "no_change": "Без змін",
+      "target": "Ціль"
+    },
+    "empty": {
+      "title": "Даних ще немає",
+      "description": "Аналітика з'явиться після виконаних записів."
     }
   },
   "services": {
@@ -1295,6 +1695,22 @@
     "remove": "Видалити",
     "assign": "Призначити",
     "edit": "Редагувати",
+    "services_page_title": "Послуги",
+    "services_page_description": "Керуйте групами послуг та послугами",
+    "rename_group_title": "Перейменувати групу",
+    "rename_service_title": "Перейменувати послугу",
+    "change_price_title": "Змінити ціну",
+    "change_duration_title": "Змінити тривалість",
+    "menu_add_service": "Додати послугу",
+    "menu_rename": "Перейменувати",
+    "menu_change_price": "Змінити ціну",
+    "menu_change_duration": "Змінити тривалість",
+    "menu_delete": "Видалити",
+    "delete_group_confirmation": "Ви впевнені, що хочете видалити \"{name}\"?",
+    "delete_group_warning": "Це також видалить {count, plural, =1 {1 послугу} few {# послуги} other {# послуг}}",
+    "delete_service_confirmation": "Ви впевнені, що хочете видалити \"{name}\"?",
+    "no_services_in_group": "Немає послуг у цій групі",
+    "add_first_service": "Додати послугу",
     "errors": {
       "not_authenticated": "Ви повинні увійти",
       "not_authorized": "У вас немає дозволу на цю дію",
@@ -1305,6 +1721,28 @@
       "assign_failed": "Не вдалося призначити спеціаліста",
       "remove_failed": "Не вдалося видалити призначення",
       "already_assigned": "Цей спеціаліст вже призначений на цю послугу"
+    }
+  },
+  "special_offers_settings": {
+    "page_title": "Спеціальні пропозиції",
+    "add_offer": "Додати пропозицію",
+    "empty_title": "Поки немає спеціальних пропозицій",
+    "empty_description": "Створюйте пропозиції зі знижками для залучення більшої кількості клієнтів",
+    "delete_confirm_title": "Видалити пропозицію",
+    "delete_confirm_description": "Ви впевнені, що хочете видалити цю спеціальну пропозицію? Цю дію неможливо скасувати.",
+    "delete_confirm_button": "Видалити",
+    "cancel": "Скасувати",
+    "status_active": "Активна",
+    "status_booked": "Заброньовано",
+    "status_expired": "Завершено",
+    "discount_label": "Знижка",
+    "errors": {
+      "not_authenticated": "Ви маєте увійти в систему",
+      "not_authorized": "У вас немає дозволу на цю дію",
+      "validation_failed": "Надано невірні дані",
+      "create_failed": "Не вдалося створити пропозицію",
+      "delete_failed": "Не вдалося видалити пропозицію",
+      "already_exists": "Пропозиція для цього часового слоту вже існує"
     }
   },
   "contact_settings": {

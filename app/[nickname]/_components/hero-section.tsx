@@ -1,22 +1,31 @@
+import { Star } from "lucide-react";
 import Image from "next/image";
 import type { BeautyPageInfo } from "@/lib/queries/beauty-page-profile";
-import type { OpenStatus } from "@/lib/utils/open-status";
-import { OpenStatusBadge } from "./open-status-badge";
 import { VerifiedBadge } from "./verified-badge";
+import { WorkingHoursBadge } from "./working-hours-badge";
+
+interface RatingStats {
+  averageRating: number;
+  totalReviews: number;
+}
+
+interface WorkingStatus {
+  isOpen: boolean;
+  statusMessage: string;
+}
 
 interface HeroSectionProps {
   info: BeautyPageInfo;
-  openStatus: OpenStatus;
+  ratingStats?: RatingStats;
+  workingStatus?: WorkingStatus;
   translations: {
-    openNow: string;
-    closed: string;
-    closesAt: string;
-    opensAt: string;
     verified: {
       title: string;
       description: string;
     };
+    reviews?: string; // e.g., "reviews" or "відгуків"
   };
+  onReviewsClick?: () => void;
 }
 
 // Consistent gradients for logo fallback based on name
@@ -30,16 +39,21 @@ const gradients = [
 
 export function HeroSection({
   info,
-  openStatus,
+  ratingStats,
+  workingStatus,
   translations,
+  onReviewsClick,
 }: HeroSectionProps) {
   const initial = info.name.charAt(0).toUpperCase();
   const gradientIndex = info.name.charCodeAt(0) % gradients.length;
   const gradient = gradients[gradientIndex];
 
+  const hasReviews = ratingStats && ratingStats.totalReviews > 0;
+  const reviewsLabel = translations.reviews ?? "reviews";
+
   return (
-    <section className="px-4 pb-6 lg:px-6 xl:px-8">
-      {/* Logo, type badge, and status */}
+    <section className="space-y-3">
+      {/* Avatar + Name row */}
       <div className="flex items-start gap-4">
         {/* Logo/Avatar */}
         {info.logo_url ? (
@@ -58,9 +72,8 @@ export function HeroSection({
           </div>
         )}
 
-        {/* Name, nickname, type badge, and status */}
+        {/* Name, nickname, type + rating */}
         <div className="min-w-0 flex-1 space-y-1">
-          {/* Name with verified badge and nickname */}
           <div>
             <div className="flex items-center gap-1.5">
               <h2 className="text-lg font-semibold">{info.name}</h2>
@@ -71,29 +84,39 @@ export function HeroSection({
             <p className="text-sm text-muted">@{info.slug}</p>
           </div>
 
-          {/* Type badge and status */}
-          <div className="flex flex-wrap items-center gap-2">
-            {info.type && (
-              <span className="inline-flex items-center rounded-full bg-accent-soft px-2.5 py-0.5 text-sm font-medium text-accent">
-                {info.type.name}
-              </span>
+          {/* Type • Rating (reviews) */}
+          <p className="flex items-center gap-1.5 text-sm text-muted">
+            {info.type && <span>{info.type.name}</span>}
+            {info.type && hasReviews && <span>•</span>}
+            {hasReviews && (
+              <button
+                type="button"
+                onClick={onReviewsClick}
+                className="inline-flex items-center gap-1 hover:text-foreground"
+              >
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                <span className="font-medium text-foreground">
+                  {ratingStats.averageRating.toFixed(1)}
+                </span>
+                <span>({ratingStats.totalReviews} {reviewsLabel})</span>
+              </button>
             )}
-
-            <OpenStatusBadge
-              status={openStatus}
-              openText={translations.openNow}
-              closedText={translations.closed}
-              closesAtText={translations.closesAt}
-              opensAtText={translations.opensAt}
-            />
-          </div>
-
-          {/* Description */}
-          {info.description && (
-            <p className="text-sm text-muted">{info.description}</p>
-          )}
+          </p>
         </div>
       </div>
+
+      {/* Working hours status */}
+      {workingStatus && (
+        <WorkingHoursBadge
+          isOpen={workingStatus.isOpen}
+          statusMessage={workingStatus.statusMessage}
+        />
+      )}
+
+      {/* Bio */}
+      {info.creator_bio && (
+        <p className="whitespace-pre-line text-sm">{info.creator_bio}</p>
+      )}
     </section>
   );
 }

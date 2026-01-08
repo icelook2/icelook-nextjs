@@ -1,22 +1,64 @@
 import type { LucideIcon } from "lucide-react";
-import { CalendarDays, Home, Search, Store } from "lucide-react";
+import { CalendarDays, Search, Settings } from "lucide-react";
+import type { UserRole } from "./active-beauty-page-context";
 
-export interface NavItem {
-  href: string;
-  labelKey: string;
-  icon: LucideIcon;
-  /** If true, this item requires beautyPagesCount > 0 to be visible */
-  requiresBeautyPages?: boolean;
+/** Context for dynamic route generation */
+export interface NavContext {
+  /** Active beauty page nickname (slug) */
+  activeNickname: string | null;
 }
 
-export const mainNavItems: NavItem[] = [
-  { href: "/", labelKey: "nav.home", icon: Home },
-  { href: "/search", labelKey: "nav.search", icon: Search },
-  { href: "/appointments", labelKey: "nav.appointments", icon: CalendarDays },
+/** Navigation item with role-based visibility */
+export interface NavItem {
+  /** Static path or function to generate path from context */
+  href: string | ((context: NavContext) => string);
+  labelKey: string;
+  icon: LucideIcon;
+  /** Which roles can see this item */
+  roles: UserRole[];
+}
+
+export const navItems: NavItem[] = [
+  // Schedule - creator only, dynamic route
   {
-    href: "/beauty-pages",
-    labelKey: "nav.beauty_pages",
-    icon: Store,
-    requiresBeautyPages: true,
+    href: (ctx) => `/${ctx.activeNickname}/settings/schedule`,
+    labelKey: "nav.schedule",
+    icon: CalendarDays,
+    roles: ["creator"],
+  },
+  // Search - both roles
+  {
+    href: "/search",
+    labelKey: "nav.search",
+    icon: Search,
+    roles: ["client", "creator"],
+  },
+  // Appointments - client only
+  {
+    href: "/appointments",
+    labelKey: "nav.appointments",
+    icon: CalendarDays,
+    roles: ["client"],
+  },
+  // Settings - client only (creators access settings from their beauty page)
+  {
+    href: "/settings",
+    labelKey: "nav.settings",
+    icon: Settings,
+    roles: ["client"],
   },
 ];
+
+/** Helper to filter nav items by role and resolve dynamic hrefs */
+export function getNavItemsForRole(
+  role: UserRole,
+  context: NavContext,
+): Array<{ item: NavItem; resolvedHref: string }> {
+  return navItems
+    .filter((item) => item.roles.includes(role))
+    .map((item) => ({
+      item,
+      resolvedHref:
+        typeof item.href === "function" ? item.href(context) : item.href,
+    }));
+}

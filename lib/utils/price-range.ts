@@ -124,6 +124,7 @@ export function formatPrice(
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
+    currencyDisplay: "narrowSymbol",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
@@ -154,6 +155,7 @@ export function formatPriceRange(
   const formatter = new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
+    currencyDisplay: "narrowSymbol",
     minimumFractionDigits: 0,
   });
 

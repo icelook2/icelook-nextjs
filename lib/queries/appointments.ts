@@ -1,13 +1,6 @@
 import type { Tables } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
-/** Label assigned to a specialist */
-export type SpecialistLabelInfo = {
-  id: string;
-  name: string;
-  color: string | null;
-};
-
 export type ClientAppointment = Pick<
   Tables<"appointments">,
   | "id"
@@ -20,15 +13,12 @@ export type ClientAppointment = Pick<
   | "service_price_cents"
   | "service_currency"
   | "service_duration_minutes"
-  | "specialist_display_name"
-  | "specialist_id"
+  | "creator_display_name"
   | "client_notes"
   | "created_at"
 > & {
-  /** Specialist's avatar URL */
-  specialist_avatar_url: string | null;
-  /** Labels assigned to the specialist */
-  specialist_labels: SpecialistLabelInfo[];
+  /** Creator's avatar URL (from beauty page) */
+  creator_avatar_url: string | null;
   /** Beauty page name where the service is provided */
   beauty_page_name: string | null;
   /** Beauty page slug for navigation (e.g., /beauty-salon) */
@@ -63,25 +53,15 @@ export async function getClientAppointments(
       service_price_cents,
       service_currency,
       service_duration_minutes,
-      specialist_display_name,
-      specialist_id,
+      creator_display_name,
       client_notes,
       created_at,
       beauty_pages!appointments_beauty_page_id_fkey (
         name,
         slug,
         logo_url,
-        address
-      ),
-      beauty_page_specialists!appointments_specialist_id_fkey (
         avatar_url,
-        specialist_label_assignments!specialist_label_assignments_specialist_id_fkey (
-          specialist_labels!specialist_label_assignments_label_id_fkey (
-            id,
-            name,
-            color
-          )
-        )
+        address
       )
     `,
     )
@@ -101,34 +81,6 @@ export async function getClientAppointments(
       ? beautyPageData[0]
       : beautyPageData;
 
-    // Get specialist data - also a to-one relationship (object, not array)
-    const specialistData = row.beauty_page_specialists;
-    const specialist = Array.isArray(specialistData)
-      ? specialistData[0]
-      : specialistData;
-
-    // Extract labels from specialist_label_assignments (to-many, so it's an array)
-    // Each assignment has specialist_labels as a to-one relationship (object)
-    const labels: SpecialistLabelInfo[] =
-      specialist?.specialist_label_assignments
-        ?.map((assignment) => {
-          const labelData = assignment.specialist_labels;
-          if (!labelData) {
-            return null;
-          }
-          // specialist_labels is a to-one FK, so it's an object
-          const label = Array.isArray(labelData) ? labelData[0] : labelData;
-          if (!label) {
-            return null;
-          }
-          return {
-            id: label.id,
-            name: label.name,
-            color: label.color,
-          };
-        })
-        .filter((label): label is SpecialistLabelInfo => label !== null) ?? [];
-
     return {
       id: row.id,
       date: row.date,
@@ -140,12 +92,12 @@ export async function getClientAppointments(
       service_price_cents: row.service_price_cents,
       service_currency: row.service_currency,
       service_duration_minutes: row.service_duration_minutes,
-      specialist_display_name: row.specialist_display_name,
-      specialist_id: row.specialist_id,
+      creator_display_name: row.creator_display_name,
       client_notes: row.client_notes,
       created_at: row.created_at,
-      specialist_avatar_url: specialist?.avatar_url ?? null,
-      specialist_labels: labels,
+      // Creator avatar comes from beauty page in solo creator model
+      creator_avatar_url:
+        beautyPage?.avatar_url ?? beautyPage?.logo_url ?? null,
       beauty_page_name: beautyPage?.name ?? null,
       beauty_page_slug: beautyPage?.slug ?? null,
       beauty_page_avatar_url: beautyPage?.logo_url ?? null,

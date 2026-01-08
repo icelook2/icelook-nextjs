@@ -43,7 +43,7 @@ export function AppointmentCard({
             {formattedDate} {t("at")} {formattedTime}
           </p>
           <p className="text-sm text-muted">
-            {appointment.specialist_display_name}
+            {appointment.creator_display_name}
           </p>
         </div>
         <StatusBadge status={appointment.status} />

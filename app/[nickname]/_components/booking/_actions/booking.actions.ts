@@ -1,21 +1,26 @@
 "use server";
 
 /**
- * Booking Server Actions
+ * Booking Server Actions (Solo Creator Model)
  *
- * Creates appointments for guests booking services with specialists.
+ * Creates appointments for guests booking services.
+ *
+ * Key changes from multi-specialist model:
+ * - No specialist selection - creator is the service provider
+ * - Prices come directly from services table
+ * - Working days are linked to beauty page, not specialist
  */
 
 import { createClient } from "@/lib/supabase/server";
-import type { CreateBookingInput, BookingResult } from "../_lib/booking-types";
+import type { BookingResult, CreateBookingInput } from "../_lib/booking-types";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-interface ServiceAssignment {
-  service_id: string;
-  service_name: string;
+interface ServiceDetails {
+  id: string;
+  name: string;
   price_cents: number;
   duration_minutes: number;
 }
@@ -37,13 +42,13 @@ export async function createBooking(
     const supabase = await createClient();
     const {
       beautyPageId,
-      specialistMemberId,
       serviceIds,
       date,
       startTime,
       endTime,
       clientInfo,
       clientId,
+      visitPreferences,
     } = input;
 
     // Validate we have at least one service
@@ -55,48 +60,40 @@ export async function createBooking(
       };
     }
 
-    // Get specialist info from member ID (including profile for full_name fallback)
-    const { data: specialist, error: specialistError } = await supabase
-      .from("beauty_page_specialists")
+    // Get beauty page info including creator profile
+    const { data: beautyPage, error: beautyPageError } = await supabase
+      .from("beauty_pages")
       .select(`
         id,
         display_name,
-        member_id,
-        beauty_page_members!inner (
-          profiles!inner (
-            full_name
-          )
-        )
+        currency,
+        auto_confirm_bookings
       `)
-      .eq("member_id", specialistMemberId)
+      .eq("id", beautyPageId)
       .single();
 
-    if (specialistError || !specialist) {
-      console.error("Error fetching specialist:", specialistError);
+    if (beautyPageError || !beautyPage) {
+      console.error("Error fetching beauty page:", beautyPageError);
       return {
         success: false,
         error: "validation",
-        message: "Specialist not found",
+        message: "Beauty page not found",
       };
     }
 
-    // Get service assignments for the selected services and specialist
-    const { data: assignments, error: assignmentsError } = await supabase
-      .from("specialist_service_assignments")
+    // Get services with their prices and durations
+    const { data: services, error: servicesError } = await supabase
+      .from("services")
       .select(`
-        service_id,
+        id,
+        name,
         price_cents,
-        duration_minutes,
-        services!inner (
-          id,
-          name
-        )
+        duration_minutes
       `)
-      .eq("member_id", specialistMemberId)
-      .in("service_id", serviceIds);
+      .in("id", serviceIds);
 
-    if (assignmentsError) {
-      console.error("Error fetching service assignments:", assignmentsError);
+    if (servicesError) {
+      console.error("Error fetching services:", servicesError);
       return {
         success: false,
         error: "validation",
@@ -104,25 +101,21 @@ export async function createBooking(
       };
     }
 
-    if (!assignments || assignments.length !== serviceIds.length) {
+    if (!services || services.length !== serviceIds.length) {
       return {
         success: false,
         error: "validation",
-        message: "Some selected services are not available for this specialist",
+        message: "Some selected services are not available",
       };
     }
 
-    // Map assignments to our format
-    const serviceDetails: ServiceAssignment[] = assignments.map((a) => {
-      // services is a single object due to !inner join
-      const service = a.services as unknown as { id: string; name: string };
-      return {
-        service_id: a.service_id,
-        service_name: service.name,
-        price_cents: a.price_cents,
-        duration_minutes: a.duration_minutes,
-      };
-    });
+    // Map services to our format
+    const serviceDetails: ServiceDetails[] = services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      price_cents: s.price_cents,
+      duration_minutes: s.duration_minutes,
+    }));
 
     // Calculate totals
     const totalPriceCents = serviceDetails.reduce(
@@ -133,14 +126,12 @@ export async function createBooking(
       (sum, s) => sum + s.duration_minutes,
       0,
     );
-    const combinedServiceName = serviceDetails
-      .map((s) => s.service_name)
-      .join(", ");
+    const combinedServiceName = serviceDetails.map((s) => s.name).join(", ");
 
     // Check if the slot is still available (prevent race conditions)
     const slotAvailable = await isSlotAvailable(
       supabase,
-      specialist.id,
+      beautyPageId,
       date,
       startTime,
       endTime,
@@ -154,11 +145,11 @@ export async function createBooking(
       };
     }
 
-    // Check if specialist is working on this date
+    // Check if creator is working on this date
     const { data: workingDay, error: workingDayError } = await supabase
       .from("working_days")
       .select("id, start_time, end_time")
-      .eq("specialist_id", specialist.id)
+      .eq("beauty_page_id", beautyPageId)
       .eq("date", date)
       .single();
 
@@ -166,17 +157,22 @@ export async function createBooking(
       return {
         success: false,
         error: "not_working",
-        message: "The specialist is not working on this date",
+        message: "Not working on this date",
       };
     }
 
     // Verify the time slot is within working hours
     const slotStartMinutes = timeToMinutes(startTime);
     const slotEndMinutes = timeToMinutes(endTime);
-    const workStartMinutes = timeToMinutes(normalizeTime(workingDay.start_time));
+    const workStartMinutes = timeToMinutes(
+      normalizeTime(workingDay.start_time),
+    );
     const workEndMinutes = timeToMinutes(normalizeTime(workingDay.end_time));
 
-    if (slotStartMinutes < workStartMinutes || slotEndMinutes > workEndMinutes) {
+    if (
+      slotStartMinutes < workStartMinutes ||
+      slotEndMinutes > workEndMinutes
+    ) {
       return {
         success: false,
         error: "not_working",
@@ -209,27 +205,12 @@ export async function createBooking(
       }
     }
 
-    // Get beauty page info for currency and timezone
-    const { data: beautyPage } = await supabase
-      .from("beauty_pages")
-      .select("id")
-      .eq("id", beautyPageId)
-      .single();
-
-    if (!beautyPage) {
-      return {
-        success: false,
-        error: "validation",
-        message: "Beauty page not found",
-      };
-    }
-
     // Build notes with service IDs metadata for future reference
     const serviceMetadata = {
       service_ids: serviceIds,
       services: serviceDetails.map((s) => ({
-        id: s.service_id,
-        name: s.service_name,
+        id: s.id,
+        name: s.name,
         price_cents: s.price_cents,
         duration_minutes: s.duration_minutes,
       })),
@@ -239,29 +220,25 @@ export async function createBooking(
       ? `${clientInfo.notes}\n\n---\n${JSON.stringify(serviceMetadata)}`
       : JSON.stringify(serviceMetadata);
 
-    // Get specialist display name with fallback to profile full_name
-    // Supabase returns nested data - beauty_page_members is a single object due to !inner
-    const memberData = specialist.beauty_page_members as unknown as {
-      profiles: { full_name: string | null };
-    };
-    const profileFullName = memberData?.profiles?.full_name;
-    const specialistDisplayName =
-      specialist.display_name ?? profileFullName ?? "Specialist";
+    // Get creator display name from beauty page
+    const creatorDisplayName = beautyPage.display_name ?? "Creator";
+
+    // Determine status based on auto_confirm setting
+    const appointmentStatus = beautyPage.auto_confirm_bookings
+      ? "confirmed"
+      : "pending";
 
     // Create the appointment
-    // Note: Using first service as primary service_id for foreign key
-    // Full service list is stored in client_notes as JSON
     const { data: appointment, error: createError } = await supabase
       .from("appointments")
       .insert({
         beauty_page_id: beautyPageId,
-        specialist_id: specialist.id,
         service_id: serviceIds[0], // Primary service for FK
         client_id: clientId ?? null,
-        specialist_display_name: specialistDisplayName,
+        creator_display_name: creatorDisplayName,
         service_name: combinedServiceName,
         service_price_cents: totalPriceCents,
-        service_currency: "UAH", // Default for now, could come from beauty page settings
+        service_currency: beautyPage.currency ?? "UAH",
         service_duration_minutes: totalDurationMinutes,
         client_name: clientInfo.name,
         client_phone: clientInfo.phone ?? null,
@@ -269,9 +246,10 @@ export async function createBooking(
         date,
         start_time: startTime,
         end_time: endTime,
-        timezone: "Europe/Kyiv", // Default, could come from beauty page settings
-        status: "pending", // Could be 'confirmed' if auto_confirm is enabled
+        timezone: "Europe/Kyiv",
+        status: appointmentStatus,
         client_notes: clientNotes,
+        visit_preferences: visitPreferences ?? null,
       })
       .select("id, status")
       .single();
@@ -309,7 +287,7 @@ export async function createBooking(
  */
 async function isSlotAvailable(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  specialistId: string,
+  beautyPageId: string,
   date: string,
   startTime: string,
   endTime: string,
@@ -318,7 +296,7 @@ async function isSlotAvailable(
   const { data: appointments, error } = await supabase
     .from("appointments")
     .select("start_time, end_time")
-    .eq("specialist_id", specialistId)
+    .eq("beauty_page_id", beautyPageId)
     .eq("date", date)
     .in("status", ["pending", "confirmed"]);
 

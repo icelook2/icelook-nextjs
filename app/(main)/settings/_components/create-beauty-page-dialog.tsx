@@ -180,28 +180,32 @@ export function CreateBeautyPageDialog({
                   <Controller
                     name="typeId"
                     control={control}
-                    render={({ field }) => (
-                      <Select.Root
-                        items={beautyPageTypes.map((type) => ({
-                          value: type.id,
-                          label: type.name,
-                        }))}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <Select.Trigger
-                          placeholder={t("beauty_page_type_placeholder")}
-                          state={errors.typeId ? "error" : "default"}
-                        />
-                        <Select.Content>
-                          {beautyPageTypes.map((type) => (
-                            <Select.Item key={type.id} value={type.id}>
-                              {type.name}
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Root>
-                    )}
+                    render={({ field }) => {
+                      const items = beautyPageTypes.map((type) => ({
+                        value: type.id,
+                        label: type.name,
+                      }));
+                      return (
+                        <Select.Root
+                          items={items}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <Select.Trigger
+                            items={items}
+                            placeholder={t("beauty_page_type_placeholder")}
+                            state={errors.typeId ? "error" : "default"}
+                          />
+                          <Select.Content>
+                            {beautyPageTypes.map((type) => (
+                              <Select.Item key={type.id} value={type.id}>
+                                {type.name}
+                              </Select.Item>
+                            ))}
+                          </Select.Content>
+                        </Select.Root>
+                      );
+                    }}
                   />
                   <Field.Error>{errors.typeId?.message}</Field.Error>
                 </Field.Root>

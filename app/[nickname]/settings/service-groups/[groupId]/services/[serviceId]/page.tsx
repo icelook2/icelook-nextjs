@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { getProfile } from "@/lib/auth/session";
 import {
   getBeautyPageByNickname,
-  getBeautyPageSpecialists,
   getServiceById,
   getServiceGroupById,
 } from "@/lib/queries";
@@ -31,10 +30,9 @@ export default async function ServiceDetailsPage({
     redirect(`/${nickname}`);
   }
 
-  const [serviceGroup, service, specialists] = await Promise.all([
+  const [serviceGroup, service] = await Promise.all([
     getServiceGroupById(groupId),
     getServiceById(serviceId),
-    getBeautyPageSpecialists(beautyPage.id),
   ]);
 
   if (!serviceGroup || serviceGroup.beauty_page_id !== beautyPage.id) {
@@ -59,7 +57,6 @@ export default async function ServiceDetailsPage({
           service={service}
           serviceGroup={serviceGroup}
           nickname={nickname}
-          specialists={specialists}
         />
       </main>
     </>

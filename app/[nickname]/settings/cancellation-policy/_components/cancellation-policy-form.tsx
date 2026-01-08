@@ -1,5 +1,15 @@
 "use client";
 
+/**
+ * Cancellation Policy Form (Solo Creator Model)
+ *
+ * Simplified form for managing cancellation policies:
+ * - Allow/disallow cancellations
+ * - Notice period in hours
+ * - Late cancellation fee percentage
+ * - Optional policy text
+ */
+
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -9,25 +19,24 @@ import { Field } from "@/lib/ui/field";
 import { NumberField } from "@/lib/ui/number-field";
 import { SettingsGroup, SettingsRow } from "@/lib/ui/settings-group";
 import { Switch } from "@/lib/ui/switch";
+import { Textarea } from "@/lib/ui/textarea";
 import { upsertCancellationPolicy } from "../_actions/cancellation-policy.actions";
 
 interface FormValues {
-  isEnabled: boolean;
-  maxCancellations: number;
-  periodDays: number;
-  blockDurationDays: number;
-  noShowMultiplier: number;
+  allowCancellation: boolean;
+  cancellationNoticeHours: number;
+  cancellationFeePercentage: number;
+  policyText: string;
 }
 
 interface CancellationPolicyFormProps {
   beautyPageId: string;
   nickname: string;
   initialValues: {
-    isEnabled: boolean;
-    maxCancellations: number;
-    periodDays: number;
-    blockDurationDays: number;
-    noShowMultiplier: number;
+    allowCancellation: boolean;
+    cancellationNoticeHours: number;
+    cancellationFeePercentage: number;
+    policyText: string;
   };
 }
 
@@ -51,7 +60,7 @@ export function CancellationPolicyForm({
     defaultValues: initialValues,
   });
 
-  const isEnabled = watch("isEnabled");
+  const allowCancellation = watch("allowCancellation");
 
   function onSubmit(data: FormValues) {
     setServerError(null);
@@ -60,11 +69,10 @@ export function CancellationPolicyForm({
       const result = await upsertCancellationPolicy({
         beautyPageId,
         nickname,
-        isEnabled: data.isEnabled,
-        maxCancellations: data.maxCancellations,
-        periodDays: data.periodDays,
-        blockDurationDays: data.blockDurationDays,
-        noShowMultiplier: data.noShowMultiplier,
+        allowCancellation: data.allowCancellation,
+        cancellationNoticeHours: data.cancellationNoticeHours,
+        cancellationFeePercentage: data.cancellationFeePercentage,
+        policyText: data.policyText || undefined,
       });
 
       if (result.success) {
@@ -84,18 +92,18 @@ export function CancellationPolicyForm({
       >
         <SettingsRow>
           <div className="space-y-6">
-            {/* Enable/Disable Toggle */}
+            {/* Allow Cancellation Toggle */}
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <p className="text-sm font-medium text-foreground">
-                  {t("policy.enable_label")}
+                  {t("policy.allow_cancellation_label")}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {t("policy.enable_description")}
+                <p className="text-sm text-muted">
+                  {t("policy.allow_cancellation_description")}
                 </p>
               </div>
               <Controller
-                name="isEnabled"
+                name="allowCancellation"
                 control={control}
                 render={({ field }) => (
                   <Switch
@@ -106,87 +114,64 @@ export function CancellationPolicyForm({
               />
             </div>
 
-            {/* Policy Settings - shown only when enabled */}
-            {isEnabled && (
+            {/* Policy Settings - shown only when cancellation is allowed */}
+            {allowCancellation && (
               <div className="space-y-4 border-t border-border pt-4">
-                <Field.Root name="maxCancellations">
-                  <Field.Label>{t("policy.max_cancellations_label")}</Field.Label>
+                <Field.Root name="cancellationNoticeHours">
+                  <Field.Label>{t("policy.notice_hours_label")}</Field.Label>
                   <Controller
-                    name="maxCancellations"
+                    name="cancellationNoticeHours"
                     control={control}
                     render={({ field }) => (
                       <NumberField
                         className="max-w-36"
                         value={field.value}
-                        onValueChange={(val) => field.onChange(val ?? 1)}
-                        min={1}
+                        onValueChange={(val) => field.onChange(val ?? 0)}
+                        min={0}
+                        max={168}
+                      />
+                    )}
+                  />
+                  <Field.Description>
+                    {t("policy.notice_hours_description")}
+                  </Field.Description>
+                </Field.Root>
+
+                <Field.Root name="cancellationFeePercentage">
+                  <Field.Label>{t("policy.fee_percentage_label")}</Field.Label>
+                  <Controller
+                    name="cancellationFeePercentage"
+                    control={control}
+                    render={({ field }) => (
+                      <NumberField
+                        className="max-w-36"
+                        value={field.value}
+                        onValueChange={(val) => field.onChange(val ?? 0)}
+                        min={0}
                         max={100}
                       />
                     )}
                   />
                   <Field.Description>
-                    {t("policy.max_cancellations_description")}
+                    {t("policy.fee_percentage_description")}
                   </Field.Description>
                 </Field.Root>
 
-                <Field.Root name="periodDays">
-                  <Field.Label>{t("policy.period_days_label")}</Field.Label>
+                <Field.Root name="policyText">
+                  <Field.Label>{t("policy.text_label")}</Field.Label>
                   <Controller
-                    name="periodDays"
+                    name="policyText"
                     control={control}
                     render={({ field }) => (
-                      <NumberField
-                        className="max-w-36"
-                        value={field.value}
-                        onValueChange={(val) => field.onChange(val ?? 1)}
-                        min={1}
-                        max={365}
+                      <Textarea
+                        {...field}
+                        placeholder={t("policy.text_placeholder")}
+                        rows={4}
                       />
                     )}
                   />
                   <Field.Description>
-                    {t("policy.period_days_description")}
-                  </Field.Description>
-                </Field.Root>
-
-                <Field.Root name="blockDurationDays">
-                  <Field.Label>{t("policy.block_duration_label")}</Field.Label>
-                  <Controller
-                    name="blockDurationDays"
-                    control={control}
-                    render={({ field }) => (
-                      <NumberField
-                        className="max-w-36"
-                        value={field.value}
-                        onValueChange={(val) => field.onChange(val ?? 1)}
-                        min={1}
-                        max={365}
-                      />
-                    )}
-                  />
-                  <Field.Description>
-                    {t("policy.block_duration_description")}
-                  </Field.Description>
-                </Field.Root>
-
-                <Field.Root name="noShowMultiplier">
-                  <Field.Label>{t("policy.no_show_multiplier_label")}</Field.Label>
-                  <Controller
-                    name="noShowMultiplier"
-                    control={control}
-                    render={({ field }) => (
-                      <NumberField
-                        className="max-w-36"
-                        value={field.value}
-                        onValueChange={(val) => field.onChange(val ?? 1)}
-                        min={1}
-                        max={10}
-                        step={0.5}
-                      />
-                    )}
-                  />
-                  <Field.Description>
-                    {t("policy.no_show_multiplier_description")}
+                    {t("policy.text_description")}
                   </Field.Description>
                 </Field.Root>
               </div>

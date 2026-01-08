@@ -8,7 +8,6 @@ import type { ClientAppointment } from "@/lib/queries/appointments";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
-import { LabelBadge } from "@/lib/ui/label-badge";
 import { formatDuration, formatPrice } from "@/lib/utils/price-range";
 import { cancelClientAppointment } from "../_actions/appointment.actions";
 import { StatusBadge } from "./status-badge";
@@ -143,27 +142,17 @@ export function AppointmentDetailDialog({
               </span>
             </SummaryRow>
 
-            {/* Specialist */}
+            {/* Creator */}
             <SummaryRow label={t("specialist")}>
               <div className="flex items-center gap-2">
                 <Avatar
-                  url={appointment.specialist_avatar_url}
-                  name={appointment.specialist_display_name}
+                  url={appointment.creator_avatar_url}
+                  name={appointment.creator_display_name}
                   size="sm"
                 />
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-foreground">
-                    {appointment.specialist_display_name}
-                  </span>
-                  {appointment.specialist_labels.map((label) => (
-                    <LabelBadge
-                      key={label.id}
-                      name={label.name}
-                      color={label.color}
-                      size="sm"
-                    />
-                  ))}
-                </div>
+                <span className="font-medium text-foreground">
+                  {appointment.creator_display_name}
+                </span>
               </div>
             </SummaryRow>
 

@@ -4,31 +4,32 @@ import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { Profile } from "@/lib/auth/session";
 import { cn } from "@/lib/utils/cn";
-import { mainNavItems } from "./nav-config";
+import { useActiveBeautyPage } from "./active-beauty-page-context";
+import { CreatorAvatarNav } from "./creator-avatar-nav";
+import { getNavItemsForRole, type NavContext } from "./nav-config";
 import { BottomNavItem } from "./nav-item";
 import { ProfileMenu } from "./profile-menu";
 
 interface BottomNavProps {
   className?: string;
-  beautyPagesCount?: number;
   profile: Profile | null;
 }
 
-export function BottomNav({
-  className,
-  beautyPagesCount = 0,
-  profile,
-}: BottomNavProps) {
+export function BottomNav({ className, profile }: BottomNavProps) {
   const t = useTranslations();
+  const { role, activeBeautyPage } = useActiveBeautyPage();
 
-  const visibleItems = useMemo(() => {
-    return mainNavItems.filter((item) => {
-      if (item.requiresBeautyPages) {
-        return beautyPagesCount > 0;
-      }
-      return true;
-    });
-  }, [beautyPagesCount]);
+  const navContext: NavContext = useMemo(
+    () => ({
+      activeNickname: activeBeautyPage?.slug ?? null,
+    }),
+    [activeBeautyPage],
+  );
+
+  const navItems = useMemo(
+    () => getNavItemsForRole(role, navContext),
+    [role, navContext],
+  );
 
   return (
     <nav
@@ -37,10 +38,14 @@ export function BottomNav({
         className,
       )}
     >
-      {visibleItems.map((item) => (
+      {/* Avatar for creators (first item) */}
+      <CreatorAvatarNav compact />
+
+      {/* Nav items */}
+      {navItems.map(({ item, resolvedHref }) => (
         <BottomNavItem
-          key={item.href}
-          href={item.href}
+          key={resolvedHref}
+          href={resolvedHref}
           icon={item.icon}
           label={t(item.labelKey)}
         />

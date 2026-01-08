@@ -64,7 +64,7 @@ export function EmailChangeForm({
   const error = errors.email?.message || serverError;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 px-4 py-4">
       <Field.Root>
         <Field.Label>{t("new_email_label")}</Field.Label>
         <Input
@@ -78,7 +78,7 @@ export function EmailChangeForm({
         <Field.Error>{error}</Field.Error>
       </Field.Root>
 
-      <div className="flex gap-3">
+      <div className="flex items-center gap-3">
         <Button type="submit" loading={isPending} size="sm">
           {t("send_confirmation")}
         </Button>

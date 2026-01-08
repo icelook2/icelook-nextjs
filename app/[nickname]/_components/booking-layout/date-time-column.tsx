@@ -1,15 +1,14 @@
 "use client";
 
 /**
- * Date Time Column
+ * Date Time Column (Solo Creator Model)
  *
  * Combined calendar and time slot selection for horizontal booking layout.
  * Uses BookingLayoutContext for state management.
  *
- * Behavior (date-first flow):
- * - Always shows calendar with aggregated working days from all specialists
- * - When date is selected, shows all available time slots from all specialists
- * - Time slots show combined availability across all specialists
+ * Key change from multi-specialist model:
+ * - Shows creator's working days directly (no specialist aggregation)
+ * - Time slots for the single creator
  */
 
 import { useBookingLayout } from "./booking-layout-context";
@@ -23,8 +22,7 @@ import { TimeSlotGrid } from "./time-slot-grid";
 interface DateTimeColumnProps {
   title: string;
   translations: {
-    selectSpecialistFirst: string;
-    selectSpecialistForTime: string;
+    selectServiceFirst: string;
     calendar: {
       monthNames: string[];
       weekdayNames: string[];
@@ -44,10 +42,7 @@ interface DateTimeColumnProps {
 // Component
 // ============================================================================
 
-export function DateTimeColumn({
-  title,
-  translations,
-}: DateTimeColumnProps) {
+export function DateTimeColumn({ title, translations }: DateTimeColumnProps) {
   const {
     selectedDate,
     selectedTime,
@@ -64,9 +59,11 @@ export function DateTimeColumn({
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <div className="pb-3">
-        <h3 className="text-base font-semibold">{title}</h3>
-      </div>
+      {title && (
+        <div className="pb-3">
+          <h3 className="text-base font-semibold">{title}</h3>
+        </div>
+      )}
 
       {/* Content - always show calendar */}
       <div className="space-y-4 rounded-2xl border border-border bg-surface p-4">
@@ -80,7 +77,7 @@ export function DateTimeColumn({
           translations={translations.calendar}
         />
 
-        {/* Time slots when date is selected (from all specialists) */}
+        {/* Time slots when date is selected */}
         {selectedDate && (
           <div className="border-t border-border pt-4">
             <TimeSlotGrid

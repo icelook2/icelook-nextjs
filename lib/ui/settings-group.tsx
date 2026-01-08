@@ -37,18 +37,36 @@ interface SettingsRowProps {
   children: ReactNode;
   className?: string;
   noBorder?: boolean;
+  onClick?: () => void;
 }
 
 export function SettingsRow({
   children,
   className,
   noBorder = false,
+  onClick,
 }: SettingsRowProps) {
+  const isClickable = !!onClick;
+
   return (
     <div
+      role={isClickable ? "button" : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      onClick={onClick}
+      onKeyDown={
+        isClickable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
       className={cn(
         "px-4 py-4",
         !noBorder && "border-b border-border last:border-b-0",
+        isClickable && "cursor-pointer transition-colors hover:bg-surface-muted",
         className,
       )}
     >

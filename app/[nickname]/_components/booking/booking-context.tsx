@@ -1,35 +1,42 @@
 "use client";
 
 /**
- * Booking Context
+ * Booking Context (Solo Creator Model)
  *
  * Manages state for the multi-step booking dialog flow.
- * Handles step navigation, selections, and booking submission.
+ * Simplified for solo creator - no specialist selection step.
+ *
+ * Flow: date → time → confirm → success
  */
 
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
 import type { ProfileService } from "@/lib/queries/beauty-page-profile";
 import { createBooking } from "./_actions/booking.actions";
-import { calculateEndTime } from "./_lib/slot-generation";
 import type {
-  AvailableSpecialist,
   BookingResult,
   BookingState,
   BookingStep,
   CurrentUserProfile,
   GuestInfo,
 } from "./_lib/booking-types";
+import { calculateEndTime } from "./_lib/slot-generation";
 
 // ============================================================================
 // Types
 // ============================================================================
+
+/** Creator info for display in booking flow */
+export interface CreatorInfo {
+  displayName: string;
+  avatarUrl: string | null;
+}
 
 interface BookingContextValue extends BookingState {
   // Navigation
@@ -38,7 +45,6 @@ interface BookingContextValue extends BookingState {
   canGoBack: boolean;
 
   // Selections
-  selectSpecialist: (specialist: AvailableSpecialist) => void;
   selectDate: (date: Date) => void;
   selectTime: (time: string) => void;
   setGuestInfo: (info: GuestInfo) => void;
@@ -52,39 +58,30 @@ interface BookingContextValue extends BookingState {
   // Derived from props
   beautyPageId: string;
   selectedServices: ProfileService[];
-  availableSpecialists: AvailableSpecialist[];
+  /** Total price for all selected services */
+  totalPriceCents: number;
+  /** Total duration for all selected services */
+  totalDurationMinutes: number;
   timezone: string;
   currency: string;
   locale: string;
   currentUserId?: string;
   currentUserProfile?: CurrentUserProfile;
-}
-
-/** Initial state for starting at a specific step */
-export interface BookingInitialState {
-  /** Skip to this step */
-  step: BookingStep;
-  /** Pre-selected specialist */
-  specialist: AvailableSpecialist;
-  /** Pre-selected date */
-  date: Date;
-  /** Pre-selected time */
-  time: string;
+  creatorInfo: CreatorInfo;
 }
 
 interface BookingProviderProps {
   children: ReactNode;
   beautyPageId: string;
   selectedServices: ProfileService[];
-  availableSpecialists: AvailableSpecialist[];
+  totalPriceCents: number;
+  totalDurationMinutes: number;
   timezone: string;
   currency: string;
   locale: string;
   currentUserId?: string;
   currentUserProfile?: CurrentUserProfile;
-  onClose: () => void;
-  /** Optional initial state for skipping to a specific step */
-  initialState?: BookingInitialState;
+  creatorInfo: CreatorInfo;
 }
 
 // ============================================================================
@@ -113,52 +110,26 @@ export function BookingProvider({
   children,
   beautyPageId,
   selectedServices,
-  availableSpecialists,
+  totalPriceCents,
+  totalDurationMinutes,
   timezone,
   currency,
   locale,
   currentUserId,
   currentUserProfile,
-  onClose,
-  initialState,
+  creatorInfo,
 }: BookingProviderProps) {
-  // Determine initial step based on initialState or number of specialists
-  const computedInitialStep: BookingStep = initialState
-    ? initialState.step
-    : availableSpecialists.length > 1
-      ? "specialist"
-      : "date";
-
-  // Initial specialist from initialState or if only one available
-  const computedInitialSpecialist: AvailableSpecialist | null = initialState
-    ? initialState.specialist
-    : availableSpecialists.length === 1
-      ? availableSpecialists[0]
-      : null;
-
-  // Initial date and time from initialState
-  const computedInitialDate = initialState?.date ?? null;
-  const computedInitialTime = initialState?.time ?? null;
-
-  // State
-  const [step, setStep] = useState<BookingStep>(computedInitialStep);
-  const [specialist, setSpecialist] = useState<AvailableSpecialist | null>(
-    computedInitialSpecialist,
-  );
-  const [date, setDate] = useState<Date | null>(computedInitialDate);
-  const [time, setTime] = useState<string | null>(computedInitialTime);
+  // State - starts at date selection (no specialist step)
+  const [step, setStep] = useState<BookingStep>("date");
+  const [date, setDate] = useState<Date | null>(null);
+  const [time, setTime] = useState<string | null>(null);
   const [guestInfo, setGuestInfoState] = useState<GuestInfo | null>(null);
   const [result, setResult] = useState<BookingResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Step order for navigation
-  const stepOrder: BookingStep[] = useMemo(() => {
-    if (availableSpecialists.length > 1) {
-      return ["specialist", "date", "time", "confirm", "success"];
-    }
-    return ["date", "time", "confirm", "success"];
-  }, [availableSpecialists.length]);
+  // Step order for navigation (no specialist step)
+  const stepOrder: BookingStep[] = ["date", "time", "confirm", "success"];
 
   // Navigation
   const goToStep = useCallback((newStep: BookingStep) => {
@@ -169,7 +140,7 @@ export function BookingProvider({
   const canGoBack = useMemo(() => {
     const currentIndex = stepOrder.indexOf(step);
     return currentIndex > 0 && step !== "success";
-  }, [step, stepOrder]);
+  }, [step]);
 
   const goBack = useCallback(() => {
     const currentIndex = stepOrder.indexOf(step);
@@ -177,17 +148,9 @@ export function BookingProvider({
       setStep(stepOrder[currentIndex - 1]);
       setError(null);
     }
-  }, [step, stepOrder]);
+  }, [step]);
 
   // Selections
-  const selectSpecialist = useCallback((selected: AvailableSpecialist) => {
-    setSpecialist(selected);
-    setDate(null); // Reset subsequent selections
-    setTime(null);
-    setStep("date");
-    setError(null);
-  }, []);
-
   const selectDate = useCallback((selected: Date) => {
     setDate(selected);
     setTime(null); // Reset time when date changes
@@ -207,7 +170,7 @@ export function BookingProvider({
 
   // Submission
   const submitBooking = useCallback(async () => {
-    if (!specialist || !date || !time) {
+    if (!date || !time) {
       setError("Missing required booking information");
       return;
     }
@@ -220,7 +183,7 @@ export function BookingProvider({
       const dateStr = formatDateToYYYYMMDD(date);
 
       // Calculate end time based on total duration
-      const endTime = calculateEndTime(time, specialist.totalDurationMinutes);
+      const endTime = calculateEndTime(time, totalDurationMinutes);
 
       // Prepare client info
       const clientInfo = guestInfo ?? {
@@ -230,13 +193,13 @@ export function BookingProvider({
 
       const bookingResult = await createBooking({
         beautyPageId,
-        specialistMemberId: specialist.memberId,
         serviceIds: selectedServices.map((s) => s.id),
         date: dateStr,
         startTime: time,
         endTime,
         clientInfo,
         clientId: currentUserId,
+        visitPreferences: guestInfo?.visitPreferences,
       });
 
       setResult(bookingResult);
@@ -253,33 +216,31 @@ export function BookingProvider({
       setIsSubmitting(false);
     }
   }, [
-    specialist,
     date,
     time,
     guestInfo,
     beautyPageId,
     selectedServices,
+    totalDurationMinutes,
     currentUserId,
   ]);
 
   // Reset
   const reset = useCallback(() => {
-    setStep(computedInitialStep);
-    setSpecialist(computedInitialSpecialist);
-    setDate(computedInitialDate);
-    setTime(computedInitialTime);
+    setStep("date");
+    setDate(null);
+    setTime(null);
     setGuestInfoState(null);
     setResult(null);
     setIsSubmitting(false);
     setError(null);
-  }, [computedInitialStep, computedInitialSpecialist, computedInitialDate, computedInitialTime]);
+  }, []);
 
   // Context value
   const value: BookingContextValue = useMemo(
     () => ({
       // State
       step,
-      specialist,
       date,
       time,
       guestInfo,
@@ -293,7 +254,6 @@ export function BookingProvider({
       canGoBack,
 
       // Selections
-      selectSpecialist,
       selectDate,
       selectTime,
       setGuestInfo,
@@ -307,16 +267,17 @@ export function BookingProvider({
       // Props
       beautyPageId,
       selectedServices,
-      availableSpecialists,
+      totalPriceCents,
+      totalDurationMinutes,
       timezone,
       currency,
       locale,
       currentUserId,
       currentUserProfile,
+      creatorInfo,
     }),
     [
       step,
-      specialist,
       date,
       time,
       guestInfo,
@@ -326,7 +287,6 @@ export function BookingProvider({
       goToStep,
       goBack,
       canGoBack,
-      selectSpecialist,
       selectDate,
       selectTime,
       setGuestInfo,
@@ -334,12 +294,14 @@ export function BookingProvider({
       reset,
       beautyPageId,
       selectedServices,
-      availableSpecialists,
+      totalPriceCents,
+      totalDurationMinutes,
       timezone,
       currency,
       locale,
       currentUserId,
       currentUserProfile,
+      creatorInfo,
     ],
   );
 

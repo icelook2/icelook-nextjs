@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
-import { getBeautyPageAdmins, getBeautyPageByNickname } from "@/lib/queries";
+import { getBeautyPageByNickname } from "@/lib/queries";
 import { getCancellationPolicy } from "@/lib/queries/cancellation-policy";
 import { PageHeader } from "@/lib/ui/page-header";
 import { CancellationPolicyForm } from "./_components/cancellation-policy-form";
@@ -12,11 +12,10 @@ interface CancellationPolicySettingsPageProps {
 
 // Default values for new policies
 const DEFAULT_POLICY = {
-  isEnabled: false,
-  maxCancellations: 3,
-  periodDays: 30,
-  blockDurationDays: 30,
-  noShowMultiplier: 2,
+  allowCancellation: true,
+  cancellationNoticeHours: 24,
+  cancellationFeePercentage: 0,
+  policyText: "",
 };
 
 export default async function CancellationPolicySettingsPage({
@@ -37,12 +36,10 @@ export default async function CancellationPolicySettingsPage({
     redirect(`/${nickname}`);
   }
 
-  // Check if user is owner or admin
+  // Solo creator model: only owner can access settings
   const isOwner = profile.id === beautyPage.owner_id;
-  const admins = await getBeautyPageAdmins(beautyPage.id);
-  const userIsAdmin = admins.some((a) => a.user_id === profile.id);
 
-  if (!isOwner && !userIsAdmin) {
+  if (!isOwner) {
     redirect(`/${nickname}`);
   }
 
@@ -51,11 +48,10 @@ export default async function CancellationPolicySettingsPage({
 
   const initialValues = existingPolicy
     ? {
-        isEnabled: existingPolicy.is_enabled,
-        maxCancellations: existingPolicy.max_cancellations,
-        periodDays: existingPolicy.period_days,
-        blockDurationDays: existingPolicy.block_duration_days,
-        noShowMultiplier: existingPolicy.no_show_multiplier,
+        allowCancellation: existingPolicy.allow_cancellation,
+        cancellationNoticeHours: existingPolicy.cancellation_notice_hours,
+        cancellationFeePercentage: existingPolicy.cancellation_fee_percentage,
+        policyText: existingPolicy.policy_text ?? "",
       }
     : DEFAULT_POLICY;
 

@@ -67,11 +67,17 @@ type SelectTriggerProps = ComponentPropsWithoutRef<
 > & {
   placeholder?: string;
   state?: "default" | "error";
+  /**
+   * Items array for label lookup. When provided, the trigger will display
+   * the label of the selected item instead of the raw value.
+   */
+  items?: SelectItem[];
 };
 
 function SelectTrigger({
   state = "default",
   placeholder,
+  items,
   className,
   children,
   ...props
@@ -88,10 +94,19 @@ function SelectTrigger({
     >
       {children ?? (
         <>
-          <BaseSelect.Value
-            className="flex-1 truncate data-[placeholder]:text-muted"
-            placeholder={placeholder}
-          />
+          <BaseSelect.Value className="flex-1 truncate data-[placeholder]:text-muted">
+            {(value) => {
+              if (value === null || value === undefined || value === "") {
+                return placeholder;
+              }
+              // Look up the label from items if provided
+              if (items) {
+                const item = items.find((i) => i.value === value);
+                return item?.label ?? value;
+              }
+              return value;
+            }}
+          </BaseSelect.Value>
           <BaseSelect.Icon className="text-muted shrink-0">
             <ChevronDown className="size-4" />
           </BaseSelect.Icon>

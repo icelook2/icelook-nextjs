@@ -1,9 +1,8 @@
 /**
- * Booking Layout Components
+ * Booking Layout Components (Solo Creator Model)
  *
- * Horizontal 4-column booking layout for tablet/desktop.
- * Columns: Services | Specialists | Date & Time | Confirmation
- * Provides bi-directional filtering between columns.
+ * Horizontal 3-column booking layout for tablet/desktop.
+ * Columns: Services | Date & Time | Confirmation
  */
 
 export {
@@ -13,12 +12,9 @@ export {
 export {
   BookingLayoutProvider,
   useBookingLayout,
-  type SpecialistWithPrice,
 } from "./booking-layout-context";
-export { ServicesColumn } from "./services-column";
-export { SpecialistsColumn } from "./specialists-column";
-export { DateTimeColumn } from "./date-time-column";
-export { ConfirmationColumn } from "./confirmation-column";
 export { CalendarView } from "./calendar-view";
+export { ConfirmationColumn } from "./confirmation-column";
+export { DateTimeColumn } from "./date-time-column";
+export { ServicesColumn } from "./services-column";
 export { TimeSlotGrid } from "./time-slot-grid";
-export { SpecialistBookingCard } from "./specialist-booking-card";

@@ -2,18 +2,19 @@
  * Query for fetching all data needed for the public beauty page profile.
  *
  * This is an optimized query that fetches beauty page info, contact details,
- * business hours, service groups with services, and specialists in one call.
+ * business hours, and service groups with services in one call.
+ *
+ * Solo Creator Model: Each beauty page has ONE creator who provides all services.
+ * Prices and durations are stored directly on services (no specialist assignments).
  */
 
 import { createClient } from "@/lib/supabase/server";
-import { getBulkSpecialistLabels, type SpecialistLabel } from "./labels";
-import { getBulkSpecialistRatingStats } from "./reviews";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-/** Contact information fields added to beauty_pages */
+/** Contact information fields on beauty_pages */
 export type ContactInfo = {
   address: string | null;
   city: string | null;
@@ -24,6 +25,13 @@ export type ContactInfo = {
   website_url: string | null;
   instagram_url: string | null;
   facebook_url: string | null;
+};
+
+/** Creator profile fields on beauty_pages */
+export type CreatorProfile = {
+  display_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
 };
 
 /** Beauty page type (category) for profile display */
@@ -44,36 +52,28 @@ export type BeautyPageInfo = {
   is_active: boolean;
   is_verified: boolean;
   type: ProfileBeautyPageType | null;
+  /** Creator's display name for bookings */
+  creator_display_name: string | null;
+  /** Creator's avatar for display */
+  creator_avatar_url: string | null;
+  /** Creator's bio */
+  creator_bio: string | null;
 } & ContactInfo;
 
-/** Business hours for a single day */
-export type DayHours = {
-  day_of_week: number;
-  is_open: boolean;
-  open_time: string | null;
-  close_time: string | null;
+/** Working day for status calculation */
+export type WorkingDayForStatus = {
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:MM or HH:MM:SS
+  endTime: string; // HH:MM or HH:MM:SS
 };
 
-/** Specialist assignment with price and duration */
-export type SpecialistAssignment = {
-  id: string;
-  member_id: string;
-  price_cents: number;
-  duration_minutes: number;
-  specialist: {
-    id: string;
-    display_name: string | null;
-    avatar_url: string | null;
-    full_name: string | null;
-  };
-};
-
-/** Service with all specialist assignments */
+/** Service with price and duration (solo creator model) */
 export type ProfileService = {
   id: string;
   name: string;
   display_order: number;
-  assignments: SpecialistAssignment[];
+  price_cents: number;
+  duration_minutes: number;
 };
 
 /** Service group with its services */
@@ -84,37 +84,31 @@ export type ProfileServiceGroup = {
   services: ProfileService[];
 };
 
-/** Label for display on specialist profile */
-export type ProfileSpecialistLabel = Pick<
-  SpecialistLabel,
-  "id" | "name" | "color"
->;
-
-/** Specialist profile for display */
+/** Specialist profile for display (simplified for solo creator) */
 export type ProfileSpecialist = {
   id: string;
-  member_id: string;
   display_name: string | null;
   avatar_url: string | null;
   bio: string | null;
-  is_active: boolean;
-  full_name: string | null;
-  service_count: number;
-  /** Average rating (1-5), 0 if no reviews */
-  average_rating: number;
-  /** Total number of reviews */
-  total_reviews: number;
-  /** Labels assigned to this specialist */
-  labels: ProfileSpecialistLabel[];
+};
+
+/** Rating statistics for the beauty page */
+export type BeautyPageRatingStats = {
+  averageRating: number;
+  totalReviews: number;
 };
 
 /** Complete beauty page profile data */
 export type BeautyPageProfile = {
   info: BeautyPageInfo;
-  businessHours: DayHours[];
+  /** Upcoming working days for status calculation (sorted by date) */
+  workingDays: WorkingDayForStatus[];
   timezone: string;
   serviceGroups: ProfileServiceGroup[];
+  /** The creator (solo specialist) for this beauty page */
   specialists: ProfileSpecialist[];
+  /** Rating stats from reviews */
+  ratingStats: BeautyPageRatingStats;
 };
 
 // ============================================================================
@@ -132,7 +126,7 @@ export async function getBeautyPageProfile(
 ): Promise<BeautyPageProfile | null> {
   const supabase = await createClient();
 
-  // 1. Fetch beauty page with type and contact info
+  // 1. Fetch beauty page with type, contact info, creator profile, and timezone
   const { data: beautyPage, error: pageError } = await supabase
     .from("beauty_pages")
     .select(`
@@ -144,6 +138,10 @@ export async function getBeautyPageProfile(
       description,
       is_active,
       is_verified,
+      timezone,
+      display_name,
+      avatar_url,
+      bio,
       address,
       city,
       postal_code,
@@ -165,17 +163,21 @@ export async function getBeautyPageProfile(
 
   const beautyPageId = beautyPage.id;
 
-  // 2. Fetch business hours
-  const { data: businessHoursData } = await supabase
-    .from("beauty_page_business_hours")
-    .select("day_of_week, is_open, open_time, close_time, timezone")
+  // 2. Fetch upcoming working days (next 30 days for status calculation)
+  const today = new Date().toISOString().split("T")[0];
+  const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
+  const { data: workingDaysData } = await supabase
+    .from("working_days")
+    .select("date, start_time, end_time")
     .eq("beauty_page_id", beautyPageId)
-    .order("day_of_week", { ascending: true });
+    .gte("date", today)
+    .lte("date", futureDate)
+    .order("date", { ascending: true });
 
-  // Extract timezone from first record (all records have same timezone)
-  const timezone = businessHoursData?.[0]?.timezone ?? "Europe/Kyiv";
-
-  // 3. Fetch service groups with services and assignments
+  // 3. Fetch service groups with services (price and duration are on services now)
   const { data: serviceGroupsData } = await supabase
     .from("service_groups")
     .select(`
@@ -186,62 +188,19 @@ export async function getBeautyPageProfile(
         id,
         name,
         display_order,
-        specialist_service_assignments (
-          id,
-          member_id,
-          price_cents,
-          duration_minutes,
-          beauty_page_members (
-            id,
-            beauty_page_specialists (
-              id,
-              display_name,
-              avatar_url
-            ),
-            profiles (
-              full_name
-            )
-          )
-        )
+        price_cents,
+        duration_minutes
       )
     `)
     .eq("beauty_page_id", beautyPageId)
     .order("display_order", { ascending: true })
     .order("display_order", { referencedTable: "services", ascending: true });
 
-  // 4. Fetch active specialists with service counts
-  const { data: membersData } = await supabase
-    .from("beauty_page_members")
-    .select(`
-      id,
-      beauty_page_specialists (
-        id,
-        display_name,
-        avatar_url,
-        bio,
-        is_active
-      ),
-      profiles (
-        full_name
-      )
-    `)
-    .eq("beauty_page_id", beautyPageId)
-    .contains("roles", ["specialist"]);
-
-  // Get service counts for each specialist
-  const { data: assignmentCounts } = await supabase
-    .from("specialist_service_assignments")
-    .select("member_id")
-    .in(
-      "member_id",
-      (membersData ?? []).map((m) => m.id),
-    );
-
-  const serviceCountByMember = new Map<string, number>();
-  for (const assignment of assignmentCounts ?? []) {
-    const count = serviceCountByMember.get(assignment.member_id) ?? 0;
-    serviceCountByMember.set(assignment.member_id, count + 1);
-  }
+  // 4. Fetch rating stats from reviews
+  const { data: reviewsData } = await supabase
+    .from("reviews")
+    .select("rating")
+    .eq("beauty_page_id", beautyPageId);
 
   // ============================================================================
   // Transform Data
@@ -265,6 +224,11 @@ export async function getBeautyPageProfile(
           slug: (typeData as unknown as ProfileBeautyPageType).slug,
         }
       : null,
+    // Creator profile
+    creator_display_name: beautyPage.display_name,
+    creator_avatar_url: beautyPage.avatar_url,
+    creator_bio: beautyPage.bio,
+    // Contact info
     address: beautyPage.address,
     city: beautyPage.city,
     postal_code: beautyPage.postal_code,
@@ -276,15 +240,19 @@ export async function getBeautyPageProfile(
     facebook_url: beautyPage.facebook_url,
   };
 
-  // Transform business hours
-  const businessHours: DayHours[] = (businessHoursData ?? []).map((h) => ({
-    day_of_week: h.day_of_week,
-    is_open: h.is_open,
-    open_time: h.open_time,
-    close_time: h.close_time,
-  }));
+  // Get timezone (default to Europe/Kyiv if not set)
+  const timezone = beautyPage.timezone ?? "Europe/Kyiv";
 
-  // Transform service groups
+  // Transform working days for status calculation
+  const workingDays: WorkingDayForStatus[] = (workingDaysData ?? []).map(
+    (wd) => ({
+      date: wd.date,
+      startTime: wd.start_time,
+      endTime: wd.end_time,
+    }),
+  );
+
+  // Transform service groups (services now have price and duration directly)
   const serviceGroups: ProfileServiceGroup[] = (serviceGroupsData ?? []).map(
     (group) => ({
       id: group.id,
@@ -295,139 +263,49 @@ export async function getBeautyPageProfile(
           id: string;
           name: string;
           display_order: number;
-          specialist_service_assignments: Array<{
-            id: string;
-            member_id: string;
-            price_cents: number;
-            duration_minutes: number;
-            beauty_page_members: {
-              id: string;
-              // Can be array or single object depending on Supabase relationship detection
-              beauty_page_specialists:
-                | Array<{
-                    id: string;
-                    display_name: string | null;
-                    avatar_url: string | null;
-                  }>
-                | {
-                    id: string;
-                    display_name: string | null;
-                    avatar_url: string | null;
-                  }
-                | null;
-              profiles: {
-                full_name: string | null;
-              } | null;
-            };
-          }>;
+          price_cents: number;
+          duration_minutes: number;
         }>) ?? []
       ).map((service) => ({
         id: service.id,
         name: service.name,
         display_order: service.display_order,
-        assignments: (service.specialist_service_assignments ?? []).map(
-          (assignment) => {
-            // Handle both array (one-to-many) and object (one-to-one) return types
-            const specialistsData =
-              assignment.beauty_page_members?.beauty_page_specialists;
-            const specialistProfile = Array.isArray(specialistsData)
-              ? specialistsData[0]
-              : specialistsData;
-            const profile = assignment.beauty_page_members?.profiles;
-
-            // Debug: Log if specialist profile is missing
-            if (!specialistProfile) {
-              console.warn(
-                "[beauty-page-profile] Missing specialist profile for member_id:",
-                assignment.member_id,
-                "beauty_page_members:",
-                JSON.stringify(assignment.beauty_page_members, null, 2),
-              );
-            }
-
-            return {
-              id: assignment.id,
-              member_id: assignment.member_id,
-              price_cents: assignment.price_cents,
-              duration_minutes: assignment.duration_minutes,
-              specialist: {
-                id: specialistProfile?.id ?? assignment.member_id,
-                display_name: specialistProfile?.display_name ?? null,
-                avatar_url: specialistProfile?.avatar_url ?? null,
-                full_name: profile?.full_name ?? null,
-              },
-            };
-          },
-        ),
+        price_cents: service.price_cents,
+        duration_minutes: service.duration_minutes,
       })),
     }),
   );
 
-  // Filter active specialists and extract their IDs for rating lookup
-  const activeMembers = (membersData ?? []).filter((member) => {
-    const specialistProfile = member.beauty_page_specialists as unknown as {
-      is_active: boolean;
-    } | null;
-    return specialistProfile?.is_active !== false;
-  });
+  // Create single specialist entry representing the creator
+  // This maintains API compatibility while simplifying to solo creator model
+  const specialists: ProfileSpecialist[] = [
+    {
+      id: beautyPage.id, // Use beauty page ID as specialist ID
+      display_name: beautyPage.display_name ?? beautyPage.name,
+      avatar_url: beautyPage.avatar_url ?? beautyPage.logo_url,
+      bio: beautyPage.bio,
+    },
+  ];
 
-  // Get specialist IDs for bulk rating stats fetch
-  const specialistIds = activeMembers
-    .map((member) => {
-      const specialistProfile = member.beauty_page_specialists as unknown as {
-        id: string;
-      } | null;
-      return specialistProfile?.id;
-    })
-    .filter((id): id is string => id !== undefined);
+  // Calculate rating stats
+  const reviews = reviewsData ?? [];
+  const totalReviews = reviews.length;
+  const averageRating =
+    totalReviews > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+      : 0;
 
-  // Fetch rating stats and labels for all specialists in parallel
-  const [ratingStatsMap, labelsMap] = await Promise.all([
-    getBulkSpecialistRatingStats(specialistIds),
-    getBulkSpecialistLabels(specialistIds),
-  ]);
-
-  // Transform specialists with rating data and labels
-  const specialists: ProfileSpecialist[] = activeMembers.map((member) => {
-    const specialistProfile = member.beauty_page_specialists as unknown as {
-      id: string;
-      display_name: string | null;
-      avatar_url: string | null;
-      bio: string | null;
-      is_active: boolean;
-    } | null;
-    const profile = member.profiles as unknown as {
-      full_name: string | null;
-    } | null;
-
-    const specialistId = specialistProfile?.id ?? member.id;
-    const ratingStats = ratingStatsMap.get(specialistId);
-    const specialistLabels = labelsMap.get(specialistId) ?? [];
-
-    return {
-      id: specialistId,
-      member_id: member.id,
-      display_name: specialistProfile?.display_name ?? null,
-      avatar_url: specialistProfile?.avatar_url ?? null,
-      bio: specialistProfile?.bio ?? null,
-      is_active: specialistProfile?.is_active ?? true,
-      full_name: profile?.full_name ?? null,
-      service_count: serviceCountByMember.get(member.id) ?? 0,
-      average_rating: ratingStats?.average_rating ?? 0,
-      total_reviews: ratingStats?.total_reviews ?? 0,
-      labels: specialistLabels.map((label) => ({
-        id: label.id,
-        name: label.name,
-        color: label.color,
-      })),
-    };
-  });
+  const ratingStats: BeautyPageRatingStats = {
+    averageRating,
+    totalReviews,
+  };
 
   return {
     info,
-    businessHours,
+    workingDays,
     timezone,
     serviceGroups,
     specialists,
+    ratingStats,
   };
 }

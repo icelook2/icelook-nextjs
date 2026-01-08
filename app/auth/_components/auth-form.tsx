@@ -27,15 +27,17 @@ export function AuthForm() {
   }
 
   return (
-    <>
-      <h1 className="text-2xl font-semibold  text-center mb-2">
-        {step === "email" ? t("welcome") : t("check_email")}
-      </h1>
-      <p className=" text-center mb-8">
-        {step === "email"
-          ? t("enter_email_description")
-          : t("code_sent", { email })}
-      </p>
+    <div className="space-y-6">
+      <div className="text-center">
+        <h1 className="text-xl font-semibold">
+          {step === "email" ? t("welcome") : t("check_email")}
+        </h1>
+        <p className="mt-1 text-sm text-muted">
+          {step === "email"
+            ? t("enter_email_description")
+            : t("code_sent", { email })}
+        </p>
+      </div>
 
       {step === "email" && <EmailStep onSubmitted={handleEmailSubmitted} />}
 
@@ -46,6 +48,6 @@ export function AuthForm() {
           onBack={handleBackToEmail}
         />
       )}
-    </>
+    </div>
   );
 }

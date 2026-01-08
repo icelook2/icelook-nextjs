@@ -1,12 +1,17 @@
 "use client";
 
 /**
- * Booking Layout
+ * Booking Layout (Solo Creator Model)
  *
- * Main container for the horizontal 4-column booking layout.
- * Columns: Services | Specialists | Date & Time | Confirmation
+ * Main container for the horizontal 3-column booking layout.
+ * Columns: Services | Date & Time | Confirmation
  *
- * Desktop (md+): 4-column grid layout
+ * Key change from multi-specialist model:
+ * - No specialist selection (creator IS the specialist)
+ * - 3 columns instead of 4
+ * - Price/duration directly on services
+ *
+ * Desktop (md+): 3-column grid layout
  * Mobile: Tab-based navigation between columns
  */
 
@@ -28,7 +33,6 @@ import { BookingSummaryBar } from "./booking-summary-bar";
 import { ConfirmationColumn } from "./confirmation-column";
 import { DateTimeColumn } from "./date-time-column";
 import { ServicesColumn } from "./services-column";
-import { SpecialistsColumn } from "./specialists-column";
 
 // ============================================================================
 // Types
@@ -38,14 +42,9 @@ export interface BookingLayoutTranslations {
   services: {
     title: string;
   };
-  specialists: {
-    title: string;
-    fallbackName: string;
-  };
   dateTime: {
     title: string;
-    selectSpecialistFirst: string;
-    selectSpecialistForTime: string;
+    selectServiceFirst: string;
     calendar: {
       monthNames: string[];
       weekdayNames: string[];
@@ -62,12 +61,10 @@ export interface BookingLayoutTranslations {
   confirmation: {
     title: string;
     services: string;
-    specialist: string;
     dateTime: string;
     total: string;
     bookButton: string;
     selectServices: string;
-    selectSpecialist: string;
     selectDateTime: string;
   };
   form: {
@@ -89,7 +86,6 @@ export interface BookingLayoutTranslations {
   // Mobile tab labels (optional - falls back to column titles)
   tabs?: {
     services: string;
-    specialists: string;
     dateTime: string;
     book: string;
   };
@@ -97,6 +93,7 @@ export interface BookingLayoutTranslations {
 
 interface BookingLayoutProps {
   serviceGroups: ProfileServiceGroup[];
+  /** The creator (single specialist) for this beauty page */
   specialists: ProfileSpecialist[];
   beautyPageId: string;
   timezone: string;
@@ -129,24 +126,15 @@ export function BookingLayout({
     const services: ProfileService[] = [];
     for (const group of serviceGroups) {
       for (const service of group.services) {
-        if (service.assignments.length > 0) {
-          services.push(service);
-        }
+        services.push(service);
       }
     }
     return services;
   }, [serviceGroups]);
 
-  // Filter active specialists
-  const activeSpecialists = useMemo(() => {
-    return specialists.filter((s) => s.is_active && s.service_count > 0);
-  }, [specialists]);
-
   // Tab labels with fallbacks to column titles
   const tabLabels = {
     services: translations.tabs?.services ?? translations.services.title,
-    specialists:
-      translations.tabs?.specialists ?? translations.specialists.title,
     dateTime: translations.tabs?.dateTime ?? translations.dateTime.title,
     book: translations.tabs?.book ?? translations.confirmation.title,
   };
@@ -154,11 +142,12 @@ export function BookingLayout({
   return (
     <BookingLayoutProvider
       allServices={allServices}
-      allSpecialists={activeSpecialists}
+      allSpecialists={specialists}
+      beautyPageId={beautyPageId}
       timezone={timezone}
     >
-      {/* Desktop: 4-column layout */}
-      <div className="hidden md:grid md:grid-cols-4 md:items-start md:gap-4 lg:gap-6">
+      {/* Desktop: 3-column layout */}
+      <div className="hidden md:grid md:grid-cols-3 md:items-start md:gap-4 lg:gap-6">
         <ServicesColumn
           serviceGroups={serviceGroups}
           title={translations.services.title}
@@ -167,20 +156,10 @@ export function BookingLayout({
           durationLabels={durationLabels}
         />
 
-        <SpecialistsColumn
-          title={translations.specialists.title}
-          fallbackName={translations.specialists.fallbackName}
-          currency={currency}
-          locale={locale}
-          durationLabels={durationLabels}
-        />
-
         <DateTimeColumn
           title={translations.dateTime.title}
           translations={{
-            selectSpecialistFirst: translations.dateTime.selectSpecialistFirst,
-            selectSpecialistForTime:
-              translations.dateTime.selectSpecialistForTime,
+            selectServiceFirst: translations.dateTime.selectServiceFirst,
             calendar: translations.dateTime.calendar,
             time: translations.dateTime.time,
           }}
@@ -222,14 +201,13 @@ export function BookingLayout({
 // Mobile Tabs Component
 // ============================================================================
 
-type TabValue = "services" | "specialists" | "dateTime" | "book";
+type TabValue = "services" | "dateTime" | "book";
 
 interface MobileBookingTabsProps {
   serviceGroups: ProfileServiceGroup[];
   translations: BookingLayoutTranslations;
   tabLabels: {
     services: string;
-    specialists: string;
     dateTime: string;
     book: string;
   };
@@ -255,16 +233,10 @@ function MobileBookingTabs({
   currentUserProfile,
 }: MobileBookingTabsProps) {
   const [activeTab, setActiveTab] = useState<TabValue>("services");
-  const {
-    selectedServiceIds,
-    selectedSpecialistId,
-    selectedDate,
-    selectedTime,
-  } = useBookingLayout();
+  const { selectedServiceIds, selectedDate, selectedTime } = useBookingLayout();
 
   // Calculate progress indicators
   const hasServices = selectedServiceIds.size > 0;
-  const hasSpecialist = !!selectedSpecialistId;
   const hasDateTime = !!selectedDate && !!selectedTime;
 
   return (
@@ -275,16 +247,10 @@ function MobileBookingTabs({
       >
         {/* Sticky tab bar */}
         <div className="sticky top-0 bg-background pb-4">
-          <Tabs.List className="grid grid-cols-4">
+          <Tabs.List className="grid grid-cols-3">
             <Tabs.Tab value="services" className="relative text-xs">
               {tabLabels.services}
               {hasServices && (
-                <span className="absolute -top-1 right-1 h-2 w-2 rounded-full bg-accent" />
-              )}
-            </Tabs.Tab>
-            <Tabs.Tab value="specialists" className="relative text-xs">
-              {tabLabels.specialists}
-              {hasSpecialist && (
                 <span className="absolute -top-1 right-1 h-2 w-2 rounded-full bg-accent" />
               )}
             </Tabs.Tab>
@@ -311,24 +277,11 @@ function MobileBookingTabs({
           />
         </Tabs.Panel>
 
-        <Tabs.Panel value="specialists" className="mt-0">
-          <SpecialistsColumn
-            title=""
-            fallbackName={translations.specialists.fallbackName}
-            currency={currency}
-            locale={locale}
-            durationLabels={durationLabels}
-          />
-        </Tabs.Panel>
-
         <Tabs.Panel value="dateTime" className="mt-0">
           <DateTimeColumn
             title=""
             translations={{
-              selectSpecialistFirst:
-                translations.dateTime.selectSpecialistFirst,
-              selectSpecialistForTime:
-                translations.dateTime.selectSpecialistForTime,
+              selectServiceFirst: translations.dateTime.selectServiceFirst,
               calendar: translations.dateTime.calendar,
               time: translations.dateTime.time,
             }}

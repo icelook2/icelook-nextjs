@@ -1,23 +1,28 @@
 "use client";
 
 /**
- * Services Column
+ * Services Column (Solo Creator Model)
  *
  * Displays services in the horizontal booking layout.
- * Uses BookingLayoutContext for selection and compatibility.
- * Incompatible services are grayed out but remain in place.
+ * Uses BookingLayoutContext for selection.
+ *
+ * Key change from multi-specialist model:
+ * - No assignments - price and duration are directly on services
+ * - No compatibility checks (no specialists to be compatible with)
  */
 
 import { Collapsible } from "@base-ui/react/collapsible";
 import { Check, ChevronDown } from "lucide-react";
-import type { ProfileService, ProfileServiceGroup } from "@/lib/queries/beauty-page-profile";
-import {
-  calculateServicePriceInfo,
-  type DurationLabels,
-  formatDurationRange,
-  formatPriceRange,
-} from "@/lib/utils/price-range";
+import type {
+  ProfileService,
+  ProfileServiceGroup,
+} from "@/lib/queries/beauty-page-profile";
 import { cn } from "@/lib/utils/cn";
+import {
+  type DurationLabels,
+  formatDuration,
+  formatPrice,
+} from "@/lib/utils/price-range";
 import { useBookingLayout } from "./booking-layout-context";
 
 // ============================================================================
@@ -43,17 +48,19 @@ export function ServicesColumn({
   locale = "uk-UA",
   durationLabels,
 }: ServicesColumnProps) {
-  // Filter groups that have at least one service with assignments
-  const groupsWithServices = serviceGroups.filter((group) =>
-    group.services.some((s) => s.assignments.length > 0),
+  // Filter groups that have at least one service
+  const groupsWithServices = serviceGroups.filter(
+    (group) => group.services.length > 0,
   );
 
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <div className="pb-3">
-        <h3 className="text-base font-semibold">{title}</h3>
-      </div>
+      {title && (
+        <div className="pb-3">
+          <h3 className="text-base font-semibold">{title}</h3>
+        </div>
+      )}
 
       {/* Content */}
       <div className="space-y-3">
@@ -91,13 +98,8 @@ function ServiceGroupCardLayout({
   locale = "uk-UA",
   durationLabels,
 }: ServiceGroupCardLayoutProps) {
-  // Filter services that have at least one specialist assigned
-  const servicesWithAssignments = group.services.filter(
-    (s) => s.assignments.length > 0,
-  );
-
-  // Don't render if no services with assignments
-  if (servicesWithAssignments.length === 0) {
+  // Don't render if no services
+  if (group.services.length === 0) {
     return null;
   }
 
@@ -108,16 +110,14 @@ function ServiceGroupCardLayout({
           <div className="font-semibold">{group.name}</div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted">
-            {servicesWithAssignments.length}
-          </span>
+          <span className="text-sm text-muted">{group.services.length}</span>
           <ChevronDown className="h-4 w-4 shrink-0 text-muted transition-transform duration-200 group-data-[panel-open]:rotate-180" />
         </div>
       </Collapsible.Trigger>
 
       <Collapsible.Panel className="overflow-hidden rounded-b-2xl border border-t-0 border-border bg-surface transition-all duration-200 data-[ending-style]:h-0 data-[starting-style]:h-0">
         <div className="divide-y divide-border">
-          {servicesWithAssignments.map((service) => (
+          {group.services.map((service) => (
             <ServiceRowLayout
               key={service.id}
               service={service}
@@ -149,39 +149,29 @@ function ServiceRowLayout({
   locale = "uk-UA",
   durationLabels,
 }: ServiceRowLayoutProps) {
-  const { isServiceSelected, isServiceCompatible, toggleService } =
-    useBookingLayout();
-
-  const priceInfo = calculateServicePriceInfo(service.assignments);
-
-  // Don't show services with no specialists assigned
-  if (priceInfo.specialistCount === 0) {
-    return null;
-  }
+  const { isServiceSelected, toggleService } = useBookingLayout();
 
   const isSelected = isServiceSelected(service.id);
-  const isCompatible = isServiceCompatible(service.id);
-  const isDisabled = !isCompatible && !isSelected;
 
-  const priceDisplay = formatPriceRange(priceInfo, currency, locale);
-  const durationDisplay = formatDurationRange(priceInfo, durationLabels);
+  // Format price and duration directly from service
+  const priceDisplay = formatPrice(service.price_cents, currency, locale);
+  const durationDisplay = formatDuration(
+    service.duration_minutes,
+    durationLabels,
+  );
 
   function handleClick() {
-    if (!isDisabled) {
-      toggleService(service);
-    }
+    toggleService(service);
   }
 
   return (
     <button
       type="button"
       onClick={handleClick}
-      disabled={isDisabled}
       className={cn(
         "group flex w-full items-center gap-3 px-4 py-3 text-left transition-all",
         isSelected && "border-l-2 border-l-accent bg-accent/5",
-        !isSelected && !isDisabled && "hover:bg-surface-hover",
-        isDisabled && "cursor-not-allowed opacity-50",
+        !isSelected && "hover:bg-surface-hover",
       )}
     >
       {/* Selection checkbox */}
@@ -198,20 +188,14 @@ function ServiceRowLayout({
 
       {/* Service name */}
       <div className="min-w-0 flex-1">
-        <div className={cn("font-medium", isDisabled && "text-muted")}>
-          {service.name}
-        </div>
+        <div className="font-medium">{service.name}</div>
       </div>
 
       {/* Duration */}
       <div className="shrink-0 text-sm text-muted">{durationDisplay}</div>
 
       {/* Price */}
-      <div
-        className={cn("shrink-0 text-sm font-medium", isDisabled && "text-muted")}
-      >
-        {priceDisplay}
-      </div>
+      <div className="shrink-0 text-sm font-medium">{priceDisplay}</div>
     </button>
   );
 }

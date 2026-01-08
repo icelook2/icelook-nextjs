@@ -12,7 +12,6 @@ interface DeleteServiceDialogProps {
   service: Service;
   groupId: string;
   nickname: string;
-  assignmentsCount: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -21,7 +20,6 @@ export function DeleteServiceDialog({
   service,
   groupId,
   nickname,
-  assignmentsCount,
   open,
   onOpenChange,
 }: DeleteServiceDialogProps) {
@@ -65,22 +63,6 @@ export function DeleteServiceDialog({
         <Dialog.Body>
           <div className="space-y-4">
             <p>{t("delete_service_confirm", { name: service.name })}</p>
-
-            {assignmentsCount > 0 && (
-              <div className="rounded-lg border border-border bg-surface p-3">
-                <p className="text-sm font-medium">
-                  {t("delete_service_warning_title")}
-                </p>
-                <ul className="mt-2 space-y-1 text-sm text-muted">
-                  <li>
-                    •{" "}
-                    {t("delete_service_assignments_warning", {
-                      count: assignmentsCount,
-                    })}
-                  </li>
-                </ul>
-              </div>
-            )}
 
             {serverError && (
               <p className="text-sm text-danger">{serverError}</p>

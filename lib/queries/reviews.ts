@@ -1,5 +1,5 @@
 /**
- * Query functions for specialist reviews.
+ * Query functions for reviews.
  */
 
 import { createClient } from "@/lib/supabase/server";
@@ -126,7 +126,10 @@ export async function getSpecialistRatingStats(
   return {
     average_rating: stats.average_rating ?? 0,
     total_reviews: stats.total_reviews ?? 0,
-    rating_distribution: (stats.rating_distribution as Record<number, number>) ?? {
+    rating_distribution: (stats.rating_distribution as Record<
+      number,
+      number
+    >) ?? {
       1: 0,
       2: 0,
       3: 0,
@@ -179,7 +182,13 @@ export async function getBulkSpecialistRatingStats(
 
   // Calculate stats for each specialist
   for (const [specialistId, ratings] of reviewsBySpecialist) {
-    const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    const distribution: Record<number, number> = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0,
+    };
     let sum = 0;
 
     for (const rating of ratings) {
@@ -195,4 +204,69 @@ export async function getBulkSpecialistRatingStats(
   }
 
   return statsMap;
+}
+
+// ============================================================================
+// Beauty Page Reviews (Solo Creator Model)
+// ============================================================================
+
+/** A review for a beauty page */
+export type BeautyPageReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  reviewer: {
+    full_name: string | null;
+    avatar_url: string | null;
+  };
+};
+
+/**
+ * Fetches all reviews for a beauty page.
+ *
+ * @param beautyPageId - The beauty page ID
+ * @returns Array of reviews sorted by newest first
+ */
+export async function getBeautyPageReviews(
+  beautyPageId: string,
+): Promise<BeautyPageReview[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select(`
+      id,
+      rating,
+      comment,
+      created_at,
+      profiles:reviewer_id (
+        full_name,
+        avatar_url
+      )
+    `)
+    .eq("beauty_page_id", beautyPageId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data.map((review) => {
+    const profile = review.profiles as unknown as {
+      full_name: string | null;
+      avatar_url: string | null;
+    } | null;
+
+    return {
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      created_at: review.created_at,
+      reviewer: {
+        full_name: profile?.full_name ?? null,
+        avatar_url: profile?.avatar_url ?? null,
+      },
+    };
+  });
 }

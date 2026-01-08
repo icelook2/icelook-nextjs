@@ -1,13 +1,16 @@
 /**
- * Booking Flow Types
+ * Booking Flow Types (Solo Creator Model)
  *
- * Type definitions for the multi-step booking dialog.
+ * Type definitions for the booking flow.
+ *
+ * Key changes from multi-specialist model:
+ * - No specialist selection (creator IS the specialist)
+ * - Removed AvailableSpecialist, SpecialistBookingSettings
+ * - CreateBookingInput no longer requires specialistMemberId
  */
 
-import type {
-  ProfileService,
-  SpecialistAssignment,
-} from "@/lib/queries/beauty-page-profile";
+import type { ProfileService } from "@/lib/queries/beauty-page-profile";
+import type { VisitPreferences } from "@/lib/types";
 
 // ============================================================================
 // Booking Steps
@@ -15,27 +18,10 @@ import type {
 
 /** All possible steps in the booking flow */
 export type BookingStep =
-  | "specialist" // Optional: shown only when multiple specialists available
   | "date" // Step 1: Select date
   | "time" // Step 2: Select time slot
   | "confirm" // Step 3: Review + guest info form
   | "success"; // Final: Booking confirmed
-
-// ============================================================================
-// Specialist Types
-// ============================================================================
-
-/** Specialist available for booking with aggregated service info */
-export interface AvailableSpecialist {
-  memberId: string;
-  specialistId: string;
-  displayName: string;
-  avatarUrl: string | null;
-  /** Total price for all selected services (in cents) */
-  totalPriceCents: number;
-  /** Total duration for all selected services (in minutes) */
-  totalDurationMinutes: number;
-}
 
 // ============================================================================
 // Time Slot Types
@@ -62,24 +48,26 @@ export interface GuestInfo {
   phone?: string;
   email?: string;
   notes?: string;
+  /** Visit preferences (optional) */
+  visitPreferences?: VisitPreferences;
 }
 
 /** Authenticated user profile for booking */
 export interface CurrentUserProfile {
   name: string;
   email: string | null;
+  /** Pre-fill visit preferences from user profile */
+  visitPreferences?: VisitPreferences | null;
 }
 
 // ============================================================================
 // Booking State Types
 // ============================================================================
 
-/** Complete booking state managed by BookingContext */
+/** Complete booking state */
 export interface BookingState {
   /** Current step in the flow */
   step: BookingStep;
-  /** Selected specialist (required before date selection) */
-  specialist: AvailableSpecialist | null;
   /** Selected date */
   date: Date | null;
   /** Selected time in "HH:MM" format */
@@ -100,15 +88,15 @@ export interface BookingState {
 
 /** Input for fetching availability data */
 export interface GetAvailabilityInput {
-  specialistId: string;
+  beautyPageId: string;
   /** Date in YYYY-MM-DD format */
   startDate: string;
   /** Date in YYYY-MM-DD format */
   endDate: string;
 }
 
-/** Booking settings for a specialist */
-export interface SpecialistBookingSettings {
+/** Booking settings for the beauty page */
+export interface BookingSettings {
   /** Whether bookings are auto-confirmed */
   autoConfirm: boolean;
   /** Minimum hours before appointment for booking */
@@ -140,23 +128,14 @@ export interface AppointmentData {
 
 /** Response from getAvailabilityData */
 export interface AvailabilityData {
-  /** Specialist ID (included when fetching for multiple specialists) */
-  specialistId?: string;
   workingDays: WorkingDayData[];
   appointments: AppointmentData[];
-  bookingSettings: SpecialistBookingSettings | null;
-}
-
-/** Time slot with specialist availability mapping */
-export interface AggregatedTimeSlot extends TimeSlot {
-  /** Specialist IDs that have this slot available */
-  availableSpecialistIds: string[];
+  bookingSettings: BookingSettings | null;
 }
 
 /** Input for creating a booking */
 export interface CreateBookingInput {
   beautyPageId: string;
-  specialistMemberId: string;
   serviceIds: string[];
   /** Date in YYYY-MM-DD format */
   date: string;
@@ -173,13 +152,15 @@ export interface CreateBookingInput {
   };
   /** User ID if authenticated */
   clientId?: string;
+  /** Visit preferences for this appointment */
+  visitPreferences?: VisitPreferences;
 }
 
 /** Successful booking result */
 export interface BookingSuccess {
   success: true;
   appointmentId: string;
-  /** Status depends on specialist's auto_confirm setting */
+  /** Status depends on beauty page's auto_confirm setting */
   status: "pending" | "confirmed";
 }
 
@@ -197,19 +178,15 @@ export type BookingResult = BookingSuccess | BookingError;
 // Props Types
 // ============================================================================
 
-/** Props for the main booking dialog */
-export interface BookingDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+/** Props for the main booking layout */
+export interface BookingLayoutProps {
   beautyPageId: string;
   nickname: string;
   timezone: string;
   currency: string;
   locale: string;
-  /** Selected services from ServiceSelectionContext */
+  /** Selected services */
   selectedServices: ProfileService[];
-  /** Specialists who can do all selected services */
-  availableSpecialists: AvailableSpecialist[];
   /** Current user ID if authenticated */
   currentUserId?: string;
 }

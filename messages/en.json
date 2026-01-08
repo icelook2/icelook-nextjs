@@ -1,10 +1,11 @@
 {
   "nav": {
-    "home": "Home",
     "search": "Search",
     "appointments": "Appointments",
     "beauty_pages": "Beauty Pages",
-    "settings": "Settings"
+    "settings": "Settings",
+    "schedule": "Schedule",
+    "switch_beauty_page": "Switch Beauty Page"
   },
   "auth": {
     "welcome": "Welcome",
@@ -23,7 +24,13 @@
     "rate_limit": "Too many requests. Please wait before trying again.",
     "resend_rate_limit": "Please wait before requesting another code.",
     "code_expired": "Code has expired. Please request a new one.",
-    "code_invalid": "Invalid code. Please check and try again."
+    "code_invalid": "Invalid code. Please check and try again.",
+    "slogan": "Your Beauty Services",
+    "legal_agreement": "By continuing, you agree to our",
+    "terms_of_service": "Terms of Service",
+    "privacy_policy": "Privacy Policy",
+    "and": "and",
+    "copyright": "© {year} Icelook. All rights reserved."
   },
   "onboarding": {
     "title": "Complete your profile",
@@ -63,8 +70,9 @@
     "service_name_required": "Service name is required",
     "service_name_too_long": "Service name must be at most 100 characters",
     "price_invalid": "Please enter a valid price",
+    "price_too_low": "Price must be at least 1 UAH",
     "price_too_high": "Price is too high",
-    "duration_too_short": "Duration must be at least 15 minutes",
+    "duration_too_short": "Duration must be at least 5 minutes",
     "duration_too_long": "Duration must be at most 8 hours",
     "contact_too_long": "Contact information is too long"
   },
@@ -106,9 +114,6 @@
     "title": "Page not found",
     "go_home": "Go back home"
   },
-  "home": {
-    "title": "Icelook"
-  },
   "search": {
     "title": "Search Specialists",
     "subtitle": "Find your perfect specialist",
@@ -122,15 +127,62 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Manage your account settings and preferences",
+    "groups": {
+      "account": "Account",
+      "preferences": "Preferences",
+      "business": "Business"
+    },
+    "nav": {
+      "account": "Account",
+      "account_description": "Manage your profile and email",
+      "name": "Name",
+      "email": "Email",
+      "preferences": "Preferences",
+      "preferences_description": "Theme and language settings",
+      "visit_preferences": "Visit Preferences",
+      "visit_preferences_description": "Your preferences for beauty visits"
+    },
+    "unnamed_user": "User",
+    "not_set": "Not set",
+    "name_page_title": "Edit Name",
+    "email_page_title": "Change Email",
+    "account_title": "Account",
+    "account_description": "Manage your profile and email",
+    "preferences_title": "Preferences",
+    "preferences_description": "Theme and language settings",
+    "visit_preferences_title": "Visit Preferences",
+    "visit_preferences_page_description": "Set your default preferences for beauty visits",
     "account_group": "Account",
     "preferences_group": "Preferences",
     "business_group": "Business",
+    "visit_preferences_group": "Visit Preferences",
+    "visit_preferences_description": "Set your default preferences for beauty visits",
+    "communication_label": "Communication Style",
+    "communication_description": "How much conversation do you prefer?",
+    "communication_quiet": "Quiet",
+    "communication_quiet_description": "I prefer minimal conversation",
+    "communication_friendly": "Friendly",
+    "communication_friendly_description": "Casual chat is welcome",
+    "communication_chatty": "Chatty",
+    "communication_chatty_description": "I enjoy lots of conversation",
+    "accessibility_label": "Accessibility Needs",
+    "accessibility_description": "Let specialists know how to best accommodate you",
+    "accessibility_wheelchair": "Wheelchair accessible setup",
+    "accessibility_hearing": "Hearing impaired",
+    "accessibility_vision": "Vision impaired",
+    "accessibility_sensory": "Sensory sensitivity",
+    "allergies_label": "Allergies & Sensitivities",
+    "allergies_placeholder": "e.g., latex allergy, fragrance sensitivity...",
+    "allergies_max_length": "Max 500 characters",
+    "preferences_saved": "Preferences saved",
+    "preferences_save_failed": "Failed to save preferences",
     "profile_section": "Profile",
     "email_section": "Email",
     "preferences_section": "Preferences",
     "name_label": "Full Name",
     "name_placeholder": "Enter your name",
     "current_email": "Current email",
+    "email_label": "Email",
     "change_email": "Change",
     "new_email_label": "New Email Address",
     "new_email_placeholder": "Enter new email",
@@ -392,6 +444,22 @@
     "USD": "$ USD",
     "EUR": "€ EUR"
   },
+  "time_settings": {
+    "page_title": "Time Settings",
+    "timezone": {
+      "title": "Timezone",
+      "description": "Set your local timezone for appointments and schedule",
+      "label": "Timezone"
+    },
+    "save": "Save",
+    "saved": "Saved",
+    "errors": {
+      "not_authenticated": "You must be logged in",
+      "not_authorized": "You don't have permission to edit this",
+      "validation_failed": "Please check your input",
+      "save_failed": "Failed to save changes"
+    }
+  },
   "schedule": {
     "title": "Schedule",
     "description": "Manage your working hours and availability",
@@ -415,8 +483,10 @@
     "select_time": "Select time",
     "generate_schedule": "Generate Schedule",
     "settings": "Settings",
-    "timezone": "Timezone",
-    "timezone_description": "All times are displayed in this timezone",
+    "timezone": {
+      "title": "Timezone",
+      "label": "Select timezone"
+    },
     "slot_duration": "Slot Duration",
     "slot_duration_description": "Minimum booking duration",
     "minutes": "min",
@@ -481,6 +551,17 @@
     "client": "Client",
     "phone": "Phone",
     "notes": "Notes",
+    "visit_preferences": "Visit Preferences",
+    "communication_label": "Communication",
+    "communication_quiet": "Prefers quiet",
+    "communication_friendly": "Friendly chat",
+    "communication_chatty": "Loves conversation",
+    "accessibility_wheelchair": "Wheelchair",
+    "accessibility_hearing": "Hearing impaired",
+    "accessibility_vision": "Vision impaired",
+    "accessibility_sensory": "Sensory sensitivity",
+    "allergies_label": "Allergies",
+    "no_preferences": "No preferences set",
     "status": "Status",
     "status_pending": "Pending",
     "status_confirmed": "Confirmed",
@@ -497,6 +578,10 @@
     "no_hours_set": "No hours set",
     "service": "Service",
     "total": "Total",
+    "unknown_client": "Unknown client",
+    "no_phone_provided": "No phone provided",
+    "no_contact_info": "No contact info",
+    "email": "Email",
     "errors": {
       "not_authenticated": "You must be logged in",
       "not_authorized": "You don't have permission to do this",
@@ -516,8 +601,8 @@
       "hours_outside_business_hours": "Working hours must be within business hours ({open} - {close})"
     }
   },
-  "business_hours": {
-    "page_title": "Business Hours",
+  "working_hours": {
+    "page_title": "Working Hours",
     "regular_hours": {
       "title": "Regular Hours",
       "description": "Set your weekly opening schedule"
@@ -557,7 +642,7 @@
     "save": "Save Changes",
     "cancel": "Cancel",
     "delete": "Delete",
-    "saved": "Business hours saved",
+    "saved": "Working hours saved",
     "special_saved": "Special hours saved",
     "special_deleted": "Special hours removed",
     "errors": {
@@ -622,7 +707,24 @@
     "phone_invalid_format": "Invalid phone number format",
     "name_too_short": "Name must be at least 2 characters",
     "name_too_long": "Name is too long",
-    "notes_too_long": "Notes must be at most 500 characters"
+    "notes_too_long": "Notes must be at most 500 characters",
+    "confirm": {
+      "visit_preferences": {
+        "title": "Visit Preferences",
+        "subtitle": "Optional - help your specialist prepare",
+        "communication_label": "Communication Style",
+        "communication_quiet": "Quiet",
+        "communication_friendly": "Friendly",
+        "communication_chatty": "Chatty",
+        "accessibility_label": "Accessibility Needs",
+        "accessibility_wheelchair": "Wheelchair accessible",
+        "accessibility_hearing": "Hearing impaired",
+        "accessibility_vision": "Vision impaired",
+        "accessibility_sensory": "Sensory sensitivity",
+        "allergies_label": "Allergies & Sensitivities",
+        "allergies_placeholder": "e.g., latex allergy, fragrance sensitivity..."
+      }
+    }
   },
   "salon": {
     "profile": {
@@ -719,9 +821,17 @@
     "closed": "Closed",
     "closes_at": "Closes at {time}",
     "opens_at": "Opens at {time}",
+    "working_status": {
+      "working_until": "I'm with clients until {time}",
+      "opens_today": "I start at {time} today",
+      "opens_tomorrow": "See you tomorrow at {time}!",
+      "opens_on_day": "See you {day} at {time}!",
+      "no_schedule": "Schedule not set yet",
+      "closed": "Taking a break"
+    },
     "services": "Services",
     "specialists": "Our Specialists",
-    "hours": "Business Hours",
+    "hours": "Working Hours",
     "contact": "Contact",
     "view_on_map": "View on map",
     "visit_instagram": "Visit",
@@ -742,6 +852,7 @@
     "duration_min": "min",
     "duration_hour": "h",
     "specialist_fallback": "Specialist",
+    "reviews": "reviews",
     "reviews_label": "View reviews",
     "reviews_title": "Reviews for {name}",
     "reviews_based_on": "Based on {count} reviews",
@@ -749,6 +860,9 @@
     "review_reply": "Reply",
     "anonymous": "Anonymous",
     "book": "Book",
+    "special_offers": "Special Offers",
+    "tomorrow": "Tomorrow",
+    "book_now": "Book Now",
     "verified": {
       "title": "Verified Business",
       "description": "This beauty page has been verified by Icelook as an authentic, legitimate business."
@@ -793,7 +907,20 @@
       "date": {
         "title": "Select Date",
         "subtitle": "Choose a day for your appointment",
-        "month_names": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+        "month_names": [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December"
+        ],
         "weekday_names": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
         "today": "Today",
         "loading": "Loading availability...",
@@ -831,6 +958,21 @@
           "notes": "Notes (optional)",
           "notes_placeholder": "Any special requests or information..."
         },
+        "visit_preferences": {
+          "title": "Visit Preferences",
+          "subtitle": "Optional - help your specialist prepare",
+          "communication_label": "Communication Style",
+          "communication_quiet": "Quiet",
+          "communication_friendly": "Friendly",
+          "communication_chatty": "Chatty",
+          "accessibility_label": "Accessibility Needs",
+          "accessibility_wheelchair": "Wheelchair accessible",
+          "accessibility_hearing": "Hearing impaired",
+          "accessibility_vision": "Vision impaired",
+          "accessibility_sensory": "Sensory sensitivity",
+          "allergies_label": "Allergies & Sensitivities",
+          "allergies_placeholder": "e.g., latex allergy, fragrance sensitivity..."
+        },
         "validation": {
           "name_too_short": "Name must be at least 2 characters",
           "name_too_long": "Name must be at most 100 characters",
@@ -847,7 +989,6 @@
         "title": "Booking Confirmed!",
         "confirmed_message": "Your appointment has been confirmed.",
         "pending_message": "Your appointment is pending confirmation.",
-        "appointment_id": "Booking ID",
         "summary": {
           "specialist": "Specialist",
           "date_time": "Date & Time",
@@ -862,14 +1003,30 @@
     "title": "Beauty Page Settings",
     "back": "Back",
     "coming_soon": "Coming Soon",
+    "save": "Save",
+    "saved": "Saved",
     "groups": {
       "services": "Services",
       "people": "Team",
-      "operations": "Operations"
+      "operations": "Operations",
+      "schedule": "Schedule"
+    },
+    "timezone": {
+      "title": "Timezone",
+      "description": "Set your local timezone for appointments and schedule",
+      "label": "Timezone"
+    },
+    "errors": {
+      "not_authenticated": "You must be logged in",
+      "not_authorized": "You don't have permission to edit this",
+      "validation_failed": "Please check your input",
+      "save_failed": "Failed to save changes"
     },
     "nav": {
       "services": "Services & Groups",
       "services_description": "Manage your service catalog and pricing",
+      "special_offers": "Special Offers",
+      "special_offers_description": "Create time-limited discount offers",
       "admins": "Administrators",
       "admins_description": "Manage who can edit this page",
       "specialists": "Specialists",
@@ -878,16 +1035,259 @@
       "team_description": "Invite specialists and manage roles",
       "contact": "Location & Contact",
       "contact_description": "Set your address and social links",
-      "business_hours": "Business Hours",
-      "business_hours_description": "Set opening hours and holidays",
+      "working_hours": "Working Hours",
+      "working_hours_description": "Set your working schedule",
       "labels": "Labels",
       "labels_description": "Create labels to categorize specialists",
       "schedule": "Schedule",
-      "schedule_description": "Set working hours and availability",
+      "schedule_description": "Manage appointments and working days",
+      "time_settings": "Time Settings",
+      "time_settings_description": "Set timezone and time preferences",
       "cancellation_policy": "Cancellation Policy",
       "cancellation_policy_description": "Set rules for cancellations and no-shows",
       "billing": "Billing",
-      "billing_description": "Manage payments and subscriptions"
+      "billing_description": "Manage payments and subscriptions",
+      "analytics": "Analytics",
+      "analytics_description": "View business performance and insights",
+      "clients": "Clients",
+      "clients_description": "View and manage your client base"
+    }
+  },
+  "clients": {
+    "page_title": "Clients",
+    "search_placeholder": "Search by name or phone...",
+    "clear_search": "Clear search",
+    "guest_badge": "Guest",
+    "visit": "visit",
+    "visits": "visits",
+    "loading": "Loading...",
+    "end_of_list": "You reached the end of the list",
+    "showing_count": "Showing {shown} of {total}",
+    "empty": {
+      "title": "No clients yet",
+      "description": "Clients will appear here after they book appointments with you",
+      "no_results_title": "No clients found",
+      "no_results_description": "Try a different search term"
+    },
+    "detail": {
+      "subtitle": "Client details",
+      "guest_badge": "Guest"
+    },
+    "contacts": {
+      "title": "Contact"
+    },
+    "stats": {
+      "title": "Statistics",
+      "total_visits": "Visits",
+      "total_spent": "Total spent",
+      "average_spend": "Avg. spend",
+      "first_visit": "First visit",
+      "last_visit": "Last visit"
+    },
+    "services": {
+      "title": "Service preferences",
+      "showing_count": "{shown} of {total}",
+      "more_services": "+{count} more services",
+      "show_all": "Show all services",
+      "columns": {
+        "name": "Service",
+        "count": "Bookings",
+        "total": "Total"
+      }
+    },
+    "services_page": {
+      "title": "Service Preferences",
+      "subtitle": "Services booked by {client}",
+      "search_placeholder": "Search services...",
+      "columns": {
+        "name": "Service",
+        "count": "Bookings",
+        "total": "Total"
+      },
+      "pagination": {
+        "page": "Page {current} of {total}",
+        "prev": "Previous",
+        "next": "Next"
+      },
+      "empty": "No services booked yet",
+      "no_results": "No services found for \"{search}\""
+    },
+    "services_table": {
+      "title": "Service preferences (Table View)",
+      "search_placeholder": "Search services...",
+      "columns": {
+        "name": "Name",
+        "amount": "Amount",
+        "total": "Total"
+      },
+      "pagination": {
+        "prev": "Previous",
+        "next": "Next",
+        "page": "Page {current} of {total}"
+      },
+      "empty": "No services found",
+      "no_results": "No services match your search"
+    },
+    "service_detail": {
+      "subtitle": "Service history for {client}",
+      "appointments_title": "Appointments",
+      "appointments_count": "appointments",
+      "view_service_settings": "View service settings",
+      "columns": {
+        "date": "Date",
+        "time": "Time",
+        "price": "Price"
+      },
+      "pagination": {
+        "page": "Page {current} of {total}",
+        "prev": "Previous",
+        "next": "Next"
+      }
+    },
+    "history": {
+      "title": "Appointment history",
+      "showing_count": "{shown} of {total}",
+      "more_appointments": "+{count} more appointments",
+      "show_all": "Show all appointments",
+      "columns": {
+        "service": "Service",
+        "date": "Date",
+        "price": "Price"
+      },
+      "status": {
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "no_show": "No show",
+        "pending": "Pending",
+        "confirmed": "Confirmed"
+      }
+    },
+    "notes": {
+      "title": "Private notes",
+      "placeholder": "Add private notes about this client (e.g., preferences, allergies, special requests)...",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "hint": "These notes are only visible to you"
+    },
+    "appointment_detail": {
+      "title": "Appointment Details",
+      "service": "Service",
+      "date": "Date",
+      "time": "Time",
+      "price": "Price",
+      "client_notes": "Client notes",
+      "your_notes": "Your notes",
+      "cancelled_at": "Cancelled on {date}",
+      "close": "Close",
+      "min": "min",
+      "hour": "h"
+    },
+    "appointments_page": {
+      "title": "Appointments",
+      "subtitle": "All appointments with {client}",
+      "total_count": "appointments",
+      "columns": {
+        "service": "Service",
+        "date": "Date",
+        "price": "Price"
+      },
+      "pagination": {
+        "page": "Page {current} of {total}",
+        "prev": "Previous",
+        "next": "Next"
+      }
+    }
+  },
+  "analytics": {
+    "page_title": "Analytics",
+    "period": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "this_week": "This week",
+      "last_7_days": "Last 7 days",
+      "this_month": "This month",
+      "last_30_days": "Last 30 days",
+      "this_quarter": "This quarter",
+      "last_quarter": "Last quarter",
+      "this_year": "This year",
+      "last_year": "Last year",
+      "all_time": "All time"
+    },
+    "groups": {
+      "revenue_tickets": "Revenue & Tickets",
+      "appointments": "Appointments",
+      "clients": "Clients",
+      "operations": "Operations"
+    },
+    "info": {
+      "revenue": "Total revenue from completed appointments in this period",
+      "avg_ticket": "Average amount per appointment",
+      "total_appointments": "All appointments scheduled in this period",
+      "completed": "Successfully completed appointments",
+      "pending": "Upcoming appointments not yet completed",
+      "cancelled": "Appointments cancelled by client or you",
+      "no_show": "Appointments where client did not show up",
+      "total_clients": "Unique clients who booked in this period",
+      "new_clients": "Clients making their first ever appointment",
+      "returning_clients": "Clients who have visited before",
+      "retention_rate": "Percentage of clients who return for another visit",
+      "fill_rate": "Percentage of available time that was booked",
+      "cancellation_rate": "Percentage of cancelled appointments",
+      "no_show_rate": "Percentage of no-show appointments"
+    },
+    "blocks": {
+      "revenue": "Revenue",
+      "appointments": "Appointments",
+      "clients": "Clients",
+      "services": "Services"
+    },
+    "metrics": {
+      "revenue": "Revenue",
+      "appointments": "Appointments",
+      "avg_ticket": "Avg. Ticket",
+      "retention": "Retention Rate",
+      "fill_rate": "Fill Rate",
+      "cancellation_rate": "Cancellation Rate",
+      "no_show_rate": "No-Show Rate",
+      "avg_rating": "Avg. Rating",
+      "operations": "Operations"
+    },
+    "appointments": {
+      "total": "Total Appointments",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "no_show": "No-show",
+      "pending": "Pending"
+    },
+    "services": {
+      "title": "Service Performance",
+      "service": "Service",
+      "bookings": "Bookings",
+      "revenue": "Revenue",
+      "percentage": "% of Total",
+      "avg_duration": "Avg. Duration",
+      "bookings_count": "{count, plural, =1 {1 booking} other {# bookings}}",
+      "no_data": "No service data available"
+    },
+    "clients": {
+      "title": "Client Insights",
+      "unique_clients": "unique clients",
+      "total_clients": "Total Clients",
+      "new": "New Clients",
+      "returning": "Returning Clients",
+      "top_clients": "Top Clients",
+      "visits": "{count, plural, =1 {1 visit} other {# visits}}"
+    },
+    "trends": {
+      "up": "+{value}% from previous period",
+      "down": "{value}% from previous period",
+      "vs_previous": "vs previous period",
+      "no_change": "No change",
+      "target": "Target"
+    },
+    "empty": {
+      "title": "No data yet",
+      "description": "Analytics will appear once you have completed appointments."
     }
   },
   "services": {
@@ -1295,6 +1695,22 @@
     "remove": "Remove",
     "assign": "Assign",
     "edit": "Edit",
+    "services_page_title": "Services",
+    "services_page_description": "Manage your service groups and services",
+    "rename_group_title": "Rename Group",
+    "rename_service_title": "Rename Service",
+    "change_price_title": "Change Price",
+    "change_duration_title": "Change Duration",
+    "menu_add_service": "Add service",
+    "menu_rename": "Rename",
+    "menu_change_price": "Change price",
+    "menu_change_duration": "Change duration",
+    "menu_delete": "Delete",
+    "delete_group_confirmation": "Are you sure you want to delete \"{name}\"?",
+    "delete_group_warning": "This will also delete {count, plural, =1 {1 service} other {# services}}",
+    "delete_service_confirmation": "Are you sure you want to delete \"{name}\"?",
+    "no_services_in_group": "No services in this group",
+    "add_first_service": "Add service",
     "errors": {
       "not_authenticated": "You must be logged in",
       "not_authorized": "You don't have permission to do this",
@@ -1305,6 +1721,28 @@
       "assign_failed": "Failed to assign specialist",
       "remove_failed": "Failed to remove assignment",
       "already_assigned": "This specialist is already assigned to this service"
+    }
+  },
+  "special_offers_settings": {
+    "page_title": "Special Offers",
+    "add_offer": "Add Offer",
+    "empty_title": "No special offers yet",
+    "empty_description": "Create time-limited offers with discounts to attract more clients",
+    "delete_confirm_title": "Delete Offer",
+    "delete_confirm_description": "Are you sure you want to delete this special offer? This action cannot be undone.",
+    "delete_confirm_button": "Delete",
+    "cancel": "Cancel",
+    "status_active": "Active",
+    "status_booked": "Booked",
+    "status_expired": "Expired",
+    "discount_label": "Discount",
+    "errors": {
+      "not_authenticated": "You must be logged in",
+      "not_authorized": "You don't have permission to do this",
+      "validation_failed": "Invalid data provided",
+      "create_failed": "Failed to create offer",
+      "delete_failed": "Failed to delete offer",
+      "already_exists": "An offer already exists for this time slot"
     }
   },
   "contact_settings": {

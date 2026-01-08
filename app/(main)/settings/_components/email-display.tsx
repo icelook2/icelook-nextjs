@@ -12,10 +12,10 @@ export function EmailDisplay({ email, onChangeClick }: EmailDisplayProps) {
   const t = useTranslations("settings");
 
   return (
-    <div className="flex items-center justify-between rounded-lg border p-4">
-      <div>
-        <p className="text-sm text-">{t("current_email")}</p>
-        <p className="font-medium">{email}</p>
+    <div className="flex items-center justify-between gap-4 px-4 py-4">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium">{t("email_label")}</p>
+        <p className="truncate text-sm text-muted">{email}</p>
       </div>
       <Button
         type="button"

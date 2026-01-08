@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { VisitPreferences } from "@/lib/types";
 
 export type Profile = {
   id: string;
@@ -7,6 +8,7 @@ export type Profile = {
   full_name: string | null;
   avatar_url: string | null;
   preferred_locale: string | null;
+  visit_preferences: VisitPreferences | null;
   created_at: string;
   updated_at: string;
 };

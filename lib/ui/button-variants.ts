@@ -11,6 +11,8 @@ export const buttonVariants = cva(
           "rounded-2xl border border-border bg-background text-foreground hover:bg-surface focus-visible:ring-2 focus-visible:ring-accent",
         ghost:
           "bg-transparent hover:bg-surface disabled:hover:bg-transparent rounded-2xl text-foreground",
+        soft:
+          "rounded-full bg-surface text-foreground hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent",
         danger:
           "rounded-2xl bg-danger text-white hover:bg-danger/90 focus-visible:ring-2 focus-visible:ring-danger",
         link: "bg-transparent p-0 text-accent hover:underline",
@@ -20,6 +22,7 @@ export const buttonVariants = cva(
         default: "px-6 py-3",
         sm: "px-4 py-2 text-xs",
         lg: "px-8 py-4 text-base",
+        icon: "h-10 w-10 p-0",
       },
     },
     compoundVariants: [

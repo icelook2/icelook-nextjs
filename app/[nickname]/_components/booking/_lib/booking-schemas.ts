@@ -35,11 +35,7 @@ export function createGuestInfoSchema(messages: GuestInfoValidationMessages) {
       .min(10, messages.phoneTooShort)
       .max(20, messages.phoneTooLong)
       .regex(/^[+]?[\d\s\-()]+$/, messages.phoneInvalidFormat),
-    email: z
-      .string()
-      .email(messages.emailInvalid)
-      .optional()
-      .or(z.literal("")),
+    email: z.string().email(messages.emailInvalid).optional().or(z.literal("")),
     notes: z.string().max(500, messages.notesTooLong).optional(),
   });
 }

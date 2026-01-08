@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Booking Bar
+ * Booking Bar (Solo Creator Model)
  *
  * A floating bar that appears at the bottom of the screen when services are selected.
  * Shows selection summary and provides actions to proceed with booking or clear selection.
@@ -30,9 +30,7 @@ export interface BookingBarTranslations {
   serviceSelected: string;
   /** Plural with count placeholder: "{count} services" */
   servicesSelected: string;
-  /** Button text when specialist selection needed */
-  selectSpecialist: string;
-  /** Button text when ready to book */
+  /** Button text */
   bookNow: string;
   /** Clear selection button aria-label */
   clearSelection: string;
@@ -60,9 +58,8 @@ export function BookingBar({
   const [mounted, setMounted] = useState(false);
   const {
     selectedServices,
-    autoSelectedSpecialist,
-    totalPriceRange,
-    totalDurationRange,
+    totalPriceCents,
+    totalDurationMinutes,
     clearSelection,
   } = useServiceSelection();
 
@@ -83,21 +80,10 @@ export function BookingBar({
         );
 
   // Format price text
-  const priceText =
-    totalPriceRange.min === totalPriceRange.max
-      ? formatPrice(totalPriceRange.min, currency, locale)
-      : `${formatPrice(totalPriceRange.min, currency, locale)} – ${formatPrice(totalPriceRange.max, currency, locale)}`;
+  const priceText = formatPrice(totalPriceCents, currency, locale);
 
   // Format duration text
-  const durationText =
-    totalDurationRange.min === totalDurationRange.max
-      ? formatDuration(totalDurationRange.min, durationLabels)
-      : `${formatDuration(totalDurationRange.min, durationLabels)} – ${formatDuration(totalDurationRange.max, durationLabels)}`;
-
-  // Button text depends on whether specialist is auto-selected
-  const buttonText = autoSelectedSpecialist
-    ? translations.bookNow
-    : translations.selectSpecialist;
+  const durationText = formatDuration(totalDurationMinutes, durationLabels);
 
   // Don't render on server
   if (!mounted) {
@@ -134,7 +120,7 @@ export function BookingBar({
             </div>
 
             {/* Book button */}
-            <Button onClick={onBookClick}>{buttonText}</Button>
+            <Button onClick={onBookClick}>{translations.bookNow}</Button>
           </div>
         </motion.div>
       )}

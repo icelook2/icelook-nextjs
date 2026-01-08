@@ -12,11 +12,11 @@ import type {
   ProfileSpecialist,
 } from "@/lib/queries/beauty-page-profile";
 import type { DurationLabels } from "@/lib/utils/price-range";
+import type { CurrentUserProfile } from "./booking/_lib/booking-types";
 import {
   BookingLayout,
   type BookingLayoutTranslations,
 } from "./booking-layout";
-import type { CurrentUserProfile } from "./booking/_lib/booking-types";
 
 // ============================================================================
 // Types

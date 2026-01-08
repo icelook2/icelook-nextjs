@@ -1,32 +1,57 @@
 "use client";
 
 /**
- * Confirmation Step
+ * Confirmation Step (Solo Creator Model)
  *
  * Shows structured booking summary (Who, When, Where, What, Price, Duration)
  * and collects guest information for the booking.
  *
- * For authenticated users with a profile, only asks for phone and notes.
+ * For authenticated users with a profile, only asks for notes.
  * For guests (unauthenticated), asks for name, phone, email, and notes.
  */
 
+import { Collapsible } from "@base-ui/react/collapsible";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronLeft, Loader2 } from "lucide-react";
-import { useMemo } from "react";
+import { ChevronDown, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import type {
+  AccessibilityNeed,
+  CommunicationPreference,
+  VisitPreferences,
+} from "@/lib/types";
+import { ACCESSIBILITY_OPTIONS, COMMUNICATION_OPTIONS } from "@/lib/types";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
+import { Checkbox } from "@/lib/ui/checkbox";
+import { Select } from "@/lib/ui/select";
 import { formatDuration, formatPrice } from "@/lib/utils/price-range";
-import type { BeautyPageInfo } from "./booking-dialog";
-import { useBooking } from "./booking-context";
 import {
+  type AuthUserFormData,
   createAuthUserSchema,
   createGuestInfoSchema,
-  type AuthUserFormData,
   type GuestInfoFormData,
   type GuestInfoValidationMessages,
 } from "./_lib/booking-schemas";
 import { calculateEndTime, formatSlotTime } from "./_lib/slot-generation";
+import { useBooking } from "./booking-context";
+import type { BeautyPageInfo } from "./booking-dialog";
+
+interface VisitPreferencesTranslations {
+  title: string;
+  subtitle: string;
+  communicationLabel: string;
+  communicationQuiet: string;
+  communicationFriendly: string;
+  communicationChatty: string;
+  accessibilityLabel: string;
+  accessibilityWheelchair: string;
+  accessibilityHearing: string;
+  accessibilityVision: string;
+  accessibilitySensory: string;
+  allergiesLabel: string;
+  allergiesPlaceholder: string;
+}
 
 interface StepConfirmationProps {
   translations: {
@@ -51,42 +76,73 @@ interface StepConfirmationProps {
       notesPlaceholder: string;
     };
     validation: GuestInfoValidationMessages;
+    visitPreferences: VisitPreferencesTranslations;
     submit: string;
     submitting: string;
   };
-  cancelLabel: string;
   beautyPageInfo: BeautyPageInfo;
   durationLabels: {
     min: string;
     hour: string;
   };
-  onCancel: () => void;
 }
 
 export function StepConfirmation({
   translations,
-  cancelLabel,
   beautyPageInfo,
   durationLabels,
-  onCancel,
 }: StepConfirmationProps) {
   const {
-    specialist,
     date,
     time,
     selectedServices,
+    totalPriceCents,
+    totalDurationMinutes,
     currency,
     locale,
     isSubmitting,
     error,
     submitBooking,
     setGuestInfo,
-    goBack,
     currentUserProfile,
+    creatorInfo,
   } = useBooking();
 
   // Determine if user is authenticated with profile data
   const isAuthenticated = !!currentUserProfile?.name;
+
+  // Visit preferences state - pre-fill from profile for authenticated users
+  const [communication, setCommunication] = useState<
+    CommunicationPreference | undefined
+  >(currentUserProfile?.visitPreferences?.communication);
+  const [accessibility, setAccessibility] = useState<AccessibilityNeed[]>(
+    currentUserProfile?.visitPreferences?.accessibility ?? [],
+  );
+  const [allergies, setAllergies] = useState<string>(
+    currentUserProfile?.visitPreferences?.allergies ?? "",
+  );
+
+  // Build visit preferences object (only include non-empty values)
+  const buildVisitPreferences = (): VisitPreferences | undefined => {
+    const prefs: VisitPreferences = {};
+    if (communication) {
+      prefs.communication = communication;
+    }
+    if (accessibility.length > 0) {
+      prefs.accessibility = accessibility;
+    }
+    if (allergies.trim()) {
+      prefs.allergies = allergies.trim();
+    }
+    return Object.keys(prefs).length > 0 ? prefs : undefined;
+  };
+
+  // Handle accessibility checkbox toggle
+  const toggleAccessibility = (need: AccessibilityNeed) => {
+    setAccessibility((prev) =>
+      prev.includes(need) ? prev.filter((n) => n !== need) : [...prev, need],
+    );
+  };
 
   // Create validation schema based on auth status
   const guestSchema = useMemo(
@@ -127,6 +183,7 @@ export function StepConfirmation({
       phone: data.phone,
       email: data.email || undefined,
       notes: data.notes || undefined,
+      visitPreferences: buildVisitPreferences(),
     });
     await submitBooking();
   };
@@ -138,6 +195,7 @@ export function StepConfirmation({
       // Phone not required for authenticated users
       email: currentUserProfile?.email || undefined,
       notes: data.notes || undefined,
+      visitPreferences: buildVisitPreferences(),
     });
     await submitBooking();
   };
@@ -149,7 +207,9 @@ export function StepConfirmation({
 
   // Calculate formatted values
   const formattedDate = useMemo(() => {
-    if (!date) return "";
+    if (!date) {
+      return "";
+    }
     return date.toLocaleDateString(undefined, {
       weekday: "long",
       month: "long",
@@ -159,22 +219,22 @@ export function StepConfirmation({
   }, [date]);
 
   const formattedTime = useMemo(() => {
-    if (!time || !specialist) return "";
-    const endTime = calculateEndTime(time, specialist.totalDurationMinutes);
+    if (!time) {
+      return "";
+    }
+    const endTime = calculateEndTime(time, totalDurationMinutes);
     return `${formatSlotTime(time, false)} – ${formatSlotTime(endTime, false)}`;
-  }, [time, specialist]);
+  }, [time, totalDurationMinutes]);
 
   const formattedPrice = useMemo(() => {
-    if (!specialist) return "";
-    return formatPrice(specialist.totalPriceCents, currency, locale);
-  }, [specialist, currency, locale]);
+    return formatPrice(totalPriceCents, currency, locale);
+  }, [totalPriceCents, currency, locale]);
 
   const formattedDuration = useMemo(() => {
-    if (!specialist) return "";
-    return formatDuration(specialist.totalDurationMinutes, durationLabels);
-  }, [specialist, durationLabels]);
+    return formatDuration(totalDurationMinutes, durationLabels);
+  }, [totalDurationMinutes, durationLabels]);
 
-  if (!specialist || !date || !time) {
+  if (!date || !time) {
     return null;
   }
 
@@ -184,16 +244,16 @@ export function StepConfirmation({
       <div className="space-y-6 px-4 pb-4">
         {/* Booking Summary */}
         <div className="space-y-4">
-          {/* Who */}
+          {/* Who (Creator) */}
           <SummaryRow label={translations.summary.who}>
             <div className="flex items-center gap-2">
               <Avatar
-                url={specialist.avatarUrl}
-                name={specialist.displayName}
+                url={creatorInfo.avatarUrl}
+                name={creatorInfo.displayName}
                 size="sm"
               />
               <span className="font-medium text-foreground">
-                {specialist.displayName}
+                {creatorInfo.displayName}
               </span>
             </div>
           </SummaryRow>
@@ -209,63 +269,56 @@ export function StepConfirmation({
           </SummaryRow>
 
           {/* Where */}
-          <SummaryRow label={translations.summary.where}>
-            <div className="flex items-center gap-2">
-              <Avatar
-                url={beautyPageInfo.avatarUrl}
-                name={beautyPageInfo.name}
-                size="sm"
-              />
-              <div>
-                <div className="font-medium text-foreground">
-                  {beautyPageInfo.name}
-                </div>
-                {beautyPageInfo.address && (
-                  <div className="text-sm text-muted">
-                    {beautyPageInfo.address}
-                  </div>
-                )}
-              </div>
-            </div>
-          </SummaryRow>
+          {beautyPageInfo.address && (
+            <SummaryRow label={translations.summary.where}>
+              <span className="text-foreground">{beautyPageInfo.address}</span>
+            </SummaryRow>
+          )}
 
           {/* What */}
           <SummaryRow label={translations.summary.what}>
             <div className="space-y-1">
-              {selectedServices.map((service) => {
-                // Get the price for this service from the specialist's assignment
-                const assignment = service.assignments.find(
-                  (a) => a.member_id === specialist.memberId,
-                );
-                const priceCents = assignment?.price_cents ?? 0;
-                return (
-                  <div
-                    key={service.id}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-foreground">{service.name}</span>
-                    <span className="text-sm text-muted">
-                      {formatPrice(priceCents, currency, locale)}
-                    </span>
-                  </div>
-                );
-              })}
+              {selectedServices.map((service) => (
+                <div
+                  key={service.id}
+                  className="flex items-center justify-between"
+                >
+                  <span className="text-foreground">{service.name}</span>
+                  <span className="text-sm text-muted">
+                    {formatPrice(service.price_cents, currency, locale)}
+                  </span>
+                </div>
+              ))}
             </div>
           </SummaryRow>
 
           {/* Price */}
           <SummaryRow label={translations.summary.price}>
-            <span className="font-semibold text-foreground">{formattedPrice}</span>
+            <span className="font-semibold text-foreground">
+              {formattedPrice}
+            </span>
           </SummaryRow>
         </div>
 
         {/* Form - different for authenticated vs guest users */}
         {isAuthenticated ? (
-          // Authenticated user - no form fields needed, just submit
+          // Authenticated user form - visit preferences only
           <form
             id="booking-form"
             onSubmit={authForm.handleSubmit(onAuthSubmit)}
+            className="space-y-4"
           >
+            {/* Visit Preferences (collapsible) */}
+            <VisitPreferencesSection
+              translations={translations.visitPreferences}
+              communication={communication}
+              onCommunicationChange={setCommunication}
+              accessibility={accessibility}
+              onAccessibilityToggle={toggleAccessibility}
+              allergies={allergies}
+              onAllergiesChange={setAllergies}
+            />
+
             {/* Error message */}
             {error && (
               <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
@@ -368,6 +421,17 @@ export function StepConfirmation({
               )}
             </div>
 
+            {/* Visit Preferences (collapsible) */}
+            <VisitPreferencesSection
+              translations={translations.visitPreferences}
+              communication={communication}
+              onCommunicationChange={setCommunication}
+              accessibility={accessibility}
+              onAccessibilityToggle={toggleAccessibility}
+              allergies={allergies}
+              onAllergiesChange={setAllergies}
+            />
+
             {/* Error message */}
             {error && (
               <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
@@ -379,11 +443,7 @@ export function StepConfirmation({
       </div>
 
       {/* Footer with actions */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-3">
-        <Button variant="ghost" onClick={goBack}>
-          <ChevronLeft className="mr-1 h-4 w-4" />
-          Back
-        </Button>
+      <div className="flex justify-end border-t border-border px-4 py-3">
         <Button
           type="submit"
           form="booking-form"
@@ -420,5 +480,146 @@ function SummaryRow({ label, children }: SummaryRowProps) {
       </div>
       <div className="flex-1">{children}</div>
     </div>
+  );
+}
+
+// ============================================================================
+// Visit Preferences Section
+// ============================================================================
+
+interface VisitPreferencesSectionProps {
+  translations: VisitPreferencesTranslations;
+  communication: CommunicationPreference | undefined;
+  onCommunicationChange: (value: CommunicationPreference | undefined) => void;
+  accessibility: AccessibilityNeed[];
+  onAccessibilityToggle: (need: AccessibilityNeed) => void;
+  allergies: string;
+  onAllergiesChange: (value: string) => void;
+}
+
+function VisitPreferencesSection({
+  translations,
+  communication,
+  onCommunicationChange,
+  accessibility,
+  onAccessibilityToggle,
+  allergies,
+  onAllergiesChange,
+}: VisitPreferencesSectionProps) {
+  // Communication options with translations
+  const communicationOptions = useMemo(
+    () =>
+      COMMUNICATION_OPTIONS.map((opt) => ({
+        value: opt,
+        label:
+          opt === "quiet"
+            ? translations.communicationQuiet
+            : opt === "friendly"
+              ? translations.communicationFriendly
+              : translations.communicationChatty,
+      })),
+    [translations],
+  );
+
+  // Accessibility options with translations
+  const accessibilityOptions = useMemo(
+    () =>
+      ACCESSIBILITY_OPTIONS.map((opt) => ({
+        value: opt,
+        label:
+          opt === "wheelchair"
+            ? translations.accessibilityWheelchair
+            : opt === "hearing_impaired"
+              ? translations.accessibilityHearing
+              : opt === "vision_impaired"
+                ? translations.accessibilityVision
+                : translations.accessibilitySensory,
+      })),
+    [translations],
+  );
+
+  return (
+    <Collapsible.Root>
+      <Collapsible.Trigger className="group flex w-full items-center justify-between rounded-lg border border-border bg-surface-muted px-3 py-2.5 text-left transition-colors hover:bg-surface-hover data-[panel-open]:rounded-b-none data-[panel-open]:border-b-0">
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-medium text-foreground">
+            {translations.title}
+          </div>
+          <div className="text-xs text-muted">{translations.subtitle}</div>
+        </div>
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted transition-transform duration-200 group-data-[panel-open]:rotate-180" />
+      </Collapsible.Trigger>
+
+      <Collapsible.Panel className="overflow-hidden rounded-b-lg border border-t-0 border-border bg-surface transition-all duration-200 data-[ending-style]:h-0 data-[starting-style]:h-0">
+        <div className="space-y-4 p-3">
+          {/* Communication Style */}
+          <div>
+            <div className="mb-1.5 text-sm font-medium text-foreground">
+              {translations.communicationLabel}
+            </div>
+            <Select.Root
+              value={communication ?? null}
+              onValueChange={(val) =>
+                onCommunicationChange(
+                  val ? (val as CommunicationPreference) : undefined,
+                )
+              }
+            >
+              <Select.Trigger
+                placeholder={translations.communicationLabel}
+                items={communicationOptions}
+              />
+              <Select.Content>
+                {communicationOptions.map((opt) => (
+                  <Select.Item key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </div>
+
+          {/* Accessibility Needs */}
+          <div>
+            <div className="mb-2 text-sm font-medium text-foreground">
+              {translations.accessibilityLabel}
+            </div>
+            <div className="space-y-2">
+              {accessibilityOptions.map((opt) => (
+                <label
+                  key={opt.value}
+                  className="flex cursor-pointer items-center gap-2"
+                >
+                  <Checkbox
+                    checked={accessibility.includes(opt.value)}
+                    onCheckedChange={() => onAccessibilityToggle(opt.value)}
+                  />
+                  <span className="text-sm text-foreground">{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Allergies */}
+          <div>
+            <label
+              htmlFor="allergies-textarea"
+              className="mb-1.5 block text-sm font-medium text-foreground"
+            >
+              {translations.allergiesLabel}
+            </label>
+            <textarea
+              id="allergies-textarea"
+              value={allergies}
+              onChange={(e) => onAllergiesChange(e.target.value)}
+              rows={2}
+              maxLength={500}
+              placeholder={translations.allergiesPlaceholder}
+              className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+        </div>
+      </Collapsible.Panel>
+    </Collapsible.Root>
   );
 }

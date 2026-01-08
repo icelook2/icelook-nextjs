@@ -29,11 +29,6 @@ export function DeleteServiceGroupDialog({
   const [serverError, setServerError] = useState<string | null>(null);
 
   const servicesCount = serviceGroup.services.length;
-  const assignmentsCount = serviceGroup.services.reduce(
-    (acc, service) => acc + service.specialist_service_assignments.length,
-    0,
-  );
-  const hasContent = servicesCount > 0 || assignmentsCount > 0;
 
   function handleOpenChange(newOpen: boolean) {
     onOpenChange(newOpen);
@@ -71,29 +66,16 @@ export function DeleteServiceGroupDialog({
           <div className="space-y-4">
             <p>{t("delete_group_confirm", { name: serviceGroup.name })}</p>
 
-            {hasContent && (
+            {servicesCount > 0 && (
               <div className="rounded-lg border border-border bg-surface p-3">
                 <p className="text-sm font-medium">
                   {t("delete_group_warning_title")}
                 </p>
-                <ul className="mt-2 space-y-1 text-sm text-muted">
-                  {servicesCount > 0 && (
-                    <li>
-                      •{" "}
-                      {t("delete_group_services_warning", {
-                        count: servicesCount,
-                      })}
-                    </li>
-                  )}
-                  {assignmentsCount > 0 && (
-                    <li>
-                      •{" "}
-                      {t("delete_group_assignments_warning", {
-                        count: assignmentsCount,
-                      })}
-                    </li>
-                  )}
-                </ul>
+                <p className="mt-2 text-sm text-muted">
+                  {t("delete_group_services_warning", {
+                    count: servicesCount,
+                  })}
+                </p>
               </div>
             )}
 

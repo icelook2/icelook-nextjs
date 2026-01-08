@@ -1,18 +1,28 @@
-import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/lib/ui/page-header";
+import { redirect } from "next/navigation";
+import { getProfile } from "@/lib/auth/session";
+import { getActiveBeautyPageId } from "@/lib/beauty-page/active-beauty-page";
+import { getUserBeautyPages } from "@/lib/queries";
 
 export default async function HomePage() {
-  const t = await getTranslations("home");
+  const profile = await getProfile();
 
-  return (
-    <>
-      <PageHeader title={t("title")} containerClassName="mx-auto max-w-2xl" />
+  // Not authenticated - redirect to appointments (will redirect to auth)
+  if (!profile) {
+    redirect("/appointments");
+  }
 
-      <div className="mx-auto max-w-2xl px-4">
-        <div className="flex items-center justify-center rounded-xl border border-dashed border-border bg-surface py-24">
-          <p className="text-muted">Welcome to Icelook</p>
-        </div>
-      </div>
-    </>
-  );
+  // Get user's beauty pages
+  const beautyPages = await getUserBeautyPages(profile.id);
+
+  // Client (no beauty pages) - redirect to appointments
+  if (beautyPages.length === 0) {
+    redirect("/appointments");
+  }
+
+  // Creator - redirect to active beauty page profile
+  const activeId = await getActiveBeautyPageId();
+  const activeBeautyPage =
+    beautyPages.find((bp) => bp.id === activeId) ?? beautyPages[0];
+
+  redirect(`/${activeBeautyPage.slug}`);
 }

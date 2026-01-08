@@ -30,14 +30,12 @@ export type BeautyPageWithType = BeautyPage & {
 };
 
 export type UserBeautyPage = Pick<BeautyPage, "id" | "name" | "slug"> & {
-  /** User's relationship to this beauty page */
-  relationship: "owner" | "member";
-  /** Roles if user is a member (admin, specialist) */
-  roles?: ("admin" | "specialist")[];
+  avatar_url: string | null;
+  display_name: string | null;
 };
 
 /**
- * Fetches all beauty pages the user has access to (owned or member of)
+ * Fetches all beauty pages owned by the user
  */
 export async function getUserBeautyPages(
   userId: string | undefined,
@@ -47,56 +45,19 @@ export async function getUserBeautyPages(
   }
   const supabase = await createClient();
 
-  // Fetch owned beauty pages
-  const { data: ownedPages, error: ownedError } = await supabase
+  const { data, error } = await supabase
     .from("beauty_pages")
-    .select("id, name, slug")
+    .select("id, name, slug, avatar_url, display_name")
     .eq("owner_id", userId)
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
-  if (ownedError) {
-    console.error("Error fetching owned beauty pages:", ownedError);
+  if (error) {
+    console.error("Error fetching beauty pages:", error);
+    return [];
   }
 
-  // Fetch beauty pages where user is a member
-  const { data: memberPages, error: memberError } = await supabase
-    .from("beauty_page_members")
-    .select("roles, beauty_pages (id, name, slug)")
-    .eq("user_id", userId);
-
-  if (memberError) {
-    console.error("Error fetching member beauty pages:", memberError);
-  }
-
-  // Build a map to deduplicate (owner might also be a member)
-  const pageMap = new Map<string, UserBeautyPage>();
-
-  // Add owned pages first (they take priority)
-  for (const page of ownedPages ?? []) {
-    pageMap.set(page.id, {
-      ...page,
-      relationship: "owner",
-    });
-  }
-
-  // Add member pages (skip if already added as owner)
-  for (const member of memberPages ?? []) {
-    const page = member.beauty_pages as unknown as {
-      id: string;
-      name: string;
-      slug: string;
-    } | null;
-    if (page && !pageMap.has(page.id)) {
-      pageMap.set(page.id, {
-        ...page,
-        relationship: "member",
-        roles: member.roles,
-      });
-    }
-  }
-
-  return Array.from(pageMap.values());
+  return data ?? [];
 }
 
 /**

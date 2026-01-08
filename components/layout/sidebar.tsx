@@ -6,15 +6,10 @@ import { SidebarNav } from "./sidebar-nav";
 
 interface SidebarProps {
   className?: string;
-  beautyPagesCount?: number;
   profile: Profile | null;
 }
 
-export function Sidebar({
-  className,
-  beautyPagesCount = 0,
-  profile,
-}: SidebarProps) {
+export function Sidebar({ className, profile }: SidebarProps) {
   return (
     <aside
       className={cn(
@@ -29,7 +24,7 @@ export function Sidebar({
 
       {/* Navigation - centered vertically */}
       <nav className="flex flex-1 flex-col items-center justify-center">
-        <SidebarNav beautyPagesCount={beautyPagesCount} />
+        <SidebarNav />
       </nav>
 
       {/* Profile menu at bottom */}

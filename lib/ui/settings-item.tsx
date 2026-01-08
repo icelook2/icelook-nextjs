@@ -1,13 +1,15 @@
 import { ChevronRight, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
 interface SettingsItemProps {
   href: string;
   icon: LucideIcon;
   title: string;
-  description: string;
+  description?: string;
+  /** Display a value below the title (alternative to description, styled for data display) */
+  value?: string;
   disabled?: boolean;
   badge?: ReactNode;
   iconClassName?: string;
@@ -21,6 +23,7 @@ export function SettingsItem({
   icon: Icon,
   title,
   description,
+  value,
   disabled = false,
   badge,
   iconClassName = "bg-accent-soft text-accent",
@@ -30,18 +33,22 @@ export function SettingsItem({
 }: SettingsItemProps) {
   const content = (
     <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <div
-          className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconClassName}`}
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconClassName}`}
         >
           <Icon className="h-5 w-5" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="font-medium">{title}</p>
-          <p className="text-sm text-muted">{description}</p>
+          {value ? (
+            <p className="truncate text-sm text-muted">{value}</p>
+          ) : description ? (
+            <p className="text-sm text-muted">{description}</p>
+          ) : null}
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         {badge}
         <ChevronRight className="h-5 w-5 text-muted" />
       </div>

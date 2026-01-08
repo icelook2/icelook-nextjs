@@ -36,7 +36,12 @@ const gradients: string[] = [
   "from-purple-400 to-indigo-500",
 ];
 
-export function Avatar({ url, name, size = "md", shape = "circle" }: AvatarProps) {
+export function Avatar({
+  url,
+  name,
+  size = "md",
+  shape = "circle",
+}: AvatarProps) {
   const initial = name.charAt(0).toUpperCase();
   const gradientIndex = name.charCodeAt(0) % gradients.length;
   const gradient = gradients[gradientIndex];

@@ -26,7 +26,8 @@ export function LabelBadge({
       className={cn(
         "inline-flex items-center rounded-full font-medium",
         size === "sm" ? "px-2 py-0.5 text-xs" : "px-2.5 py-1 text-sm",
-        !color && "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+        !color &&
+          "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
         className,
       )}
       style={
