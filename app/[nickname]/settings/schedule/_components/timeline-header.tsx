@@ -9,6 +9,9 @@ import {
 import { findWorkingDayForDate } from "../_lib/schedule-utils";
 import type { WorkingDayWithBreaks } from "../_lib/types";
 
+/** Minimum width matching the day column minimum */
+const MIN_DAY_WIDTH = 120;
+
 interface TimelineHeaderProps {
   dates: Date[];
   workingDays?: WorkingDayWithBreaks[];
@@ -31,12 +34,9 @@ export function TimelineHeader({
   className,
 }: TimelineHeaderProps) {
   return (
-    <div className={cn("sticky top-0 flex bg-background", className)}>
-      {/* Spacer for time column */}
-      <div className="w-16 shrink-0" />
-
+    <div className={cn("sticky top-0 bg-background", className)}>
       {/* Day headers - unified row, no gaps */}
-      <div className="flex flex-1 border-b border-border">
+      <div className="flex border-b border-border">
         {dates.map((date, index) => {
           const { dayName, dayNumber } = formatDayHeader(date);
           const isToday = checkIsToday(date);
@@ -60,10 +60,11 @@ export function TimelineHeader({
             <div
               key={date.toISOString()}
               className={cn(
-                "flex-1 py-3 text-center",
+                "flex-1 py-3 text-center snap-start",
                 !isLast && "border-r border-border",
                 canManage && "cursor-pointer hover:bg-surface-alt/50 transition-colors",
               )}
+              style={{ minWidth: MIN_DAY_WIDTH }}
               onClick={handleClick}
               onKeyDown={
                 canManage

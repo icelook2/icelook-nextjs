@@ -11,6 +11,12 @@ interface AppointmentBlockProps {
   beautyPageId: string;
   nickname: string;
   canManage: boolean;
+  /** Controlled popover open state (optional) */
+  popoverOpen?: boolean;
+  /** Callback when popover open state should change (optional) */
+  onPopoverOpenChange?: (open: boolean) => void;
+  /** When true, fills parent container instead of absolute positioning */
+  fillParent?: boolean;
   className?: string;
 }
 
@@ -68,6 +74,9 @@ export function AppointmentBlock({
   beautyPageId,
   nickname,
   canManage,
+  popoverOpen,
+  onPopoverOpenChange,
+  fillParent,
   className,
 }: AppointmentBlockProps) {
   const startTime = normalizeTime(appointment.start_time);
@@ -101,24 +110,32 @@ export function AppointmentBlock({
       beautyPageId={beautyPageId}
       nickname={nickname}
       canManage={canManage}
+      open={popoverOpen}
+      onOpenChange={onPopoverOpenChange}
     >
       <button
         type="button"
         className={cn(
-          "absolute inset-x-1 overflow-hidden rounded-lg text-left transition-all",
+          "overflow-hidden rounded-lg text-left transition-all",
           // Floating card - colored background with subtle border and shadow
           "border shadow-sm",
           styles.background,
           styles.border,
           "hover:shadow-md hover:brightness-[1.02] dark:hover:brightness-110",
           isCancelled && "opacity-60",
+          // Positioning: either fill parent or absolute
+          fillParent ? "relative h-full w-full" : "absolute inset-x-1",
           className,
         )}
-        style={{
-          top: `${topPercent}%`,
-          height: `${heightPercent}%`,
-          minHeight: "20px",
-        }}
+        style={
+          fillParent
+            ? undefined
+            : {
+                top: `${topPercent}%`,
+                height: `${heightPercent}%`,
+                minHeight: "20px",
+              }
+        }
       >
         <div
           className={cn(

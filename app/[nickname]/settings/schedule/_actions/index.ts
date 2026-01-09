@@ -3,6 +3,7 @@ export {
   completeAppointment,
   confirmAppointment,
   markNoShow,
+  rescheduleAppointment,
   updateAppointmentNotes,
   updateAppointmentStatus,
 } from "./appointment.actions";

@@ -209,6 +209,102 @@ export async function markNoShow(input: {
   });
 }
 
+// Validation schema for reschedule
+const rescheduleSchema = z.object({
+  newDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  newStartTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+  newEndTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),
+});
+
+/**
+ * Reschedule an appointment to a new date/time
+ * Used for drag-and-drop rescheduling
+ */
+export async function rescheduleAppointment(input: {
+  appointmentId: string;
+  beautyPageId: string;
+  nickname: string;
+  newDate: string;
+  newStartTime: string;
+  newEndTime: string;
+}): Promise<ActionResult> {
+  const t = await getTranslations("schedule");
+
+  // Validate input
+  const validation = rescheduleSchema.safeParse({
+    newDate: input.newDate,
+    newStartTime: input.newStartTime,
+    newEndTime: input.newEndTime,
+  });
+
+  if (!validation.success) {
+    return { success: false, error: t("errors.validation_failed") };
+  }
+
+  // Check authorization
+  const authorization = await verifyCanManageSchedule(input.beautyPageId);
+  if (!authorization.authorized) {
+    return { success: false, error: authorization.error };
+  }
+
+  const supabase = await createClient();
+
+  // Get appointment to verify it exists and can be rescheduled
+  const { data: appointment } = await supabase
+    .from("appointments")
+    .select("id, status, date, start_time, end_time")
+    .eq("id", input.appointmentId)
+    .single();
+
+  if (!appointment) {
+    return { success: false, error: t("errors.not_found") };
+  }
+
+  // Only pending/confirmed can be rescheduled
+  if (!["pending", "confirmed"].includes(appointment.status)) {
+    return { success: false, error: t("errors.cannot_reschedule_status") };
+  }
+
+  // Normalize time format (strip seconds if present)
+  const normalizedStartTime = input.newStartTime.substring(0, 5);
+  const normalizedEndTime = input.newEndTime.substring(0, 5);
+
+  // Check for conflicts with other appointments
+  const { data: conflicts } = await supabase
+    .from("appointments")
+    .select("id")
+    .eq("beauty_page_id", input.beautyPageId)
+    .eq("date", input.newDate)
+    .neq("id", input.appointmentId)
+    .not("status", "in", '("cancelled","no_show")')
+    .or(
+      `and(start_time.lt.${normalizedEndTime},end_time.gt.${normalizedStartTime})`,
+    );
+
+  if (conflicts && conflicts.length > 0) {
+    return { success: false, error: t("errors.slot_conflict") };
+  }
+
+  // Update the appointment
+  const { error: updateError } = await supabase
+    .from("appointments")
+    .update({
+      date: input.newDate,
+      start_time: normalizedStartTime,
+      end_time: normalizedEndTime,
+    })
+    .eq("id", input.appointmentId);
+
+  if (updateError) {
+    console.error("Error rescheduling appointment:", updateError);
+    return { success: false, error: t("errors.update_failed") };
+  }
+
+  revalidatePath(`/${input.nickname}/settings/schedule`);
+
+  return { success: true };
+}
+
 /**
  * Add notes to an appointment
  */

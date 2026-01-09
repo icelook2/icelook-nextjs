@@ -13,8 +13,11 @@ import type {
   GridConfig,
   WorkingDayWithBreaks,
 } from "../_lib/types";
-import { AppointmentBlock } from "./appointment-block";
 import { BreakBlock } from "./break-block";
+import { DraggableAppointment } from "./draggable-appointment";
+
+/** Minimum width for each day column to ensure comfortable touch targets */
+const MIN_DAY_WIDTH = 120;
 
 interface DayColumnProps {
   date: Date;
@@ -94,9 +97,11 @@ export function DayColumn({
     <div
       className={cn(
         "relative flex-1 border-r border-border last:border-r-0",
+        "snap-start snap-always",
         isToday && "bg-accent/5",
         className,
       )}
+      style={{ minWidth: MIN_DAY_WIDTH }}
     >
       {/* Grid lines for hours - subtle */}
       {Array.from({ length: config.endHour - config.startHour + 1 }, (_, i) => (
@@ -138,7 +143,7 @@ export function DayColumn({
 
       {/* Appointments */}
       {dayAppointments.map((appointment) => (
-        <AppointmentBlock
+        <DraggableAppointment
           key={appointment.id}
           appointment={appointment}
           config={config}

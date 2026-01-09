@@ -47,6 +47,10 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/.playwright-mcp/
+
+# Temp images
+*.png
 
 # Sentry Config File
 .env.sentry-build-plugin

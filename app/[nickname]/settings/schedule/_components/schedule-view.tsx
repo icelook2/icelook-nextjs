@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { rescheduleAppointment } from "../_actions";
 import { useScheduleNavigation } from "../_hooks";
 import type { WorkingDayBreak, WorkingDayWithBreaks } from "../_lib/types";
 import type { Appointment } from "../_lib/types";
@@ -44,6 +46,9 @@ export function ScheduleView({
   appointments,
   canManage,
 }: ScheduleViewProps) {
+  const router = useRouter();
+  const [_isPending, startTransition] = useTransition();
+
   // Navigation state from URL
   const {
     viewMode,
@@ -101,6 +106,32 @@ export function ScheduleView({
     setBreakDialog({ open: false });
   }
 
+  // Handler for rescheduling via drag
+  function handleReschedule(result: {
+    appointmentId: string;
+    newDate: string;
+    newStartTime: string;
+    newEndTime: string;
+  }) {
+    startTransition(async () => {
+      const response = await rescheduleAppointment({
+        appointmentId: result.appointmentId,
+        beautyPageId,
+        nickname,
+        newDate: result.newDate,
+        newStartTime: result.newStartTime,
+        newEndTime: result.newEndTime,
+      });
+
+      if (response.success) {
+        router.refresh();
+      } else {
+        // TODO: Show error toast
+        console.error("Failed to reschedule:", response.error);
+      }
+    });
+  }
+
   return (
     <div className="flex flex-col">
       {/* Toolbar */}
@@ -126,6 +157,7 @@ export function ScheduleView({
         onAddWorkingDay={handleAddWorkingDay}
         onEditWorkingDay={handleEditWorkingDay}
         onEditBreak={handleEditBreak}
+        onReschedule={canManage ? handleReschedule : undefined}
       />
 
       {/* Dialogs */}

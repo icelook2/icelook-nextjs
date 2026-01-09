@@ -36,6 +36,10 @@ interface AppointmentPopoverProps {
   nickname: string;
   canManage: boolean;
   children: ReactElement;
+  /** Controlled open state (optional) */
+  open?: boolean;
+  /** Callback when open state should change (optional) */
+  onOpenChange?: (open: boolean) => void;
 }
 
 /**
@@ -48,12 +52,21 @@ export function AppointmentPopover({
   nickname,
   canManage,
   children,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: AppointmentPopoverProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  // Support both controlled and uncontrolled modes
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled
+    ? (value: boolean) => controlledOnOpenChange?.(value)
+    : setInternalOpen;
 
   const statusColors = getAppointmentStatusColor(appointment.status);
   const formattedDate = parseDate(appointment.date).toLocaleDateString(locale, {
