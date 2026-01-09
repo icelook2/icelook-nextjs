@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { getMessages } from "next-intl/server";
 import { LocaleProvider } from "@/components/locale-provider";
+import { NavigationProvider } from "@/components/navigation-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getLocale } from "@/i18n/get-locale";
 import "./globals.css";
@@ -42,7 +43,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <LocaleProvider locale={locale} messages={messages} timeZone="UTC">
-              {children}
+              <NavigationProvider>{children}</NavigationProvider>
             </LocaleProvider>
           </ThemeProvider>
         </div>

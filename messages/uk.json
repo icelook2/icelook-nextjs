@@ -130,6 +130,7 @@
     "groups": {
       "account": "Акаунт",
       "preferences": "Налаштування",
+      "activity": "Активність",
       "business": "Бізнес"
     },
     "nav": {
@@ -140,7 +141,11 @@
       "preferences": "Налаштування",
       "preferences_description": "Тема та мова",
       "visit_preferences": "Побажання до візиту",
-      "visit_preferences_description": "Ваші вподобання для візитів"
+      "visit_preferences_description": "Ваші вподобання для візитів",
+      "appointments": "Записи",
+      "appointments_description": "Переглянути ваші записи на візити",
+      "beauty_pages": "Б'юті сторінки",
+      "beauty_pages_description": "Керуйте своїми б'юті сторінками"
     },
     "unnamed_user": "Користувач",
     "not_set": "Не вказано",
@@ -1711,6 +1716,8 @@
     "delete_service_confirmation": "Ви впевнені, що хочете видалити \"{name}\"?",
     "no_services_in_group": "Немає послуг у цій групі",
     "add_first_service": "Додати послугу",
+    "danger_zone": "Небезпечна зона",
+    "danger_zone_description": "Незворотні дії",
     "errors": {
       "not_authenticated": "Ви повинні увійти",
       "not_authorized": "У вас немає дозволу на цю дію",

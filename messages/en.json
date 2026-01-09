@@ -130,6 +130,7 @@
     "groups": {
       "account": "Account",
       "preferences": "Preferences",
+      "activity": "Activity",
       "business": "Business"
     },
     "nav": {
@@ -140,7 +141,11 @@
       "preferences": "Preferences",
       "preferences_description": "Theme and language settings",
       "visit_preferences": "Visit Preferences",
-      "visit_preferences_description": "Your preferences for beauty visits"
+      "visit_preferences_description": "Your preferences for beauty visits",
+      "appointments": "Appointments",
+      "appointments_description": "View your booked appointments",
+      "beauty_pages": "Beauty Pages",
+      "beauty_pages_description": "Manage your beauty pages"
     },
     "unnamed_user": "User",
     "not_set": "Not set",
@@ -1711,6 +1716,8 @@
     "delete_service_confirmation": "Are you sure you want to delete \"{name}\"?",
     "no_services_in_group": "No services in this group",
     "add_first_service": "Add service",
+    "danger_zone": "Danger Zone",
+    "danger_zone_description": "Irreversible actions",
     "errors": {
       "not_authenticated": "You must be logged in",
       "not_authorized": "You don't have permission to do this",

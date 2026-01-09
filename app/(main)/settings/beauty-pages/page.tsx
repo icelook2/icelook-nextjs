@@ -17,6 +17,7 @@ export default async function BeautyPagesPage() {
       <PageHeader
         title={t("title")}
         subtitle={t("subtitle")}
+        backHref=""
         containerClassName="mx-auto max-w-2xl"
       >
         <Link href="/settings">

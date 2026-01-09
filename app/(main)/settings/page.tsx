@@ -1,4 +1,4 @@
-import { Heart, Mail, Palette, User } from "lucide-react";
+import { Calendar, Heart, Mail, Palette, Sparkles, User } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
@@ -27,6 +27,7 @@ export default async function SettingsPage() {
       <PageHeader
         title={t("title")}
         subtitle={t("subtitle")}
+        backHref=""
         containerClassName="mx-auto max-w-2xl"
       />
 
@@ -75,6 +76,27 @@ export default async function SettingsPage() {
               title={t("nav.visit_preferences")}
               description={t("nav.visit_preferences_description")}
               iconClassName="bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-400"
+              variant="grouped"
+              noBorder
+            />
+          </SettingsGroup>
+
+          {/* Activity */}
+          <SettingsGroup title={t("groups.activity")}>
+            <SettingsItem
+              href="/appointments"
+              icon={Calendar}
+              title={t("nav.appointments")}
+              description={t("nav.appointments_description")}
+              iconClassName="bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"
+              variant="grouped"
+            />
+            <SettingsItem
+              href="/settings/beauty-pages"
+              icon={Sparkles}
+              title={t("nav.beauty_pages")}
+              description={t("nav.beauty_pages_description")}
+              iconClassName="bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-500/20 dark:text-fuchsia-400"
               variant="grouped"
               noBorder
             />

@@ -1,16 +1,14 @@
 "use client";
 
-import { ChevronRight, Pencil, Scissors } from "lucide-react";
+import { ChevronRight, Pencil, Scissors, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { ServiceGroupWithServices } from "@/lib/queries";
-import { Button } from "@/lib/ui/button";
 import { SettingsGroup, SettingsRow } from "@/lib/ui/settings-group";
 import { formatDuration, formatPrice } from "./constants";
 import { CreateServiceDialog } from "./create-service-dialog";
 import { DeleteServiceGroupDialog } from "./delete-service-group-dialog";
-import { EditServiceGroupDialog } from "./edit-service-group-dialog";
 
 interface ServicesListProps {
   serviceGroup: ServiceGroupWithServices;
@@ -24,7 +22,6 @@ export function ServicesList({
   nickname,
 }: ServicesListProps) {
   const t = useTranslations("service_groups");
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const services = serviceGroup.services;
@@ -36,39 +33,24 @@ export function ServicesList({
         title={t("group_settings")}
         description={t("group_settings_description")}
       >
-        <SettingsRow className="flex items-center justify-between">
-          <p className="font-medium">{serviceGroup.name}</p>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setEditDialogOpen(true)}
-            className="h-8 w-8 p-0"
+        <SettingsRow noBorder>
+          <Link
+            href={`/${nickname}/settings/service-groups/${serviceGroup.id}/services/name`}
+            className="flex items-center justify-between"
           >
-            <Pencil className="h-4 w-4" />
-          </Button>
-        </SettingsRow>
-        <SettingsRow noBorder className="flex items-center justify-between">
-          <div>
-            <p className="font-medium text-danger">{t("delete_group")}</p>
-            <p className="text-sm text-muted">{t("delete_group_hint")}</p>
-          </div>
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={() => setDeleteDialogOpen(true)}
-          >
-            {t("delete")}
-          </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400">
+                <Pencil className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-medium">{t("group_name_label")}</p>
+                <p className="text-sm text-muted">{serviceGroup.name}</p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted" />
+          </Link>
         </SettingsRow>
       </SettingsGroup>
-
-      <EditServiceGroupDialog
-        serviceGroup={serviceGroup}
-        beautyPageId={beautyPageId}
-        nickname={nickname}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-      />
 
       <DeleteServiceGroupDialog
         serviceGroup={serviceGroup}
@@ -131,6 +113,27 @@ export function ServicesList({
             </div>
           </div>
         )}
+      </SettingsGroup>
+
+      {/* Danger Zone - destructive actions separated at bottom */}
+      <SettingsGroup
+        title={t("danger_zone")}
+        description={t("danger_zone_description")}
+      >
+        <SettingsRow noBorder className="flex items-center justify-between">
+          <div>
+            <p className="font-medium">{t("delete_group")}</p>
+            <p className="text-sm text-muted">{t("delete_group_hint")}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDeleteDialogOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-100/30 text-danger transition-colors hover:bg-red-100 dark:bg-red-500/5 dark:hover:bg-red-500/15"
+            aria-label={t("delete_group")}
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+        </SettingsRow>
       </SettingsGroup>
     </div>
   );

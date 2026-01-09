@@ -1,19 +1,23 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { useSmartBack } from "@/components/navigation-provider";
 import { cn } from "@/lib/utils/cn";
 
 /**
  * PageHeader - Reusable header component for pages
  *
+ * The back button uses smart navigation: it will go back in browser history
+ * if the user navigated from within the app, otherwise it navigates to the
+ * fallback URL specified in backHref.
+ *
  * @example
- * // Simple usage with title only
+ * // Simple usage with title only (no back button)
  * <PageHeader title="Settings" />
  *
  * @example
- * // With back button and subtitle
+ * // With back button - goes back in history or to /beauty-pages as fallback
  * <PageHeader
  *   title="Beauty Page Settings"
  *   subtitle="Roman's Beauty Page"
@@ -31,7 +35,7 @@ import { cn } from "@/lib/utils/cn";
  * // With actions on the right
  * <PageHeader
  *   title="Profile"
- *   backHref=""
+ *   backHref="/settings"
  * >
  *   <Button>Edit</Button>
  * </PageHeader>
@@ -49,7 +53,10 @@ interface PageHeaderProps {
   title: ReactNode;
   /** Subtitle/description - can be string or ReactNode for flexibility */
   subtitle?: ReactNode;
-  /** Back button href - if provided, shows back button. Pass empty string to use router.back() */
+  /**
+   * Fallback URL for back navigation. If provided, shows a back button.
+   * The button will navigate back in history if possible, otherwise go to this URL.
+   */
   backHref?: string;
   /** Optional actions/buttons on the right side */
   children?: ReactNode;
@@ -67,15 +74,8 @@ export function PageHeader({
   className,
   containerClassName,
 }: PageHeaderProps) {
-  const router = useRouter();
-
-  function handleBack() {
-    if (backHref) {
-      router.push(backHref);
-    } else {
-      router.back();
-    }
-  }
+  // Use "/" as default fallback if backHref is empty string (for backwards compatibility)
+  const handleBack = useSmartBack(backHref || "/");
 
   return (
     <header className={cn("bg-background pb-6", className)}>
