@@ -1,6 +1,7 @@
 "use client";
 
-import { Calendar, Clock, Phone, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Calendar, Clock, Phone, X } from "lucide-react";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
@@ -11,6 +12,7 @@ import { formatTimeRange } from "../_lib/workday-utils";
 
 interface AppointmentDetailDialogProps {
   appointment: Appointment;
+  nickname: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   // Actions
@@ -21,6 +23,7 @@ interface AppointmentDetailDialogProps {
 
 export function AppointmentDetailDialog({
   appointment,
+  nickname,
   open,
   onOpenChange,
   onReschedule,
@@ -99,6 +102,16 @@ export function AppointmentDetailDialog({
               <p className="text-sm">{appointment.client_notes}</p>
             </div>
           )}
+
+          {/* View full details link */}
+          <Link
+            href={`/${nickname}/workday/appointment/${appointment.id}`}
+            className="flex items-center justify-center gap-1 text-sm text-accent transition-colors hover:text-accent/80"
+            onClick={() => onOpenChange(false)}
+          >
+            View full details
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </Dialog.Body>
 
         {/* Actions */}

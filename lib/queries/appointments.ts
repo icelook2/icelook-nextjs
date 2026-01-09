@@ -1,5 +1,132 @@
-import type { Tables } from "@/lib/supabase/database.types";
+import type { Tables, Enums } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export type Appointment = Tables<"appointments">;
+export type AppointmentStatus = Enums<"appointment_status">;
+
+/** Summarized client history for the appointment details page */
+export interface ClientHistorySummary {
+  /** Number of completed appointments with this creator */
+  totalVisits: number;
+  /** Total revenue from this client in cents */
+  totalSpentCents: number;
+  /** Currency code */
+  currency: string;
+  /** ISO date string of last completed appointment */
+  lastVisitDate: string | null;
+  /** Top services booked by this client */
+  topServices: Array<{ serviceName: string; count: number }>;
+}
+
+// ============================================================================
+// Creator-side Queries (for appointment details page)
+// ============================================================================
+
+/**
+ * Get a single appointment by ID for a beauty page
+ * Used on the appointment details page
+ */
+export async function getAppointmentById(
+  beautyPageId: string,
+  appointmentId: string,
+): Promise<Appointment | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("*")
+    .eq("id", appointmentId)
+    .eq("beauty_page_id", beautyPageId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      // No rows returned
+      return null;
+    }
+    console.error("Error fetching appointment:", error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Get summarized client history for showing on appointment details page
+ * Matches client by client_id (if authenticated) or normalized phone (if guest)
+ */
+export async function getClientHistoryForAppointment(
+  beautyPageId: string,
+  clientId: string | null,
+  clientPhone: string,
+): Promise<ClientHistorySummary | null> {
+  const supabase = await createClient();
+
+  // Build query to match client
+  let query = supabase
+    .from("appointments")
+    .select("service_name, service_price_cents, service_currency, date, status")
+    .eq("beauty_page_id", beautyPageId)
+    .eq("status", "completed");
+
+  if (clientId) {
+    // Authenticated client - match by ID
+    query = query.eq("client_id", clientId);
+  } else {
+    // Guest client - match by phone
+    query = query.eq("client_phone", clientPhone);
+  }
+
+  const { data: appointments, error } = await query.order("date", {
+    ascending: false,
+  });
+
+  if (error) {
+    console.error("Error fetching client history:", error);
+    throw error;
+  }
+
+  if (!appointments || appointments.length === 0) {
+    return null;
+  }
+
+  // Calculate stats
+  const totalVisits = appointments.length;
+  const totalSpentCents = appointments.reduce(
+    (sum, a) => sum + a.service_price_cents,
+    0,
+  );
+  const currency = appointments[0].service_currency;
+  const lastVisitDate = appointments[0].date;
+
+  // Calculate top services
+  const serviceCount = new Map<string, number>();
+  for (const apt of appointments) {
+    const count = serviceCount.get(apt.service_name) ?? 0;
+    serviceCount.set(apt.service_name, count + 1);
+  }
+
+  const topServices = [...serviceCount.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([serviceName, count]) => ({ serviceName, count }));
+
+  return {
+    totalVisits,
+    totalSpentCents,
+    currency,
+    lastVisitDate,
+    topServices,
+  };
+}
+
+// ============================================================================
+// Client-side Queries (for client's appointment history)
+// ============================================================================
 
 export type ClientAppointment = Pick<
   Tables<"appointments">,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { Paper } from "@/lib/ui/paper";
 import type { Appointment } from "../../../settings/schedule/_lib/types";
@@ -16,6 +17,7 @@ interface CompletedViewProps {
 }
 
 export function CompletedView({ appointments }: CompletedViewProps) {
+  const { nickname } = useParams<{ nickname: string }>();
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
   // Update current time every minute (less frequent since we're just showing completed)
@@ -62,6 +64,7 @@ export function CompletedView({ appointments }: CompletedViewProps) {
           key={apt.id}
           appointment={apt}
           currentTime={currentTime}
+          nickname={nickname}
           variant="queue"
         />
       ))}

@@ -1,15 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, Clock, Phone, X } from "lucide-react";
+import { Check, Clock, Phone, Scissors, X } from "lucide-react";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
 import { Paper } from "@/lib/ui/paper";
 import { cn } from "@/lib/utils/cn";
 import type { Appointment } from "../../settings/schedule/_lib/types";
+import { formatDuration } from "@/lib/utils/price-range";
 import { getAppointmentStatusColor } from "../../settings/schedule/_lib/schedule-utils";
-import { formatTimeRemaining, formatTimeUntil } from "../_lib/workday-utils";
+import {
+  calculateDurationMinutes,
+  formatTimeRange,
+  formatTimeRemaining,
+  formatTimeUntil,
+} from "../_lib/workday-utils";
 import { AppointmentDetailDialog } from "./appointment-detail-dialog";
 
 const appointmentCardVariants = cva("transition-colors", {
@@ -28,6 +35,7 @@ const appointmentCardVariants = cva("transition-colors", {
 interface AppointmentCardProps extends VariantProps<typeof appointmentCardVariants> {
   appointment: Appointment;
   currentTime: Date;
+  nickname: string;
   isActive?: boolean;
   isCompleted?: boolean;
   showTimeUntil?: boolean;
@@ -46,6 +54,7 @@ interface AppointmentCardProps extends VariantProps<typeof appointmentCardVarian
 export function AppointmentCard({
   appointment,
   currentTime,
+  nickname,
   isActive = false,
   isCompleted = false,
   showTimeUntil = false,
@@ -156,6 +165,7 @@ export function AppointmentCard({
         {!isPending && (
           <AppointmentDetailDialog
             appointment={appointment}
+            nickname={nickname}
             open={dialogOpen}
             onOpenChange={setDialogOpen}
             onReschedule={onReschedule}
@@ -202,12 +212,24 @@ export function AppointmentCard({
         </span>
       </div>
 
+      {/* Service name (hero only) */}
+      {isHero && (
+        <div className="mt-3 flex items-center gap-2 text-muted">
+          <Scissors className="h-4 w-4 shrink-0" />
+          <span className="truncate text-base">{appointment.service_name}</span>
+        </div>
+      )}
+
       {/* Time info (unless hidden) */}
       {!hideTime && (
-        <div className={cn("flex items-center gap-4", isHero ? "mt-4" : "mt-3")}>
+        <div className={cn("flex items-center gap-4", isHero ? "mt-3" : "mt-3")}>
           <div className="flex items-center gap-1.5 text-muted">
             <Clock className="h-4 w-4" />
-            <span className={isHero ? "text-base" : "text-sm"}>{startTime}</span>
+            <span className={isHero ? "text-base" : "text-sm"}>
+              {isHero
+                ? `${formatTimeRange(appointment.start_time, appointment.end_time)} (${formatDuration(calculateDurationMinutes(appointment.start_time, appointment.end_time))})`
+                : startTime}
+            </span>
           </div>
 
           {isActive && (
@@ -227,14 +249,18 @@ export function AppointmentCard({
       {/* Contact info (hero only) */}
       {isHero && appointment.client_phone && (
         <div className="mt-4 flex items-center gap-4 border-t border-border pt-4">
-          <a
-            href={`tel:${appointment.client_phone}`}
-            onClick={(e) => e.stopPropagation()}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.location.href = `tel:${appointment.client_phone}`;
+            }}
             className="flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
           >
             <Phone className="h-4 w-4" />
             {appointment.client_phone}
-          </a>
+          </button>
         </div>
       )}
 
@@ -249,6 +275,19 @@ export function AppointmentCard({
     </Paper>
   );
 
+  // Hero variant: navigate to details page
+  if (isHero) {
+    return (
+      <Link
+        href={`/${nickname}/workday/appointment/${appointment.id}`}
+        className="block w-full text-left"
+      >
+        {cardContent}
+      </Link>
+    );
+  }
+
+  // Compact variant: open dialog
   return (
     <>
       <button
@@ -261,6 +300,7 @@ export function AppointmentCard({
 
       <AppointmentDetailDialog
         appointment={appointment}
+        nickname={nickname}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onReschedule={onReschedule}

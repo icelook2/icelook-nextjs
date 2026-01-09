@@ -196,3 +196,16 @@ export function formatBreakDuration(minutes: number): string {
 
   return `${h}h ${m}min break`;
 }
+
+/**
+ * Calculate duration in minutes from start and end times
+ * @param startTime - Start time in "HH:MM" format
+ * @param endTime - End time in "HH:MM" format
+ * @returns Duration in minutes
+ */
+export function calculateDurationMinutes(
+  startTime: string,
+  endTime: string,
+): number {
+  return timeToMinutes(endTime) - timeToMinutes(startTime);
+}

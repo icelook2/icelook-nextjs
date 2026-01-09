@@ -61,6 +61,7 @@ export function NowQueueView({
                   key={apt.id}
                   appointment={apt}
                   currentTime={currentTime}
+                  nickname={nickname}
                   variant="compact"
                 />
               ))}
@@ -112,6 +113,7 @@ export function NowQueueView({
           <AppointmentCard
             appointment={currentAppointment}
             currentTime={currentTime}
+            nickname={nickname}
             variant="hero"
             isActive
           />
@@ -148,6 +150,7 @@ export function NowQueueView({
                 key={apt.id}
                 appointment={apt}
                 currentTime={currentTime}
+                nickname={nickname}
                 variant="queue"
                 onApprove={onApprove}
                 onDecline={onDecline}
