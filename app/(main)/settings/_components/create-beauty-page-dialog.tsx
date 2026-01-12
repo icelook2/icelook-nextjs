@@ -93,7 +93,10 @@ export function CreateBeautyPageDialog({
 
       if (result.success) {
         setOpen(false);
+        // Use refresh() after push() to ensure the Router Cache is invalidated
+        // and fresh data is fetched for the newly created beauty page
         router.push(`/${result.slug}`);
+        router.refresh();
       } else {
         setServerError(result.error);
       }

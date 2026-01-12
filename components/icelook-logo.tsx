@@ -1,4 +1,3 @@
-import { useId } from "react";
 import { cn } from "@/lib/utils/cn";
 
 interface IcelookLogoProps {
@@ -8,7 +7,6 @@ interface IcelookLogoProps {
 }
 
 export function IcelookLogo({ size = 32, className }: IcelookLogoProps) {
-  const titleId = useId();
   // Original viewBox: 390x609, aspect ratio: 390/609 ≈ 0.64
   const width = Math.round(size * 0.64);
 
@@ -21,9 +19,8 @@ export function IcelookLogo({ size = 32, className }: IcelookLogoProps) {
       xmlns="http://www.w3.org/2000/svg"
       className={cn("shrink-0", className)}
       role="img"
-      aria-labelledby={titleId}
+      aria-label="Icelook"
     >
-      <title id={titleId}>Icelook</title>
       <ellipse
         cx="74.0996"
         cy="78.0768"

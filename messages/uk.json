@@ -603,7 +603,12 @@
       "break_overlap": "Перерва перетинається з іншою перервою",
       "invalid_status_transition": "Недопустима зміна статусу",
       "salon_closed_this_day": "Салон закритий у цей день",
-      "hours_outside_business_hours": "Робочі години мають бути в межах годин роботи ({open} - {close})"
+      "hours_outside_business_hours": "Робочі години мають бути в межах годин роботи ({open} - {close})",
+      "cannot_modify_status": "Неможливо змінити запис у цьому статусі",
+      "cannot_remove_last_service": "Неможливо видалити останню послугу",
+      "service_not_found": "Послугу не знайдено",
+      "cannot_reschedule_status": "Неможливо перенести запис у цьому статусі",
+      "slot_conflict": "Цей час конфліктує з іншим записом"
     }
   },
   "working_hours": {
@@ -1399,7 +1404,8 @@
     "beauty_page": "Місце",
     "min": "хв",
     "hour": "год",
-    "close": "Закрити"
+    "close": "Закрити",
+    "last_appointment": "Останній візит"
   },
   "team": {
     "page_title": "Команда",
@@ -1835,6 +1841,41 @@
       "update_failed": "Не вдалося оновити мітку",
       "delete_failed": "Не вдалося видалити мітку",
       "assign_failed": "Не вдалося призначити мітки"
+    }
+  },
+  "appointment_details": {
+    "creator_notes": {
+      "title": "Ваші нотатки",
+      "placeholder": "Додайте нотатки про клієнта (напр., уподобання, алергії, формула фарби)...",
+      "saving": "Збереження...",
+      "saved": "Збережено",
+      "hint": "Ці нотатки відображаються на всіх записах цього клієнта"
+    },
+    "services": {
+      "title": "Послуги",
+      "column_service": "Послуга",
+      "column_duration": "Тривалість",
+      "column_price": "Ціна",
+      "column_actions": "Дії",
+      "add_service": "Додати послугу",
+      "add_service_title": "Додати послугу",
+      "remove_service": "Видалити",
+      "total": "Всього",
+      "no_services_available": "Немає доступних послуг для додавання"
+    },
+    "overlap_warning": {
+      "title": "Конфлікт розкладу",
+      "message": "Додавання \"{serviceName}\" подовжує цей запис на {duration} хвилин, що перетинається з наступним записом о {nextTime}.",
+      "add_without_extending": "Додати без подовження",
+      "allow_overlap": "Дозволити перетин",
+      "cancel": "Скасувати"
+    },
+    "actions": {
+      "title": "Дії",
+      "reschedule": "Перенести",
+      "reschedule_description": "Змінити дату або час",
+      "cancel": "Скасувати запис",
+      "cancel_description": "Скасувати цей запис"
     }
   }
 }

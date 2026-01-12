@@ -12,6 +12,7 @@ DECLARE
   v_end_date date;
   v_appointment_time time;
   v_service_record record;
+  v_client_record record;
   v_random_hour int;
   v_random_minute int;
   v_appointments_per_day int;
@@ -103,11 +104,12 @@ BEGIN
         v_random_minute := (floor(random() * 2)::int) * 30; -- 0 or 30
         v_appointment_time := (v_random_hour || ':' || LPAD(v_random_minute::text, 2, '0'))::time;
 
-        -- Pick random client
+        -- Pick random client and get their profile data including visit preferences
         j := 1 + floor(random() * 10)::int;
         IF j > 10 THEN j := 10; END IF;
 
-        SELECT id INTO v_client_id FROM profiles WHERE email = 'client' || j || '@test.com' LIMIT 1;
+        SELECT id, full_name, visit_preferences INTO v_client_record
+        FROM profiles WHERE email = 'client' || j || '@test.com' LIMIT 1;
 
         -- Mix of pending and confirmed for drag testing
         -- More confirmed than pending, realistic scenario
@@ -118,23 +120,35 @@ BEGIN
           ELSE 'confirmed'
         END;
 
-        -- Insert appointment
-        INSERT INTO appointments (
-          beauty_page_id, service_id, service_name, service_price_cents,
-          service_duration_minutes, service_currency, creator_display_name,
-          client_id, client_name, client_phone, client_email,
-          date, start_time, end_time, status, timezone
-        ) VALUES (
-          v_beauty_page_id, v_service_record.id, v_service_record.name,
-          v_service_record.price_cents, v_service_record.duration_minutes,
-          'UAH', 'Roman',
-          v_client_id, v_client_names[j], v_client_phones[j], 'client' || j || '@test.com',
-          v_current_date,
-          v_appointment_time,
-          v_appointment_time + (v_service_record.duration_minutes || ' minutes')::interval,
-          v_status::appointment_status,
-          'Europe/Kyiv'
-        );
+        -- Insert appointment using profile data for consistency (including visit preferences snapshot)
+        DECLARE
+          v_appointment_id uuid;
+        BEGIN
+          INSERT INTO appointments (
+            beauty_page_id, service_id, service_name, service_price_cents,
+            service_duration_minutes, service_currency, creator_display_name,
+            client_id, client_name, client_phone, client_email,
+            date, start_time, end_time, status, timezone, visit_preferences
+          ) VALUES (
+            v_beauty_page_id, v_service_record.id, v_service_record.name,
+            v_service_record.price_cents, v_service_record.duration_minutes,
+            'UAH', 'Roman',
+            v_client_record.id,
+            COALESCE(v_client_record.full_name, v_client_names[j]),
+            v_client_phones[j],
+            'client' || j || '@test.com',
+            v_current_date,
+            v_appointment_time,
+            v_appointment_time + (v_service_record.duration_minutes || ' minutes')::interval,
+            v_status::appointment_status,
+            'Europe/Kyiv',
+            v_client_record.visit_preferences
+          ) RETURNING id INTO v_appointment_id;
+
+          -- Also insert into appointment_services table
+          INSERT INTO appointment_services (appointment_id, service_id, service_name, price_cents, duration_minutes)
+          VALUES (v_appointment_id, v_service_record.id, v_service_record.name, v_service_record.price_cents, v_service_record.duration_minutes);
+        END;
       END LOOP;
     END IF;
 

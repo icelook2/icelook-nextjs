@@ -4,8 +4,8 @@ import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageByNickname } from "@/lib/queries";
 import { PageHeader } from "@/lib/ui/page-header";
 import { RequestsView } from "./requests-view";
-import { getScheduleData } from "../settings/schedule/_lib/queries";
-import { toDateString } from "../settings/schedule/_lib/date-utils";
+import { getScheduleData } from "../appointments/_lib/queries";
+import { toDateString } from "../appointments/_lib/date-utils";
 
 interface RequestsPageProps {
   params: Promise<{ nickname: string }>;
@@ -54,7 +54,7 @@ export default async function RequestsPage({ params }: RequestsPageProps) {
       <PageHeader
         title="Requests"
         subtitle={beautyPage.name}
-        backHref={`/${nickname}/workday`}
+        backHref={`/${nickname}/appointments`}
         containerClassName="mx-auto max-w-2xl"
       />
 

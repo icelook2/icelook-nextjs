@@ -5,8 +5,32 @@ import { createClient } from "@/lib/supabase/server";
 // Types
 // ============================================================================
 
-export type Appointment = Tables<"appointments">;
 export type AppointmentStatus = Enums<"appointment_status">;
+
+/** Individual service within an appointment */
+export type AppointmentService = Pick<
+  Tables<"appointment_services">,
+  "id" | "service_name" | "price_cents" | "duration_minutes"
+>;
+
+/** Appointment with individual services */
+export type Appointment = Tables<"appointments"> & {
+  appointment_services: AppointmentService[];
+};
+
+/** Last appointment data for display (matches AppointmentCard requirements) */
+export interface LastAppointment {
+  id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  status: AppointmentStatus;
+  client_name: string;
+  client_phone: string;
+  service_name: string;
+  service_price_cents: number;
+  service_currency: string;
+}
 
 /** Summarized client history for the appointment details page */
 export interface ClientHistorySummary {
@@ -16,10 +40,8 @@ export interface ClientHistorySummary {
   totalSpentCents: number;
   /** Currency code */
   currency: string;
-  /** ISO date string of last completed appointment */
-  lastVisitDate: string | null;
-  /** Top services booked by this client */
-  topServices: Array<{ serviceName: string; count: number }>;
+  /** The last completed appointment */
+  lastAppointment: LastAppointment | null;
 }
 
 // ============================================================================
@@ -38,7 +60,17 @@ export async function getAppointmentById(
 
   const { data, error } = await supabase
     .from("appointments")
-    .select("*")
+    .select(
+      `
+      *,
+      appointment_services (
+        id,
+        service_name,
+        price_cents,
+        duration_minutes
+      )
+    `,
+    )
     .eq("id", appointmentId)
     .eq("beauty_page_id", beautyPageId)
     .single();
@@ -69,7 +101,9 @@ export async function getClientHistoryForAppointment(
   // Build query to match client
   let query = supabase
     .from("appointments")
-    .select("service_name, service_price_cents, service_currency, date, status")
+    .select(
+      "id, date, start_time, end_time, status, client_name, client_phone, service_name, service_price_cents, service_currency",
+    )
     .eq("beauty_page_id", beautyPageId)
     .eq("status", "completed");
 
@@ -101,27 +135,64 @@ export async function getClientHistoryForAppointment(
     0,
   );
   const currency = appointments[0].service_currency;
-  const lastVisitDate = appointments[0].date;
 
-  // Calculate top services
-  const serviceCount = new Map<string, number>();
-  for (const apt of appointments) {
-    const count = serviceCount.get(apt.service_name) ?? 0;
-    serviceCount.set(apt.service_name, count + 1);
-  }
-
-  const topServices = [...serviceCount.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([serviceName, count]) => ({ serviceName, count }));
+  // Last appointment is the first one (sorted by date desc)
+  const last = appointments[0];
+  const lastAppointment: LastAppointment = {
+    id: last.id,
+    date: last.date,
+    start_time: last.start_time,
+    end_time: last.end_time,
+    status: last.status,
+    client_name: last.client_name,
+    client_phone: last.client_phone,
+    service_name: last.service_name,
+    service_price_cents: last.service_price_cents,
+    service_currency: last.service_currency,
+  };
 
   return {
     totalVisits,
     totalSpentCents,
     currency,
-    lastVisitDate,
-    topServices,
+    lastAppointment,
   };
+}
+
+/**
+ * Get the next appointment after a given time on the same date
+ * Used to check for overlap when adding services to an appointment
+ */
+export async function getNextAppointment(
+  beautyPageId: string,
+  date: string,
+  afterTime: string,
+  excludeAppointmentId?: string,
+): Promise<{ start_time: string; client_name: string } | null> {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from("appointments")
+    .select("start_time, client_name")
+    .eq("beauty_page_id", beautyPageId)
+    .eq("date", date)
+    .gt("start_time", afterTime)
+    .not("status", "in", '("cancelled","no_show")')
+    .order("start_time", { ascending: true })
+    .limit(1);
+
+  if (excludeAppointmentId) {
+    query = query.neq("id", excludeAppointmentId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+
+  if (error) {
+    console.error("Error fetching next appointment:", error);
+    throw error;
+  }
+
+  return data;
 }
 
 // ============================================================================

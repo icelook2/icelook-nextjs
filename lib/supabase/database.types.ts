@@ -34,6 +34,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_services: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          duration_minutes: number
+          id: string
+          price_cents: number
+          service_id: string | null
+          service_name: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          duration_minutes: number
+          id?: string
+          price_cents: number
+          service_id?: string | null
+          service_name: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          price_cents?: number
+          service_id?: string | null
+          service_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_services_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           beauty_page_id: string
@@ -58,6 +103,7 @@ export type Database = {
           status: Database["public"]["Enums"]["appointment_status"]
           timezone: string
           updated_at: string
+          visit_preferences: Json | null
         }
         Insert: {
           beauty_page_id: string
@@ -82,6 +128,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["appointment_status"]
           timezone?: string
           updated_at?: string
+          visit_preferences?: Json | null
         }
         Update: {
           beauty_page_id?: string
@@ -106,6 +153,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["appointment_status"]
           timezone?: string
           updated_at?: string
+          visit_preferences?: Json | null
         }
         Relationships: [
           {
@@ -263,6 +311,47 @@ export type Database = {
           },
         ]
       }
+      business_hours: {
+        Row: {
+          beauty_page_id: string
+          close_time: string | null
+          created_at: string
+          day_of_week: number
+          id: string
+          is_open: boolean
+          open_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          beauty_page_id: string
+          close_time?: string | null
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_open?: boolean
+          open_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          beauty_page_id?: string
+          close_time?: string | null
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_open?: boolean
+          open_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_hours_beauty_page_id_fkey"
+            columns: ["beauty_page_id"]
+            isOneToOne: false
+            referencedRelation: "beauty_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cancellation_policies: {
         Row: {
           allow_cancellation: boolean
@@ -313,6 +402,7 @@ export type Database = {
           id: string
           preferred_locale: string | null
           updated_at: string | null
+          visit_preferences: Json | null
         }
         Insert: {
           avatar_url?: string | null
@@ -322,6 +412,7 @@ export type Database = {
           id: string
           preferred_locale?: string | null
           updated_at?: string | null
+          visit_preferences?: Json | null
         }
         Update: {
           avatar_url?: string | null
@@ -331,53 +422,9 @@ export type Database = {
           id?: string
           preferred_locale?: string | null
           updated_at?: string | null
+          visit_preferences?: Json | null
         }
         Relationships: []
-      }
-      reviews: {
-        Row: {
-          beauty_page_id: string
-          comment: string | null
-          created_at: string
-          id: string
-          rating: number
-          reviewer_id: string
-          updated_at: string
-        }
-        Insert: {
-          beauty_page_id: string
-          comment?: string | null
-          created_at?: string
-          id?: string
-          rating: number
-          reviewer_id: string
-          updated_at?: string
-        }
-        Update: {
-          beauty_page_id?: string
-          comment?: string | null
-          created_at?: string
-          id?: string
-          rating?: number
-          reviewer_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reviews_beauty_page_id_fkey"
-            columns: ["beauty_page_id"]
-            isOneToOne: false
-            referencedRelation: "beauty_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_reviewer_id_profiles_fkey"
-            columns: ["reviewer_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       service_groups: {
         Row: {
@@ -455,66 +502,6 @@ export type Database = {
           },
         ]
       }
-      special_offers: {
-        Row: {
-          beauty_page_id: string
-          created_at: string
-          date: string
-          discount_percentage: number
-          discounted_price_cents: number
-          end_time: string
-          id: string
-          original_price_cents: number
-          service_id: string
-          start_time: string
-          status: Database["public"]["Enums"]["special_offer_status"]
-          updated_at: string
-        }
-        Insert: {
-          beauty_page_id: string
-          created_at?: string
-          date: string
-          discount_percentage?: number
-          discounted_price_cents: number
-          end_time: string
-          id?: string
-          original_price_cents: number
-          service_id: string
-          start_time: string
-          status?: Database["public"]["Enums"]["special_offer_status"]
-          updated_at?: string
-        }
-        Update: {
-          beauty_page_id?: string
-          created_at?: string
-          date?: string
-          discount_percentage?: number
-          discounted_price_cents?: number
-          end_time?: string
-          id?: string
-          original_price_cents?: number
-          service_id?: string
-          start_time?: string
-          status?: Database["public"]["Enums"]["special_offer_status"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "special_offers_beauty_page_id_fkey"
-            columns: ["beauty_page_id"]
-            isOneToOne: false
-            referencedRelation: "beauty_pages"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "special_offers_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       working_day_breaks: {
         Row: {
           created_at: string
@@ -585,47 +572,6 @@ export type Database = {
           },
         ]
       }
-      working_hours: {
-        Row: {
-          beauty_page_id: string
-          close_time: string | null
-          created_at: string
-          day_of_week: number
-          id: string
-          is_open: boolean
-          open_time: string | null
-          updated_at: string
-        }
-        Insert: {
-          beauty_page_id: string
-          close_time?: string | null
-          created_at?: string
-          day_of_week: number
-          id?: string
-          is_open?: boolean
-          open_time?: string | null
-          updated_at?: string
-        }
-        Update: {
-          beauty_page_id?: string
-          close_time?: string | null
-          created_at?: string
-          day_of_week?: number
-          id?: string
-          is_open?: boolean
-          open_time?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "working_hours_beauty_page_id_fkey"
-            columns: ["beauty_page_id"]
-            isOneToOne: false
-            referencedRelation: "beauty_pages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -635,22 +581,6 @@ export type Database = {
         Args: { wd_id: string }
         Returns: string
       }
-      search_beauty_pages: {
-        Args: { result_limit?: number; search_query: string }
-        Returns: {
-          city: string
-          display_name: string
-          id: string
-          is_verified: boolean
-          logo_url: string
-          name: string
-          similarity_score: number
-          slug: string
-          type_name: string
-        }[]
-      }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       appointment_status:
@@ -659,7 +589,6 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "no_show"
-      special_offer_status: "active" | "booked" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -797,7 +726,6 @@ export const Constants = {
         "cancelled",
         "no_show",
       ],
-      special_offer_status: ["active", "booked", "expired"],
     },
   },
 } as const

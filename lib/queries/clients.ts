@@ -758,3 +758,34 @@ export async function getAppointmentsPaginated(
     currentPage: total === 0 ? 1 : currentPage,
   };
 }
+
+// ============================================================================
+// Client Notes
+// ============================================================================
+
+/**
+ * Get creator's notes for a specific client
+ * Matches by client_id (if authenticated) or client_phone (if guest)
+ */
+export async function getClientNotes(
+  beautyPageId: string,
+  clientId: string | null,
+  clientPhone: string,
+): Promise<string | null> {
+  const supabase = await createClient();
+
+  let query = supabase
+    .from("client_notes")
+    .select("notes")
+    .eq("beauty_page_id", beautyPageId);
+
+  if (clientId) {
+    query = query.eq("client_id", clientId);
+  } else {
+    query = query.eq("client_phone", clientPhone);
+  }
+
+  const { data } = await query.single();
+
+  return data?.notes ?? null;
+}

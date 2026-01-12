@@ -71,7 +71,7 @@ export async function getActiveSpecialOffers(
     .order("start_time", { ascending: true });
 
   if (error) {
-    console.error("Error fetching special offers:", error);
+    // Silently return empty array - table may not exist yet
     return [];
   }
 

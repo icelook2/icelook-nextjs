@@ -92,7 +92,7 @@ export async function updateTimezone(input: {
 
   revalidatePath(`/${input.nickname}`);
   revalidatePath(`/${input.nickname}/settings`);
-  revalidatePath(`/${input.nickname}/settings/schedule`);
+  revalidatePath(`/${input.nickname}/schedule`);
 
   return { success: true };
 }

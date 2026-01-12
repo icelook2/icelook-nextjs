@@ -19,9 +19,9 @@ export interface NavItem {
 }
 
 export const navItems: NavItem[] = [
-  // Schedule - creator only, dynamic route
+  // Appointments - creator only, dynamic route
   {
-    href: (ctx) => `/${ctx.activeNickname}/settings/schedule`,
+    href: (ctx) => `/${ctx.activeNickname}/appointments`,
     labelKey: "nav.schedule",
     icon: CalendarDays,
     roles: ["creator"],

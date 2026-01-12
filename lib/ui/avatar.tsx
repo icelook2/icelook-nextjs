@@ -5,18 +5,20 @@ import Image from "next/image";
 interface AvatarProps {
   url?: string | null;
   name: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   /** Shape of the avatar. Use "circle" for users, "rounded" for beauty pages */
   shape?: "circle" | "rounded";
 }
 
 const sizeClasses = {
+  xs: "h-5 w-5 text-xs",
   sm: "h-8 w-8 text-sm",
   md: "h-12 w-12 text-lg",
   lg: "h-16 w-16 text-xl",
 };
 
 const imageSizes = {
+  xs: 20,
   sm: 32,
   md: 48,
   lg: 64,

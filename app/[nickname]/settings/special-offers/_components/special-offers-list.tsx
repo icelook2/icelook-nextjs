@@ -23,7 +23,7 @@ import { Popover } from "@/lib/ui/popover";
 import { Select } from "@/lib/ui/select";
 import { SettingsGroup, SettingsRow } from "@/lib/ui/settings-group";
 import { cn } from "@/lib/utils/cn";
-import { SimpleDatePicker } from "../../schedule/_components/simple-date-picker";
+import { SimpleDatePicker } from "../../../appointments/_components/simple-date-picker";
 import {
   createSpecialOffer,
   deleteSpecialOffer,

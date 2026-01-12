@@ -69,7 +69,7 @@ export default async function BeautyPageSettings({
 
   const scheduleLinks = [
     {
-      href: `/${nickname}/settings/schedule`,
+      href: `/${nickname}/appointments`,
       icon: Calendar,
       title: t("nav.schedule"),
       description: t("nav.schedule_description"),

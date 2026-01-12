@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 import { ArrowDownUp, Calendar, Check, Clock, Inbox, X } from "lucide-react";
 import { Button } from "@/lib/ui/button";
 import { Paper } from "@/lib/ui/paper";
-import type { Appointment } from "../settings/schedule/_lib/types";
+import type { Appointment } from "../appointments/_lib/types";
 import {
   confirmAppointment,
   cancelAppointment,
-} from "../settings/schedule/_actions/appointment.actions";
+} from "../appointments/_actions/appointment.actions";
 
 type SortMode = "recent" | "soonest";
 

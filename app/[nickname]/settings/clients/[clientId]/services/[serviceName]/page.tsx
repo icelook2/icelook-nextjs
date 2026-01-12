@@ -104,6 +104,7 @@ export default async function ServiceDetailPage({
             totalCount={serviceStats?.count ?? totalAppointments}
             totalSpentCents={serviceStats?.totalCents ?? 0}
             currency={details.client.currency}
+            nickname={nickname}
           />
 
           {/* Pagination */}

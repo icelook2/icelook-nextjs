@@ -7,18 +7,18 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
 import type { ClientAppointmentHistory } from "@/lib/queries/clients";
 import { Paper } from "@/lib/ui/paper";
 import { formatCurrency } from "../../../../_lib/utils";
-import { AppointmentDetailDialog } from "../../../_components/appointment-detail-dialog";
 
 interface ServiceAppointmentsListProps {
   appointments: ClientAppointmentHistory[];
   totalCount: number;
   totalSpentCents: number;
   currency: string;
+  nickname: string;
 }
 
 type AppointmentStatus =
@@ -59,12 +59,11 @@ export function ServiceAppointmentsList({
   totalCount,
   totalSpentCents,
   currency,
+  nickname,
 }: ServiceAppointmentsListProps) {
   const t = useTranslations("clients.service_detail");
   const tStatus = useTranslations("clients.history.status");
   const locale = useLocale();
-  const [selectedAppointment, setSelectedAppointment] =
-    useState<ClientAppointmentHistory | null>(null);
 
   return (
     <div className="space-y-4">
@@ -131,14 +130,13 @@ export function ServiceAppointmentsList({
             const formattedTime = `${apt.startTime.slice(0, 5)} - ${apt.endTime.slice(0, 5)}`;
 
             return (
-              <button
+              <Link
                 key={apt.id}
-                type="button"
-                onClick={() => setSelectedAppointment(apt)}
+                href={`/${nickname}/appointments/${apt.id}`}
                 className="grid w-full grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-muted"
               >
                 {/* Calendar Icon */}
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 dark:bg-gray-500/20 dark:text-gray-400">
                   <Calendar className="h-4 w-4" />
                 </div>
 
@@ -163,18 +161,11 @@ export function ServiceAppointmentsList({
 
                 {/* Chevron */}
                 <ChevronRight className="h-4 w-4 text-muted" />
-              </button>
+              </Link>
             );
           })}
         </div>
       </Paper>
-
-      {/* Appointment Detail Dialog */}
-      <AppointmentDetailDialog
-        appointment={selectedAppointment}
-        open={selectedAppointment !== null}
-        onOpenChange={(open) => !open && setSelectedAppointment(null)}
-      />
     </div>
   );
 }

@@ -82,7 +82,12 @@ export default async function AppointmentsPage({
       <main className="mx-auto max-w-2xl px-4 pb-8">
         <div className="space-y-6">
           {/* Appointments Table */}
-          <AppointmentsTable appointments={appointments} sort={sort} order={order} />
+          <AppointmentsTable
+            appointments={appointments}
+            sort={sort}
+            order={order}
+            nickname={nickname}
+          />
 
           {/* Pagination */}
           {totalPages > 1 && (

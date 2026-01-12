@@ -9,9 +9,10 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import type {
   AppointmentsSortField,
   ClientAppointmentHistory,
@@ -19,12 +20,12 @@ import type {
 } from "@/lib/queries/clients";
 import { Paper } from "@/lib/ui/paper";
 import { formatCurrency, formatDate } from "../../../_lib/utils";
-import { AppointmentDetailDialog } from "../../_components/appointment-detail-dialog";
 
 interface AppointmentsTableProps {
   appointments: ClientAppointmentHistory[];
   sort: AppointmentsSortField;
   order: SortOrder;
+  nickname: string;
 }
 
 type AppointmentStatus =
@@ -64,13 +65,12 @@ export function AppointmentsTable({
   appointments,
   sort,
   order,
+  nickname,
 }: AppointmentsTableProps) {
   const t = useTranslations("clients.appointments_page");
   const tStatus = useTranslations("clients.history.status");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selectedAppointment, setSelectedAppointment] =
-    useState<ClientAppointmentHistory | null>(null);
 
   const handleSort = useCallback(
     (field: AppointmentsSortField) => {
@@ -158,10 +158,9 @@ export function AppointmentsTable({
             const StatusIcon = statusConfig.icon;
 
             return (
-              <button
+              <Link
                 key={apt.id}
-                type="button"
-                onClick={() => setSelectedAppointment(apt)}
+                href={`/${nickname}/appointments/${apt.id}`}
                 className="grid w-full grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-muted"
               >
                 {/* Calendar Icon */}
@@ -190,18 +189,11 @@ export function AppointmentsTable({
 
                 {/* Chevron */}
                 <ChevronRight className="h-4 w-4 text-muted" />
-              </button>
+              </Link>
             );
           })}
         </div>
       </Paper>
-
-      {/* Appointment Detail Dialog */}
-      <AppointmentDetailDialog
-        appointment={selectedAppointment}
-        open={selectedAppointment !== null}
-        onOpenChange={(open) => !open && setSelectedAppointment(null)}
-      />
     </div>
   );
 }

@@ -81,12 +81,27 @@ DECLARE
     '+380507890123', '+380678901234', '+380939012345', '+380500123456'
   ];
 
+  -- Visit preferences for each client (varied realistic data)
+  v_visit_preferences jsonb[] := ARRAY[
+    '{"communication": "friendly", "allergies": "Алергія на деякі ароматизатори"}'::jsonb,
+    '{"communication": "quiet"}'::jsonb,
+    '{"communication": "chatty", "accessibility": ["wheelchair"]}'::jsonb,
+    '{"communication": "friendly", "accessibility": ["hearing_impaired"], "allergies": "Чутлива шкіра"}'::jsonb,
+    NULL::jsonb,
+    '{"communication": "quiet", "accessibility": ["sensory_sensitivity"]}'::jsonb,
+    '{"communication": "chatty"}'::jsonb,
+    '{"accessibility": ["vision_impaired"], "allergies": "Алергія на латекс"}'::jsonb,
+    '{"communication": "friendly"}'::jsonb,
+    '{"communication": "quiet", "allergies": "Алергія на певні хімічні засоби для волосся"}'::jsonb
+  ];
+  v_client_prefs jsonb;
+
 BEGIN
   -- Get barber type ID
-  SELECT id INTO v_barber_type_id FROM beauty_page_types WHERE slug = 'barber' LIMIT 1;
+  SELECT id INTO v_barber_type_id FROM beauty_page_types WHERE slug = 'barbershop' LIMIT 1;
 
   IF v_barber_type_id IS NULL THEN
-    RAISE EXCEPTION 'Barber type not found';
+    RAISE EXCEPTION 'Barbershop type not found';
   END IF;
 
   -- Get Roman Mahotskyi as owner (primary email)
@@ -113,11 +128,12 @@ BEGIN
   IF v_beauty_page_id IS NOT NULL THEN
     RAISE NOTICE 'Roman Barber already exists, deleting old data...';
     -- Delete existing data
+    DELETE FROM appointment_services WHERE appointment_id IN (SELECT id FROM appointments WHERE beauty_page_id = v_beauty_page_id);
     DELETE FROM appointments WHERE beauty_page_id = v_beauty_page_id;
+    DELETE FROM working_day_breaks WHERE working_day_id IN (SELECT id FROM working_days WHERE beauty_page_id = v_beauty_page_id);
     DELETE FROM working_days WHERE beauty_page_id = v_beauty_page_id;
     DELETE FROM services WHERE service_group_id IN (SELECT id FROM service_groups WHERE beauty_page_id = v_beauty_page_id);
     DELETE FROM service_groups WHERE beauty_page_id = v_beauty_page_id;
-    DELETE FROM reviews WHERE beauty_page_id = v_beauty_page_id;
     DELETE FROM beauty_pages WHERE id = v_beauty_page_id;
   END IF;
 
@@ -168,7 +184,7 @@ BEGIN
 
   RAISE NOTICE 'Created working days';
 
-  -- Create 10 mock users in auth.users and profiles
+  -- Create 10 mock users in auth.users and profiles with visit preferences
   FOR i IN 1..10 LOOP
     -- Check if user exists in profiles
     SELECT id INTO v_client_id FROM profiles WHERE email = 'client' || i || '@test.com' LIMIT 1;
@@ -192,10 +208,17 @@ BEGIN
         ) RETURNING id INTO v_client_id;
       END IF;
 
-      -- Create profile only if it doesn't exist
-      INSERT INTO profiles (id, email, full_name)
-      VALUES (v_client_id, 'client' || i || '@test.com', v_client_names[i])
-      ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name;
+      -- Create profile with visit preferences
+      INSERT INTO profiles (id, email, full_name, visit_preferences)
+      VALUES (v_client_id, 'client' || i || '@test.com', v_client_names[i], v_visit_preferences[i])
+      ON CONFLICT (id) DO UPDATE SET
+        full_name = EXCLUDED.full_name,
+        visit_preferences = EXCLUDED.visit_preferences;
+    ELSE
+      -- Update existing profile with visit preferences
+      UPDATE profiles
+      SET visit_preferences = v_visit_preferences[i]
+      WHERE id = v_client_id;
     END IF;
   END LOOP;
 
@@ -228,11 +251,15 @@ BEGIN
         v_random_minute := (floor(random() * 4)::int) * 15; -- 0, 15, 30, 45
         v_appointment_time := (v_random_hour || ':' || LPAD(v_random_minute::text, 2, '0'))::time;
 
-        -- Pick random client
+        -- Pick random client and get their profile data including visit preferences
         j := 1 + floor(random() * 10)::int;
         IF j > 10 THEN j := 10; END IF;
 
-        SELECT id INTO v_client_id FROM profiles WHERE email = 'client' || j || '@test.com' LIMIT 1;
+        SELECT id, full_name, visit_preferences INTO v_client_record
+        FROM profiles WHERE email = 'client' || j || '@test.com' LIMIT 1;
+
+        v_client_id := v_client_record.id;
+        v_client_prefs := v_client_record.visit_preferences;
 
         -- Determine status based on date
         IF v_current_date < CURRENT_DATE - INTERVAL '7 days' THEN
@@ -254,23 +281,35 @@ BEGIN
           END;
         END IF;
 
-        -- Insert appointment
-        INSERT INTO appointments (
-          beauty_page_id, service_id, service_name, service_price_cents,
-          service_duration_minutes, service_currency, creator_display_name,
-          client_id, client_name, client_phone, client_email,
-          date, start_time, end_time, status, timezone
-        ) VALUES (
-          v_beauty_page_id, v_service_record.id, v_service_record.name,
-          v_service_record.price_cents, v_service_record.duration_minutes,
-          'UAH', 'Roman',
-          v_client_id, v_client_names[j], v_client_phones[j], 'client' || j || '@test.com',
-          v_current_date,
-          v_appointment_time,
-          v_appointment_time + (v_service_record.duration_minutes || ' minutes')::interval,
-          v_random_status::appointment_status,
-          'Europe/Kyiv'
-        );
+        -- Insert appointment using profile data for consistency (including visit preferences snapshot)
+        DECLARE
+          v_appointment_id uuid;
+        BEGIN
+          INSERT INTO appointments (
+            beauty_page_id, service_id, service_name, service_price_cents,
+            service_duration_minutes, service_currency, creator_display_name,
+            client_id, client_name, client_phone, client_email,
+            date, start_time, end_time, status, timezone, visit_preferences
+          ) VALUES (
+            v_beauty_page_id, v_service_record.id, v_service_record.name,
+            v_service_record.price_cents, v_service_record.duration_minutes,
+            'UAH', 'Roman',
+            v_client_id,
+            COALESCE(v_client_record.full_name, v_client_names[j]),
+            v_client_phones[j],
+            'client' || j || '@test.com',
+            v_current_date,
+            v_appointment_time,
+            v_appointment_time + (v_service_record.duration_minutes || ' minutes')::interval,
+            v_random_status::appointment_status,
+            'Europe/Kyiv',
+            v_client_prefs
+          ) RETURNING id INTO v_appointment_id;
+
+          -- Also insert into appointment_services table
+          INSERT INTO appointment_services (appointment_id, service_id, service_name, price_cents, duration_minutes)
+          VALUES (v_appointment_id, v_service_record.id, v_service_record.name, v_service_record.price_cents, v_service_record.duration_minutes);
+        END;
       END LOOP;
     END IF;
 
@@ -278,34 +317,6 @@ BEGIN
   END LOOP;
 
   RAISE NOTICE 'Created appointments';
-
-  -- Create some reviews
-  FOR i IN 1..10 LOOP
-    SELECT id INTO v_client_id FROM profiles WHERE email = 'client' || i || '@test.com' LIMIT 1;
-
-    IF v_client_id IS NOT NULL THEN
-      INSERT INTO reviews (beauty_page_id, reviewer_id, rating, comment)
-      VALUES (
-        v_beauty_page_id,
-        v_client_id,
-        4 + floor(random() * 2)::int, -- Rating 4 or 5
-        CASE i
-          WHEN 1 THEN 'Відмінний барбер! Завжди задоволений результатом.'
-          WHEN 2 THEN 'Професійний підхід та приємна атмосфера.'
-          WHEN 3 THEN 'Найкращий барбершоп у місті!'
-          WHEN 4 THEN 'Рекомендую всім друзям. Якість на висоті.'
-          WHEN 5 THEN 'Завжди вчасно, завжди якісно.'
-          WHEN 6 THEN 'Роман - справжній майстер своєї справи.'
-          WHEN 7 THEN 'Приходжу сюди вже рік, ніколи не розчаровувався.'
-          WHEN 8 THEN 'Стильні стрижки та чудовий сервіс.'
-          WHEN 9 THEN 'Доступні ціни та преміум якість.'
-          WHEN 10 THEN 'Мій постійний барбер. Дуже задоволений!'
-        END
-      );
-    END IF;
-  END LOOP;
-
-  RAISE NOTICE 'Created reviews';
   RAISE NOTICE 'Seed completed successfully!';
 
   -- Output statistics
@@ -314,6 +325,5 @@ BEGIN
   RAISE NOTICE '- Services: %', (SELECT COUNT(*) FROM services WHERE service_group_id IN (SELECT id FROM service_groups WHERE beauty_page_id = v_beauty_page_id));
   RAISE NOTICE '- Working days: %', (SELECT COUNT(*) FROM working_days WHERE beauty_page_id = v_beauty_page_id);
   RAISE NOTICE '- Appointments: %', (SELECT COUNT(*) FROM appointments WHERE beauty_page_id = v_beauty_page_id);
-  RAISE NOTICE '- Reviews: %', (SELECT COUNT(*) FROM reviews WHERE beauty_page_id = v_beauty_page_id);
 
 END $$;

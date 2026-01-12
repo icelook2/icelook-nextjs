@@ -8,12 +8,10 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import type { ClientAppointmentHistory } from "@/lib/queries/clients";
 import { Paper } from "@/lib/ui/paper";
 import { formatCurrency, formatDate } from "../../_lib/utils";
-import { AppointmentDetailDialog } from "./appointment-detail-dialog";
 
 /** Maximum number of appointments to display */
 const MAX_DISPLAY_COUNT = 5;
@@ -61,8 +59,6 @@ export function AppointmentHistory({
   clientId,
 }: AppointmentHistoryProps) {
   const t = useTranslations("clients.history");
-  const [selectedAppointment, setSelectedAppointment] =
-    useState<ClientAppointmentHistory | null>(null);
 
   if (appointments.length === 0) {
     return null;
@@ -111,10 +107,9 @@ export function AppointmentHistory({
             const StatusIcon = statusConfig.icon;
 
             return (
-              <button
+              <Link
                 key={apt.id}
-                type="button"
-                onClick={() => setSelectedAppointment(apt)}
+                href={`/${nickname}/appointments/${apt.id}`}
                 className="grid w-full grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-muted"
               >
                 {/* Calendar Icon */}
@@ -143,7 +138,7 @@ export function AppointmentHistory({
 
                 {/* Chevron */}
                 <ChevronRight className="h-4 w-4 text-muted" />
-              </button>
+              </Link>
             );
           })}
 
@@ -160,13 +155,6 @@ export function AppointmentHistory({
           )}
         </div>
       </Paper>
-
-      {/* Appointment Detail Dialog */}
-      <AppointmentDetailDialog
-        appointment={selectedAppointment}
-        open={selectedAppointment !== null}
-        onOpenChange={(open) => !open && setSelectedAppointment(null)}
-      />
     </div>
   );
 }

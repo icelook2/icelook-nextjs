@@ -603,7 +603,12 @@
       "break_overlap": "Break overlaps with another break",
       "invalid_status_transition": "Invalid status change",
       "salon_closed_this_day": "The salon is closed on this day",
-      "hours_outside_business_hours": "Working hours must be within business hours ({open} - {close})"
+      "hours_outside_business_hours": "Working hours must be within business hours ({open} - {close})",
+      "cannot_modify_status": "Cannot modify appointment in this status",
+      "cannot_remove_last_service": "Cannot remove the last service",
+      "service_not_found": "Service not found",
+      "cannot_reschedule_status": "Cannot reschedule appointment in this status",
+      "slot_conflict": "This time slot conflicts with another appointment"
     }
   },
   "working_hours": {
@@ -1399,7 +1404,8 @@
     "beauty_page": "Location",
     "min": "min",
     "hour": "h",
-    "close": "Close"
+    "close": "Close",
+    "last_appointment": "Last Appointment"
   },
   "team": {
     "page_title": "Team",
@@ -1835,6 +1841,41 @@
       "update_failed": "Failed to update label",
       "delete_failed": "Failed to delete label",
       "assign_failed": "Failed to assign labels"
+    }
+  },
+  "appointment_details": {
+    "creator_notes": {
+      "title": "Your Notes",
+      "placeholder": "Add notes about this client (e.g., preferences, allergies, color formula)...",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "hint": "These notes appear on all appointments with this client"
+    },
+    "services": {
+      "title": "Services",
+      "column_service": "Service",
+      "column_duration": "Duration",
+      "column_price": "Price",
+      "column_actions": "Actions",
+      "add_service": "Add Service",
+      "add_service_title": "Add Service",
+      "remove_service": "Remove",
+      "total": "Total",
+      "no_services_available": "No services available to add"
+    },
+    "overlap_warning": {
+      "title": "Scheduling Conflict",
+      "message": "Adding \"{serviceName}\" extends this appointment by {duration} minutes, which overlaps with your next appointment at {nextTime}.",
+      "add_without_extending": "Add without extending",
+      "allow_overlap": "Allow overlap",
+      "cancel": "Cancel"
+    },
+    "actions": {
+      "title": "Actions",
+      "reschedule": "Re-schedule",
+      "reschedule_description": "Change the date or time",
+      "cancel": "Cancel Appointment",
+      "cancel_description": "Cancel this appointment"
     }
   }
 }

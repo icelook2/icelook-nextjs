@@ -115,6 +115,7 @@ export async function createBeautyPage(
   }
 
   // Create the beauty page
+  // timezone defaults to 'Europe/Kyiv' in the database schema
   const { error } = await supabase.from("beauty_pages").insert({
     name,
     slug,
@@ -129,6 +130,8 @@ export async function createBeautyPage(
 
   revalidatePath("/settings");
   revalidatePath("/beauty-pages");
+  // Revalidate the new beauty page route to ensure it's immediately accessible
+  revalidatePath(`/${slug}`);
 
   return { success: true, slug };
 }
