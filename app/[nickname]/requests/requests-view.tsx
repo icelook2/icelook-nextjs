@@ -1,16 +1,22 @@
 "use client";
 
-import { useState, useMemo, useTransition } from "react";
-import { formatDistanceToNow, format, isToday, isTomorrow, parseISO } from "date-fns";
-import { useRouter } from "next/navigation";
+import {
+  format,
+  formatDistanceToNow,
+  isToday,
+  isTomorrow,
+  parseISO,
+} from "date-fns";
 import { ArrowDownUp, Calendar, Check, Clock, Inbox, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState, useTransition } from "react";
 import { Button } from "@/lib/ui/button";
 import { Paper } from "@/lib/ui/paper";
-import type { Appointment } from "../appointments/_lib/types";
 import {
-  confirmAppointment,
   cancelAppointment,
+  confirmAppointment,
 } from "../appointments/_actions/appointment.actions";
+import type { Appointment } from "../appointments/_lib/types";
 
 type SortMode = "recent" | "soonest";
 
@@ -96,7 +102,9 @@ export function RequestsView({
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface-alt">
           <Inbox className="h-8 w-8 text-muted" />
         </div>
-        <p className="text-lg font-medium text-foreground">No pending requests</p>
+        <p className="text-lg font-medium text-foreground">
+          No pending requests
+        </p>
         <p className="mt-1 text-sm text-muted">
           All appointment requests have been processed
         </p>
@@ -109,13 +117,16 @@ export function RequestsView({
       {/* Sort toggle */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">
-          {appointments.length} request{appointments.length !== 1 ? "s" : ""} waiting
+          {appointments.length} request{appointments.length !== 1 ? "s" : ""}{" "}
+          waiting
         </p>
 
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setSortMode(sortMode === "recent" ? "soonest" : "recent")}
+          onClick={() =>
+            setSortMode(sortMode === "recent" ? "soonest" : "recent")
+          }
           className="gap-1.5"
         >
           <ArrowDownUp className="h-4 w-4" />
@@ -190,7 +201,8 @@ function RequestCard({
             <div className="flex items-center gap-1.5 text-foreground">
               <Clock className="h-4 w-4 text-muted" />
               <span>
-                {appointment.start_time.slice(0, 5)} – {appointment.end_time.slice(0, 5)}
+                {appointment.start_time.slice(0, 5)} –{" "}
+                {appointment.end_time.slice(0, 5)}
               </span>
             </div>
           </div>

@@ -98,7 +98,9 @@ export function HeroSection({
                 <span className="font-medium text-foreground">
                   {ratingStats.averageRating.toFixed(1)}
                 </span>
-                <span>({ratingStats.totalReviews} {reviewsLabel})</span>
+                <span>
+                  ({ratingStats.totalReviews} {reviewsLabel})
+                </span>
               </button>
             )}
           </p>

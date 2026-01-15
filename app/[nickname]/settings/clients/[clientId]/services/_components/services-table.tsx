@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback } from "react";
 import { ArrowDown, ArrowUp, ChevronRight, Scissors } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useCallback } from "react";
 import type {
   ServicePreference,
   ServicePreferencesSortField,

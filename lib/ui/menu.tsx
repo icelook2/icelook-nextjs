@@ -112,6 +112,7 @@ function MenuItem({
       className={cn(
         "flex cursor-default select-none items-center gap-2 rounded-lg px-3 py-2 text-sm outline-none",
         "data-[highlighted]:bg-accent data-[highlighted]:text-white",
+        "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         variant === "danger" &&
           "text-danger data-[highlighted]:bg-danger data-[highlighted]:text-white",
         className,

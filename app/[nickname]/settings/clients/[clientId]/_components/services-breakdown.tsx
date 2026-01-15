@@ -32,7 +32,9 @@ export function ServicesBreakdown({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-on-surface-muted">{t("title")}</h3>
+      <h3 className="text-sm font-medium text-on-surface-muted">
+        {t("title")}
+      </h3>
 
       <Paper className="overflow-hidden">
         {/* Table Header */}
@@ -73,10 +75,14 @@ export function ServicesBreakdown({
               </div>
 
               {/* Service Name */}
-              <span className="truncate font-medium">{service.serviceName}</span>
+              <span className="truncate font-medium">
+                {service.serviceName}
+              </span>
 
               {/* Count */}
-              <span className="w-16 text-right text-muted">{service.count}x</span>
+              <span className="w-16 text-right text-muted">
+                {service.count}x
+              </span>
 
               {/* Total */}
               <span className="w-24 text-right">

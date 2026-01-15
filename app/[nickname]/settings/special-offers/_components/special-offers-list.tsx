@@ -15,7 +15,6 @@ import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import type { ServiceGroupWithServices } from "@/lib/queries/services";
-import type { Database } from "@/lib/supabase/database.types";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
 import { Field } from "@/lib/ui/field";
@@ -30,7 +29,7 @@ import {
 } from "../_actions/special-offer.actions";
 
 // Type alias for special offer status
-type SpecialOfferStatus = Database["public"]["Enums"]["special_offer_status"];
+type SpecialOfferStatus = "active" | "booked" | "expired";
 
 // Time options for select (every 30 minutes from 06:00 to 22:00)
 const TIME_OPTIONS = Array.from({ length: 33 }, (_, i) => {
@@ -390,7 +389,10 @@ export function SpecialOffersList({
       </SettingsGroup>
 
       {/* Create Offer Dialog */}
-      <Dialog.Root open={createDialogOpen} onOpenChange={handleCreateDialogOpen}>
+      <Dialog.Root
+        open={createDialogOpen}
+        onOpenChange={handleCreateDialogOpen}
+      >
         <Dialog.Portal open={createDialogOpen} size="sm">
           <Dialog.Header onClose={() => setCreateDialogOpen(false)}>
             {t.addOffer}
@@ -446,7 +448,10 @@ export function SpecialOffersList({
               {/* Date - using Popover with SimpleDatePicker */}
               <Field.Root>
                 <Field.Label>Date</Field.Label>
-                <Popover.Root open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                <Popover.Root
+                  open={datePickerOpen}
+                  onOpenChange={setDatePickerOpen}
+                >
                   <Popover.Trigger
                     render={
                       <Button
@@ -602,11 +607,7 @@ export function SpecialOffersList({
             <Button variant="ghost" onClick={() => setCreateDialogOpen(false)}>
               {t.cancel}
             </Button>
-            <Button
-              type="submit"
-              form="create-offer-form"
-              loading={isPending}
-            >
+            <Button type="submit" form="create-offer-form" loading={isPending}>
               {t.addOffer}
             </Button>
           </Dialog.Footer>

@@ -28,12 +28,14 @@ export default async function AppointmentsPage({
   const t = await getTranslations("clients.appointments_page");
 
   // Validate and parse search params
-  const sort = (["date", "service", "price"].includes(query.sort ?? "")
-    ? query.sort
-    : "date") as AppointmentsSortField;
-  const order = (["asc", "desc"].includes(query.order ?? "")
-    ? query.order
-    : "desc") as SortOrder;
+  const sort = (
+    ["date", "service", "price"].includes(query.sort ?? "")
+      ? query.sort
+      : "date"
+  ) as AppointmentsSortField;
+  const order = (
+    ["asc", "desc"].includes(query.order ?? "") ? query.order : "desc"
+  ) as SortOrder;
   const page = Math.max(1, Number.parseInt(query.page ?? "1", 10) || 1);
 
   const beautyPage = await getBeautyPageByNickname(nickname);

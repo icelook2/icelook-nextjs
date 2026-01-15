@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog as BaseDialog } from "@base-ui/react/dialog";
-import { X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
@@ -75,7 +75,8 @@ function DialogPortal({
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                 className={cn(
                   "fixed left-1/2 top-1/2 w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl shadow-xl",
-                  "bg-surface focus:outline-none overflow-hidden",
+                  "bg-surface focus:outline-none",
+                  "flex max-h-[90vh] flex-col",
                   sizeClasses[size],
                   className,
                 )}
@@ -96,11 +97,13 @@ function DialogPortal({
 
 interface DialogHeaderProps {
   children: ReactNode;
-  subtitle?: string;
+  subtitle?: ReactNode;
   onClose?: () => void;
   onBack?: () => void;
   showCloseButton?: boolean;
   showBackButton?: boolean;
+  /** Custom action element to show instead of the close button */
+  action?: ReactNode;
   className?: string;
 }
 
@@ -111,12 +114,13 @@ function DialogHeader({
   onBack,
   showCloseButton = true,
   showBackButton = false,
+  action,
   className,
 }: DialogHeaderProps) {
   return (
     <div
       className={cn(
-        "border-b border-border px-4 py-3 flex items-center gap-3",
+        "flex shrink-0 items-center gap-3 border-b border-border px-4 py-3",
         className,
       )}
     >
@@ -125,24 +129,13 @@ function DialogHeader({
         <button
           type="button"
           onClick={onBack}
-          className="-ml-1 rounded-lg p-1.5 text-muted hover:bg-surface-hover hover:text-foreground"
+          className="-ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent-soft/50"
+          aria-label="Go back"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m15 18-6-6 6-6" />
-          </svg>
+          <ArrowLeft className="h-5 w-5" />
         </button>
       ) : showBackButton ? (
-        <div className="w-8" />
+        <div className="w-10" />
       ) : null}
 
       {/* Title and subtitle */}
@@ -150,20 +143,20 @@ function DialogHeader({
         <BaseDialog.Title className="text-lg font-semibold">
           {children}
         </BaseDialog.Title>
-        {subtitle && (
-          <p className="text-sm text-muted">{subtitle}</p>
-        )}
+        {subtitle && <div className="text-sm text-muted">{subtitle}</div>}
       </div>
 
-      {/* Close button */}
-      {showCloseButton && (
+      {/* Action or Close button */}
+      {action ? (
+        action
+      ) : showCloseButton ? (
         <BaseDialog.Close
           onClick={onClose}
           className="-mr-1 rounded-lg p-1.5 text-muted hover:bg-surface-hover hover:text-foreground"
         >
           <X className="h-5 w-5" />
         </BaseDialog.Close>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -179,7 +172,7 @@ interface DialogBodyProps {
 
 function DialogBody({ children, className }: DialogBodyProps) {
   return (
-    <div className={cn("p-6", className)}>
+    <div className={cn("min-h-0 flex-1 overflow-y-auto p-6", className)}>
       <BaseDialog.Description render={<div />}>
         {children}
       </BaseDialog.Description>
@@ -200,7 +193,7 @@ function DialogFooter({ children, className }: DialogFooterProps) {
   return (
     <div
       className={cn(
-        "border-t border-border px-6 py-4 flex items-center gap-2",
+        "flex shrink-0 items-center gap-2 border-t border-border px-6 py-4",
         className,
       )}
     >

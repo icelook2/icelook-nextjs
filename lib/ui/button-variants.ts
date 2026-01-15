@@ -8,11 +8,10 @@ export const buttonVariants = cva(
         primary:
           "rounded-2xl bg-accent text-white hover:bg-accent/90 focus-visible:ring-2 focus-visible:ring-accent",
         secondary:
-          "rounded-2xl border border-border bg-background text-foreground hover:bg-surface focus-visible:ring-2 focus-visible:ring-accent",
+          "rounded-full bg-surface text-foreground hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent",
         ghost:
           "bg-transparent hover:bg-surface disabled:hover:bg-transparent rounded-2xl text-foreground",
-        soft:
-          "rounded-full bg-surface text-foreground hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent",
+        soft: "rounded-full bg-surface text-foreground hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent",
         danger:
           "rounded-2xl bg-danger text-white hover:bg-danger/90 focus-visible:ring-2 focus-visible:ring-danger",
         link: "bg-transparent p-0 text-accent hover:underline",

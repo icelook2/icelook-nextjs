@@ -66,7 +66,8 @@ export function SettingsRow({
       className={cn(
         "px-4 py-4",
         !noBorder && "border-b border-border last:border-b-0",
-        isClickable && "cursor-pointer transition-colors hover:bg-surface-muted",
+        isClickable &&
+          "cursor-pointer transition-colors hover:bg-surface-muted",
         className,
       )}
     >

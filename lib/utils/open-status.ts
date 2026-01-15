@@ -282,7 +282,10 @@ export function formatWorkingStatusMessage(
     }
 
     // Opens on another day within the week
-    if (status.nextOpenDayOfWeek !== null && dayNames[status.nextOpenDayOfWeek]) {
+    if (
+      status.nextOpenDayOfWeek !== null &&
+      dayNames[status.nextOpenDayOfWeek]
+    ) {
       // Check if more than 7 days away - use date format instead
       if (status.nextOpenDate && formatDate) {
         const today = new Date();

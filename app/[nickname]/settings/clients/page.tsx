@@ -33,7 +33,9 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
   }
 
   // Fetch initial batch of clients (no search, first page)
-  const { clients, total, hasMore, pageSize } = await getBeautyPageClients(beautyPage.id);
+  const { clients, total, hasMore, pageSize } = await getBeautyPageClients(
+    beautyPage.id,
+  );
 
   return (
     <>

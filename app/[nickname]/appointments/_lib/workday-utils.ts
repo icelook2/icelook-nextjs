@@ -1,6 +1,6 @@
 import { differenceInMinutes, format } from "date-fns";
 import { timeToMinutes } from "./time-utils";
-import type { Appointment } from "./types";
+import type { Appointment, WorkingDayBreak } from "./types";
 
 /**
  * Get all appointments for a specific date
@@ -208,4 +208,87 @@ export function calculateDurationMinutes(
   endTime: string,
 ): number {
   return timeToMinutes(endTime) - timeToMinutes(startTime);
+}
+
+/**
+ * Get the current break if we're currently in one
+ *
+ * A break is considered "current" if:
+ * - Current time is within start_time and end_time
+ * - The break hasn't been ended early (completed_at is null)
+ */
+export function getCurrentBreak(
+  breaks: WorkingDayBreak[],
+  now: Date,
+): WorkingDayBreak | null {
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  for (const brk of breaks) {
+    // Skip breaks that were ended early
+    if (brk.completed_at) {
+      continue;
+    }
+
+    const startMinutes = timeToMinutes(brk.start_time);
+    const endMinutes = timeToMinutes(brk.end_time);
+
+    if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
+      return brk;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Get upcoming breaks (not started yet)
+ *
+ * Excludes breaks that have been ended early (completed_at is set)
+ */
+export function getUpcomingBreaks(
+  breaks: WorkingDayBreak[],
+  now: Date,
+): WorkingDayBreak[] {
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  return breaks
+    .filter((brk) => {
+      // Skip breaks that were ended early
+      if (brk.completed_at) {
+        return false;
+      }
+      const startMinutes = timeToMinutes(brk.start_time);
+      return startMinutes > currentMinutes;
+    })
+    .sort(
+      (a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time),
+    );
+}
+
+/**
+ * Get completed breaks (already ended or ended early)
+ *
+ * A break is considered "completed" if:
+ * - It was ended early (completed_at is set), OR
+ * - Current time is past the scheduled end_time
+ */
+export function getCompletedBreaks(
+  breaks: WorkingDayBreak[],
+  now: Date,
+): WorkingDayBreak[] {
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  return breaks
+    .filter((brk) => {
+      // Ended early via completed_at
+      if (brk.completed_at) {
+        return true;
+      }
+      // Naturally ended (past end_time)
+      const endMinutes = timeToMinutes(brk.end_time);
+      return endMinutes <= currentMinutes;
+    })
+    .sort(
+      (a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time),
+    );
 }

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { BeautyPageInfo, BeautyPageRatingStats } from "@/lib/queries/beauty-page-profile";
+import type {
+  BeautyPageInfo,
+  BeautyPageRatingStats,
+} from "@/lib/queries/beauty-page-profile";
 import { HeroSection } from "./hero-section";
 import { ReviewsDialog } from "./reviews-dialog";
 

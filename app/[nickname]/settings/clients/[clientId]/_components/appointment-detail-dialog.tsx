@@ -1,6 +1,12 @@
 "use client";
 
-import { Calendar, Clock, FileText, MessageSquare, Scissors } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  FileText,
+  MessageSquare,
+  Scissors,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ClientAppointmentHistory } from "@/lib/queries/clients";
 import { Button } from "@/lib/ui/button";
@@ -14,11 +20,18 @@ interface AppointmentDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type AppointmentStatus = "pending" | "confirmed" | "completed" | "cancelled" | "no_show";
+type AppointmentStatus =
+  | "pending"
+  | "confirmed"
+  | "completed"
+  | "cancelled"
+  | "no_show";
 
 const statusStyles: Record<AppointmentStatus, string> = {
-  pending: "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
-  confirmed: "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400",
+  pending:
+    "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
+  confirmed:
+    "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400",
   completed: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
   cancelled: "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400",
   no_show: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
@@ -70,7 +83,9 @@ export function AppointmentDetailDialog({
     !appointment.clientNotes.trim().startsWith("[");
 
   // Parse client notes (may have JSON appended)
-  const clientNotes = hasClientNotes ? parseClientNotes(appointment.clientNotes) : null;
+  const clientNotes = hasClientNotes
+    ? parseClientNotes(appointment.clientNotes)
+    : null;
 
   const status = appointment.status as AppointmentStatus;
 
@@ -135,13 +150,16 @@ export function AppointmentDetailDialog({
           {appointment.status === "cancelled" && appointment.cancelledAt && (
             <div className="rounded-lg bg-surface-muted p-3 text-sm text-muted">
               {t("cancelled_at", {
-                date: new Date(appointment.cancelledAt).toLocaleDateString(locale, {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }),
+                date: new Date(appointment.cancelledAt).toLocaleDateString(
+                  locale,
+                  {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  },
+                ),
               })}
             </div>
           )}

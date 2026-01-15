@@ -1,8 +1,8 @@
 "use server";
 
 import {
-  searchBeautyPages,
   type BeautyPageSearchResult,
+  searchBeautyPages,
 } from "@/lib/queries/search";
 
 type SearchResult =

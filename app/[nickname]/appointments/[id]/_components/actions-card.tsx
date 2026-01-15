@@ -12,13 +12,10 @@ interface ActionsCardProps {
 export function ActionsCard({ appointment }: ActionsCardProps) {
   const t = useTranslations("appointment_details.actions");
 
-  // Don't show actions for terminal states
-  const isTerminalState =
-    appointment.status === "completed" ||
-    appointment.status === "cancelled" ||
-    appointment.status === "no_show";
-
-  if (isTerminalState) {
+  // Only show for confirmed appointments
+  // - Pending: actions are shown in the client header card
+  // - Terminal states (completed/cancelled/no_show): no actions
+  if (appointment.status !== "confirmed") {
     return null;
   }
 

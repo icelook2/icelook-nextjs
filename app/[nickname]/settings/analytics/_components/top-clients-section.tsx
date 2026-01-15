@@ -3,8 +3,8 @@
 import { Users } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Paper } from "@/lib/ui/paper";
-import { useAnalytics } from "./analytics-context";
 import { formatCurrency } from "../_lib/utils";
+import { useAnalytics } from "./analytics-context";
 
 export function TopClientsSection() {
   const t = useTranslations("analytics.clients");
@@ -35,7 +35,9 @@ export function TopClientsSection() {
                 {index + 1}
               </span>
               <div>
-                <p className="font-medium text-on-surface">{client.clientName}</p>
+                <p className="font-medium text-on-surface">
+                  {client.clientName}
+                </p>
                 <p className="text-sm text-on-surface-muted">
                   {t("visits", { count: client.appointmentCount })}
                 </p>

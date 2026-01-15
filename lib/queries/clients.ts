@@ -83,7 +83,10 @@ export interface ClientDetails {
  * - Authenticated users: "u_<uuid>"
  * - Guests: "g_<base64url(phone)>"
  */
-export function encodeClientKey(clientId: string | null, clientPhone: string): string {
+export function encodeClientKey(
+  clientId: string | null,
+  clientPhone: string,
+): string {
   if (clientId) {
     return `u_${clientId}`;
   }
@@ -234,7 +237,10 @@ export async function getBeautyPageClients(
     // Count services
     const serviceCount = new Map<string, number>();
     for (const apt of data.appointments) {
-      serviceCount.set(apt.service_name, (serviceCount.get(apt.service_name) ?? 0) + 1);
+      serviceCount.set(
+        apt.service_name,
+        (serviceCount.get(apt.service_name) ?? 0) + 1,
+      );
     }
     const topServices = Array.from(serviceCount.entries())
       .map(([serviceName, count]) => ({ serviceName, count }))
@@ -312,7 +318,9 @@ export async function getClientDetails(
     return null;
   }
 
-  const { data: appointments, error } = await query.order("date", { ascending: false });
+  const { data: appointments, error } = await query.order("date", {
+    ascending: false,
+  });
 
   if (error) {
     console.error("Error fetching client details:", error);
@@ -324,16 +332,19 @@ export async function getClientDetails(
   }
 
   // Filter to completed only for stats
-  const completedAppointments = appointments.filter((a) => a.status === "completed");
+  const completedAppointments = appointments.filter(
+    (a) => a.status === "completed",
+  );
 
-  if (completedAppointments.length === 0) {
-    return null;
-  }
-
-  // Get latest client info
+  // Get latest client info (from any appointment, not just completed)
   const latestApt = appointments[0];
-  const latestCompleted = completedAppointments[0];
-  const oldestCompleted = completedAppointments[completedAppointments.length - 1];
+
+  // For stats, use completed appointments if available, otherwise use defaults
+  const hasCompletedAppointments = completedAppointments.length > 0;
+  const latestCompleted = hasCompletedAppointments ? completedAppointments[0] : null;
+  const oldestCompleted = hasCompletedAppointments
+    ? completedAppointments[completedAppointments.length - 1]
+    : null;
 
   // Calculate totals
   const totalSpentCents = completedAppointments.reduce(
@@ -348,7 +359,10 @@ export async function getClientDetails(
   // Services breakdown
   const serviceMap = new Map<string, { count: number; totalCents: number }>();
   for (const apt of completedAppointments) {
-    const existing = serviceMap.get(apt.service_name) ?? { count: 0, totalCents: 0 };
+    const existing = serviceMap.get(apt.service_name) ?? {
+      count: 0,
+      totalCents: 0,
+    };
     serviceMap.set(apt.service_name, {
       count: existing.count + 1,
       totalCents: existing.totalCents + apt.service_price_cents,
@@ -398,29 +412,31 @@ export async function getClientDetails(
     isGuest: !latestApt.client_id,
     totalVisits: completedAppointments.length,
     totalSpentCents,
-    currency: latestCompleted.service_currency,
-    lastVisitDate: latestCompleted.date,
-    firstVisitDate: oldestCompleted.date,
+    currency: latestCompleted?.service_currency ?? latestApt.service_currency,
+    lastVisitDate: latestCompleted?.date ?? "",
+    firstVisitDate: oldestCompleted?.date ?? "",
     topServices,
     creatorNotes,
   };
 
   // Map all appointments to history format
-  const appointmentHistory: ClientAppointmentHistory[] = appointments.map((apt) => ({
-    id: apt.id,
-    date: apt.date,
-    startTime: apt.start_time,
-    endTime: apt.end_time,
-    status: apt.status,
-    serviceName: apt.service_name,
-    servicePriceCents: apt.service_price_cents,
-    serviceCurrency: apt.service_currency,
-    serviceDurationMinutes: apt.service_duration_minutes,
-    clientNotes: apt.client_notes,
-    creatorNotes: apt.creator_notes,
-    cancelledAt: apt.cancelled_at,
-    createdAt: apt.created_at,
-  }));
+  const appointmentHistory: ClientAppointmentHistory[] = appointments.map(
+    (apt) => ({
+      id: apt.id,
+      date: apt.date,
+      startTime: apt.start_time,
+      endTime: apt.end_time,
+      status: apt.status,
+      serviceName: apt.service_name,
+      servicePriceCents: apt.service_price_cents,
+      serviceCurrency: apt.service_currency,
+      serviceDurationMinutes: apt.service_duration_minutes,
+      clientNotes: apt.client_notes,
+      creatorNotes: apt.creator_notes,
+      cancelledAt: apt.cancelled_at,
+      createdAt: apt.created_at,
+    }),
+  );
 
   return {
     client,
@@ -709,21 +725,23 @@ export async function getAppointmentsPaginated(
   }
 
   // Map to ClientAppointmentHistory format
-  let mappedAppointments: ClientAppointmentHistory[] = appointments.map((apt) => ({
-    id: apt.id,
-    date: apt.date,
-    startTime: apt.start_time,
-    endTime: apt.end_time,
-    status: apt.status,
-    serviceName: apt.service_name,
-    servicePriceCents: apt.service_price_cents,
-    serviceCurrency: apt.service_currency,
-    serviceDurationMinutes: apt.service_duration_minutes,
-    clientNotes: apt.client_notes,
-    creatorNotes: apt.creator_notes,
-    cancelledAt: apt.cancelled_at,
-    createdAt: apt.created_at,
-  }));
+  const mappedAppointments: ClientAppointmentHistory[] = appointments.map(
+    (apt) => ({
+      id: apt.id,
+      date: apt.date,
+      startTime: apt.start_time,
+      endTime: apt.end_time,
+      status: apt.status,
+      serviceName: apt.service_name,
+      servicePriceCents: apt.service_price_cents,
+      serviceCurrency: apt.service_currency,
+      serviceDurationMinutes: apt.service_duration_minutes,
+      clientNotes: apt.client_notes,
+      creatorNotes: apt.creator_notes,
+      cancelledAt: apt.cancelled_at,
+      createdAt: apt.created_at,
+    }),
+  );
 
   // Apply sorting
   mappedAppointments.sort((a, b) => {
@@ -749,7 +767,10 @@ export async function getAppointmentsPaginated(
   const offset = (currentPage - 1) * pageSize;
 
   // Apply pagination
-  const paginatedAppointments = mappedAppointments.slice(offset, offset + pageSize);
+  const paginatedAppointments = mappedAppointments.slice(
+    offset,
+    offset + pageSize,
+  );
 
   return {
     appointments: paginatedAppointments,

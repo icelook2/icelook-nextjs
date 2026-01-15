@@ -15,7 +15,9 @@ export function ClientStats({ details }: ClientStatsProps) {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-on-surface-muted">{t("title")}</h3>
+      <h3 className="text-sm font-medium text-on-surface-muted">
+        {t("title")}
+      </h3>
 
       <div className="grid grid-cols-2 gap-3">
         {/* Row 1: Visits + Last visit */}

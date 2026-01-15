@@ -65,7 +65,7 @@ export function Avatar({
 
   return (
     <div
-      className={`flex ${sizeClass} ${shapeClass} shrink-0 items-center justify-center bg-gradient-to-br ${gradient} font-semibold`}
+      className={`flex ${sizeClass} ${shapeClass} shrink-0 items-center justify-center bg-gradient-to-br ${gradient} font-semibold text-white`}
     >
       {initial}
     </div>

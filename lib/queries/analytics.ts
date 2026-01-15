@@ -93,8 +93,15 @@ export async function getBeautyPageAnalytics(
     startDateStr,
     endDateStr,
   );
-  const appointmentMetrics = calculateAppointmentMetrics(appointments, prevAppointments);
-  const clients = calculateClientMetrics(appointments, allAppointments, prevAppointments);
+  const appointmentMetrics = calculateAppointmentMetrics(
+    appointments,
+    prevAppointments,
+  );
+  const clients = calculateClientMetrics(
+    appointments,
+    allAppointments,
+    prevAppointments,
+  );
   const services = calculateServiceMetrics(appointments, revenue.totalCents);
   const operational = calculateOperationalMetrics(appointments);
   const peakTimes = calculatePeakTimes(appointments);
@@ -115,8 +122,13 @@ export async function getBeautyPageAnalytics(
     .filter((a) => a.status === "completed")
     .reduce((sum, a) => sum + a.service_price_cents, 0);
   const prevAverageTicketCents =
-    prevCompletedCount > 0 ? Math.round(prevRevenue / prevCompletedCount) : null;
-  const averageTicketTrend = calculateTrend(averageTicketCents ?? 0, prevAverageTicketCents ?? 0);
+    prevCompletedCount > 0
+      ? Math.round(prevRevenue / prevCompletedCount)
+      : null;
+  const averageTicketTrend = calculateTrend(
+    averageTicketCents ?? 0,
+    prevAverageTicketCents ?? 0,
+  );
 
   return {
     period: {

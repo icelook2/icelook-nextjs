@@ -40,8 +40,14 @@ function DashboardContent() {
   const t = useTranslations("analytics");
   const { analytics } = useAnalytics();
 
-  const { revenue, appointments, clients, operational, averageTicketCents, averageTicketTrend } =
-    analytics;
+  const {
+    revenue,
+    appointments,
+    clients,
+    operational,
+    averageTicketCents,
+    averageTicketTrend,
+  } = analytics;
 
   const currency = revenue.currency;
 

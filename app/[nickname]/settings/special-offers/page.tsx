@@ -2,8 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageByNickname } from "@/lib/queries";
-import { getAllSpecialOffers } from "@/lib/queries/special-offers";
 import { getServiceGroupsWithServices } from "@/lib/queries/services";
+import { getAllSpecialOffers } from "@/lib/queries/special-offers";
 import { PageHeader } from "@/lib/ui/page-header";
 import { SpecialOffersList } from "./_components/special-offers-list";
 

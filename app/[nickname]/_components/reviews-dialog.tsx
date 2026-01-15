@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import type { BeautyPageReview } from "@/lib/queries/reviews";
 import { Dialog } from "@/lib/ui/dialog";
 import { StarRating } from "@/lib/ui/star-rating";
-import type { BeautyPageReview } from "@/lib/queries/reviews";
 
 // ============================================================================
 // Types
@@ -79,9 +79,7 @@ function ReviewCard({
       </div>
 
       {/* Comment */}
-      {review.comment && (
-        <p className="text-sm text-muted">{review.comment}</p>
-      )}
+      {review.comment && <p className="text-sm text-muted">{review.comment}</p>}
     </div>
   );
 }

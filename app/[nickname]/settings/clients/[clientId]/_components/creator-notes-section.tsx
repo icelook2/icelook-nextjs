@@ -88,7 +88,9 @@ export function CreatorNotesSection({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-on-surface-muted">{t("title")}</h3>
+        <h3 className="text-sm font-medium text-on-surface-muted">
+          {t("title")}
+        </h3>
         <div className="flex items-center gap-2 text-sm">
           {isPending && (
             <span className="flex items-center gap-1 text-muted">
@@ -121,9 +123,7 @@ export function CreatorNotesSection({
         </div>
       </Paper>
 
-      <p className="text-xs text-muted">
-        {t("hint")}
-      </p>
+      <p className="text-xs text-muted">{t("hint")}</p>
     </div>
   );
 }

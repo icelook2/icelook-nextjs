@@ -1,8 +1,7 @@
 export { AppointmentCard } from "./appointment-card";
-export { BreakIndicator } from "./break-indicator";
-export { CalendarPickerButton } from "./calendar-picker-button";
-export { CreateScheduleButton } from "./create-schedule-button";
-export { DayStatsHeader } from "./day-stats-header";
-export { ScheduleView } from "./schedule-view";
+export { BreakCard } from "./break-card";
+export { BreakMenu } from "./break-menu";
+export { AvailableSlot, FreeSlotMutedPaper, PastEmptySlot } from "./free-slot-variants";
+export { FreeSlotsView } from "./free-slots-view";
+export { QuickBookingDialog, type QuickBookingStep, type SelectedSlot } from "./quick-booking";
 export { SimpleDatePicker } from "./simple-date-picker";
-export { StatusBanner } from "./status-banner";

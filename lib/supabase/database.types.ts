@@ -88,6 +88,7 @@ export type Database = {
           client_name: string
           client_notes: string | null
           client_phone: string
+          completed_at: string | null
           created_at: string
           creator_display_name: string
           creator_notes: string | null
@@ -113,6 +114,7 @@ export type Database = {
           client_name: string
           client_notes?: string | null
           client_phone: string
+          completed_at?: string | null
           created_at?: string
           creator_display_name: string
           creator_notes?: string | null
@@ -138,6 +140,7 @@ export type Database = {
           client_name?: string
           client_notes?: string | null
           client_phone?: string
+          completed_at?: string | null
           created_at?: string
           creator_display_name?: string
           creator_notes?: string | null
@@ -504,6 +507,7 @@ export type Database = {
       }
       working_day_breaks: {
         Row: {
+          completed_at: string | null
           created_at: string
           end_time: string
           id: string
@@ -511,6 +515,7 @@ export type Database = {
           working_day_id: string
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string
           end_time: string
           id?: string
@@ -518,6 +523,7 @@ export type Database = {
           working_day_id: string
         }
         Update: {
+          completed_at?: string | null
           created_at?: string
           end_time?: string
           id?: string

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import { IcelookLogo } from "@/components/icelook-logo";
 import { Paper } from "@/lib/ui/paper";
 import { AuthForm } from "./_components/auth-form";

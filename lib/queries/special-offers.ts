@@ -1,9 +1,23 @@
-import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
-// Database types
-type SpecialOfferRow = Database["public"]["Tables"]["special_offers"]["Row"];
-type SpecialOfferStatus = Database["public"]["Enums"]["special_offer_status"];
+// Special offer status type (database enum placeholder)
+type SpecialOfferStatus = "active" | "booked" | "expired";
+
+// Special offer row type (database table placeholder)
+type SpecialOfferRow = {
+  id: string;
+  beauty_page_id: string;
+  service_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  discount_percentage: number;
+  original_price_cents: number;
+  discounted_price_cents: number;
+  status: SpecialOfferStatus;
+  created_at: string;
+  updated_at: string;
+};
 
 /**
  * Special offer with joined service data for display

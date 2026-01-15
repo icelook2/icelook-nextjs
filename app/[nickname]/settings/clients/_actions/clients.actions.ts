@@ -152,13 +152,25 @@ export async function loadClients(
     // Auth check
     const profile = await getProfile();
     if (!profile) {
-      return { clients: [], total: 0, hasMore: false, pageSize: validated.limit, error: "Unauthorized" };
+      return {
+        clients: [],
+        total: 0,
+        hasMore: false,
+        pageSize: validated.limit,
+        error: "Unauthorized",
+      };
     }
 
     // Verify user is beauty page owner
     const beautyPage = await getBeautyPageByNickname(validated.nickname);
     if (!beautyPage || beautyPage.owner_id !== profile.id) {
-      return { clients: [], total: 0, hasMore: false, pageSize: validated.limit, error: "Unauthorized" };
+      return {
+        clients: [],
+        total: 0,
+        hasMore: false,
+        pageSize: validated.limit,
+        error: "Unauthorized",
+      };
     }
 
     // Fetch clients with pagination
@@ -171,6 +183,12 @@ export async function loadClients(
     return result;
   } catch (error) {
     console.error("Error in loadClients:", error);
-    return { clients: [], total: 0, hasMore: false, pageSize: CLIENTS_PAGE_SIZE, error: "An unexpected error occurred" };
+    return {
+      clients: [],
+      total: 0,
+      hasMore: false,
+      pageSize: CLIENTS_PAGE_SIZE,
+      error: "An unexpected error occurred",
+    };
   }
 }

@@ -14,7 +14,9 @@ export function ClientContacts({ client }: ClientContactsProps) {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-on-surface-muted">{t("title")}</h3>
+      <h3 className="text-sm font-medium text-on-surface-muted">
+        {t("title")}
+      </h3>
 
       <Paper className="divide-y divide-border overflow-hidden">
         {/* Phone */}
@@ -37,7 +39,9 @@ export function ClientContacts({ client }: ClientContactsProps) {
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400">
               <Mail className="h-4 w-4" />
             </div>
-            <span className="min-w-0 flex-1 truncate">{client.clientEmail}</span>
+            <span className="min-w-0 flex-1 truncate">
+              {client.clientEmail}
+            </span>
           </a>
         )}
       </Paper>

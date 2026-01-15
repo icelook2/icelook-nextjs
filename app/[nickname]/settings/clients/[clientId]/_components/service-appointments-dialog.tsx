@@ -1,8 +1,8 @@
 "use client";
 
 import { Calendar, CheckCircle2, Clock, XCircle } from "lucide-react";
-import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import type { ClientAppointmentHistory } from "@/lib/queries/clients";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
@@ -17,7 +17,12 @@ interface ServiceAppointmentsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type AppointmentStatus = "pending" | "confirmed" | "completed" | "cancelled" | "no_show";
+type AppointmentStatus =
+  | "pending"
+  | "confirmed"
+  | "completed"
+  | "cancelled"
+  | "no_show";
 
 const STATUS_CONFIG: Record<
   AppointmentStatus,
@@ -54,7 +59,8 @@ export function ServiceAppointmentsDialog({
   const t = useTranslations("clients.services.dialog");
   const tStatus = useTranslations("clients.history.status");
   const locale = useLocale();
-  const [selectedAppointment, setSelectedAppointment] = useState<ClientAppointmentHistory | null>(null);
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<ClientAppointmentHistory | null>(null);
 
   if (!serviceName) {
     return null;
@@ -70,21 +76,27 @@ export function ServiceAppointmentsDialog({
 
           <Dialog.Body>
             {appointments.length === 0 ? (
-              <p className="py-8 text-center text-muted">{t("no_appointments")}</p>
+              <p className="py-8 text-center text-muted">
+                {t("no_appointments")}
+              </p>
             ) : (
               <div className="divide-y divide-border">
                 {appointments.map((apt) => {
                   const status = apt.status as AppointmentStatus;
-                  const statusConfig = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
+                  const statusConfig =
+                    STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
                   const StatusIcon = statusConfig.icon;
 
                   // Format date
-                  const formattedDate = new Date(apt.date).toLocaleDateString(locale, {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  });
+                  const formattedDate = new Date(apt.date).toLocaleDateString(
+                    locale,
+                    {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    },
+                  );
 
                   return (
                     <button
@@ -100,14 +112,19 @@ export function ServiceAppointmentsDialog({
                         <div>
                           <p className="font-medium">{formattedDate}</p>
                           <p className="text-sm text-muted">
-                            {apt.startTime.slice(0, 5)} - {apt.endTime.slice(0, 5)}
+                            {apt.startTime.slice(0, 5)} -{" "}
+                            {apt.endTime.slice(0, 5)}
                           </p>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-3">
                         <span className="font-medium">
-                          {formatPrice(apt.servicePriceCents, apt.serviceCurrency, locale)}
+                          {formatPrice(
+                            apt.servicePriceCents,
+                            apt.serviceCurrency,
+                            locale,
+                          )}
                         </span>
                         <StatusIcon
                           className={cn("h-5 w-5", statusConfig.className)}

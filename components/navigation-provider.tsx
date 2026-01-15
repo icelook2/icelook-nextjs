@@ -3,11 +3,11 @@
 import { usePathname, useRouter } from "next/navigation";
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useRef,
-  type ReactNode,
 } from "react";
 
 interface NavigationContextValue {

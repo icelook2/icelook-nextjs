@@ -34,7 +34,14 @@ export function getDateRangeForPeriod(period: AnalyticsPeriod): {
       const yesterday = subDays(today, 1);
       return {
         startDate: yesterday,
-        endDate: new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59),
+        endDate: new Date(
+          yesterday.getFullYear(),
+          yesterday.getMonth(),
+          yesterday.getDate(),
+          23,
+          59,
+          59,
+        ),
       };
     }
 

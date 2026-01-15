@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type {
   Appointment,
   ClientHistorySummary,
@@ -7,7 +8,7 @@ import type {
 import type { ServiceGroupWithServices } from "@/lib/queries/services";
 import type { VisitPreferences } from "@/lib/types/visit-preferences";
 import { isEmptyPreferences } from "@/lib/types/visit-preferences";
-import { ActionsCard } from "./actions-card";
+import { AppointmentActionsCard } from "./appointment-actions-card";
 import { ClientDetailsCard } from "./client-details-card";
 import { ClientNotesCard } from "./client-notes-card";
 import { CreatorNotesEditableCard } from "./creator-notes-editable-card";
@@ -34,6 +35,18 @@ export function AppointmentDetailsView({
   creatorNotes,
   serviceGroups,
 }: AppointmentDetailsViewProps) {
+  // Track current time for determining if appointment is upcoming or active
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every second for live status updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const hasClientNotes = Boolean(appointment.client_notes);
   const isReturningClient = clientHistory && clientHistory.totalVisits > 0;
   const visitPreferences =
@@ -48,13 +61,22 @@ export function AppointmentDetailsView({
     <div className="space-y-4">
       {/* 1. CLIENT DETAILS - Who is this? */}
       <ClientDetailsCard
-        appointment={appointment}
+        clientName={appointment.client_name}
+        clientId={appointment.client_id}
         clientHistory={clientHistory}
         clientKey={clientKey}
         nickname={nickname}
       />
 
-      {/* 2. VISIT PREFERENCES - Accessibility & communication needs */}
+      {/* 2. ACTIONS - Call, Confirm, Decline, etc. */}
+      <AppointmentActionsCard
+        appointment={appointment}
+        beautyPageId={beautyPageId}
+        nickname={nickname}
+        currentTime={currentTime}
+      />
+
+      {/* 3. VISIT PREFERENCES - Accessibility & communication needs */}
       {hasVisitPreferences && (
         <VisitPreferencesCard preferences={visitPreferences!} />
       )}
@@ -87,9 +109,6 @@ export function AppointmentDetailsView({
           nickname={nickname}
         />
       )}
-
-      {/* 7. ACTIONS - Re-schedule / Cancel */}
-      <ActionsCard appointment={appointment} />
     </div>
   );
 }

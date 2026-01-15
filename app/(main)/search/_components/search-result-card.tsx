@@ -1,7 +1,7 @@
 import { BadgeCheck, MapPin } from "lucide-react";
 import Link from "next/link";
-import { Avatar } from "@/lib/ui/avatar";
 import type { BeautyPageSearchResult } from "@/lib/queries/search";
+import { Avatar } from "@/lib/ui/avatar";
 
 interface SearchResultCardProps {
   result: BeautyPageSearchResult;

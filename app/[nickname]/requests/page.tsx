@@ -3,9 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageByNickname } from "@/lib/queries";
 import { PageHeader } from "@/lib/ui/page-header";
-import { RequestsView } from "./requests-view";
-import { getScheduleData } from "../appointments/_lib/queries";
 import { toDateString } from "../appointments/_lib/date-utils";
+import { getScheduleData } from "../appointments/_lib/queries";
+import { RequestsView } from "./requests-view";
 
 interface RequestsPageProps {
   params: Promise<{ nickname: string }>;

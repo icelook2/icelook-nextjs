@@ -6,9 +6,16 @@ import {
   getClientDetails,
   getServicePreferencesPaginated,
 } from "@/lib/queries";
-import type { ServicePreferencesSortField, SortOrder } from "@/lib/queries/clients";
+import type {
+  ServicePreferencesSortField,
+  SortOrder,
+} from "@/lib/queries/clients";
 import { PageHeader } from "@/lib/ui/page-header";
-import { ServicesSearch, ServicesPagination, ServicesTable } from "./_components";
+import {
+  ServicesPagination,
+  ServicesSearch,
+  ServicesTable,
+} from "./_components";
 
 interface ServicesPageProps {
   params: Promise<{ nickname: string; clientId: string }>;
@@ -30,12 +37,12 @@ export default async function ServicesPage({
 
   // Validate and parse search params
   const search = query.search ?? "";
-  const sort = (["count", "total", "name"].includes(query.sort ?? "")
-    ? query.sort
-    : "count") as ServicePreferencesSortField;
-  const order = (["asc", "desc"].includes(query.order ?? "")
-    ? query.order
-    : "desc") as SortOrder;
+  const sort = (
+    ["count", "total", "name"].includes(query.sort ?? "") ? query.sort : "count"
+  ) as ServicePreferencesSortField;
+  const order = (
+    ["asc", "desc"].includes(query.order ?? "") ? query.order : "desc"
+  ) as SortOrder;
   const page = Math.max(1, Number.parseInt(query.page ?? "1", 10) || 1);
 
   const beautyPage = await getBeautyPageByNickname(nickname);

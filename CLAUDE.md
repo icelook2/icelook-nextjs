@@ -99,6 +99,17 @@ pnpm test:ui  # Run Playwright with UI
 
 ## Conventions
 
+### CRITICAL: No useCallback, useMemo, or React.memo
+
+**NEVER use `useCallback`, `useMemo`, or `React.memo` in this codebase.**
+
+- React Compiler (enabled in this project via React 19) automatically optimizes re-renders
+- Manual memoization hooks are obsolete and interfere with the compiler's optimizations
+- The compiler understands dependency tracking better than manually specified arrays
+- If you encounter performance issues, the solution is NEVER to add manual memoization
+
+Why: React Compiler automatically detects and applies optimizations. Manual hooks add complexity without benefit and can actually prevent optimal compilation.
+
 See `.claude/skills/coding-conventions/SKILL.md` for detailed coding guidelines including:
 
 - Component patterns (always wrap Base UI)

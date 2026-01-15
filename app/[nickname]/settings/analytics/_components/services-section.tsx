@@ -3,8 +3,8 @@
 import { Scissors } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Paper } from "@/lib/ui/paper";
-import { useAnalytics } from "./analytics-context";
 import { formatCurrency } from "../_lib/utils";
+import { useAnalytics } from "./analytics-context";
 
 export function ServicesSection() {
   const t = useTranslations("analytics.services");
@@ -19,7 +19,7 @@ export function ServicesSection() {
 
   // Sort by revenue descending
   const sortedServices = [...services].sort(
-    (a, b) => b.revenueCents - a.revenueCents
+    (a, b) => b.revenueCents - a.revenueCents,
   );
 
   return (
@@ -49,7 +49,9 @@ export function ServicesSection() {
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-muted">
                 <div
                   className="h-full rounded-full bg-primary"
-                  style={{ width: `${Math.min(service.revenuePercentage, 100)}%` }}
+                  style={{
+                    width: `${Math.min(service.revenuePercentage, 100)}%`,
+                  }}
                 />
               </div>
               <span className="w-12 text-right text-sm text-on-surface-muted">

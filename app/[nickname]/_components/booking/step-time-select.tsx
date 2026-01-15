@@ -30,8 +30,14 @@ interface StepTimeSelectProps {
 }
 
 export function StepTimeSelect({ translations }: StepTimeSelectProps) {
-  const { beautyPageId, totalDurationMinutes, date, time, selectTime, timezone } =
-    useBooking();
+  const {
+    beautyPageId,
+    totalDurationMinutes,
+    date,
+    time,
+    selectTime,
+    timezone,
+  } = useBooking();
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTime, setSelectedTime] = useState<string | null>(time);

@@ -209,6 +209,68 @@ export async function markNoShow(input: {
   });
 }
 
+/**
+ * Start an appointment early by updating start_time to NOW
+ * This allows clients who arrive early to be served immediately
+ */
+export async function startAppointmentEarly(input: {
+  appointmentId: string;
+  beautyPageId: string;
+  nickname: string;
+}): Promise<ActionResult> {
+  const t = await getTranslations("schedule");
+
+  // Check authorization
+  const authorization = await verifyCanManageSchedule(input.beautyPageId);
+  if (!authorization.authorized) {
+    return { success: false, error: authorization.error };
+  }
+
+  const supabase = await createClient();
+
+  // Get appointment
+  const { data: appointment } = await supabase
+    .from("appointments")
+    .select("id, status, start_time, end_time, service_duration_minutes")
+    .eq("id", input.appointmentId)
+    .eq("beauty_page_id", input.beautyPageId)
+    .single();
+
+  if (!appointment) {
+    return { success: false, error: t("errors.not_found") };
+  }
+
+  // Only confirmed appointments can be started early
+  if (appointment.status !== "confirmed") {
+    return { success: false, error: t("errors.invalid_status_transition") };
+  }
+
+  // Calculate new times - start now, end based on duration
+  const now = new Date();
+  const newStartTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+  const newEndMinutes = timeToMinutes(newStartTime) + appointment.service_duration_minutes;
+  const newEndTime = minutesToTime(newEndMinutes);
+
+  // Update appointment start/end times
+  const { error: updateError } = await supabase
+    .from("appointments")
+    .update({
+      start_time: newStartTime,
+      end_time: newEndTime,
+    })
+    .eq("id", input.appointmentId);
+
+  if (updateError) {
+    console.error("Error starting appointment early:", updateError);
+    return { success: false, error: t("errors.update_failed") };
+  }
+
+  revalidatePath(`/${input.nickname}/appointments`);
+  revalidatePath(`/${input.nickname}/appointments/${input.appointmentId}`);
+
+  return { success: true };
+}
+
 // Validation schema for reschedule
 const rescheduleSchema = z.object({
   newDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

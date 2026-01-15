@@ -2,11 +2,11 @@
 
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
 import { setActiveBeautyPageAction } from "@/app/actions/active-beauty-page";
 import type { UserBeautyPage } from "@/lib/queries/beauty-pages";
@@ -45,7 +45,7 @@ export function ActiveBeautyPageProvider({
   const validInitialId =
     initialActiveId && beautyPages.some((bp) => bp.id === initialActiveId)
       ? initialActiveId
-      : beautyPages[0]?.id ?? null;
+      : (beautyPages[0]?.id ?? null);
 
   const [activeId, setActiveId] = useState<string | null>(validInitialId);
 
@@ -56,15 +56,12 @@ export function ActiveBeautyPageProvider({
 
   const role: UserRole = beautyPages.length > 0 ? "creator" : "client";
 
-  const switchBeautyPage = useCallback(
-    async (beautyPageId: string) => {
-      // Optimistically update state
-      setActiveId(beautyPageId);
-      // Persist to cookie
-      await setActiveBeautyPageAction(beautyPageId);
-    },
-    [],
-  );
+  const switchBeautyPage = useCallback(async (beautyPageId: string) => {
+    // Optimistically update state
+    setActiveId(beautyPageId);
+    // Persist to cookie
+    await setActiveBeautyPageAction(beautyPageId);
+  }, []);
 
   const value = useMemo(
     () => ({

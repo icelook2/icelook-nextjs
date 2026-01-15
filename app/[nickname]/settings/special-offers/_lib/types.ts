@@ -1,8 +1,5 @@
-import type { Database } from "@/lib/supabase/database.types";
-
-// Database types
-export type SpecialOfferStatus =
-  Database["public"]["Enums"]["special_offer_status"];
+// Special offer status type
+export type SpecialOfferStatus = "active" | "booked" | "expired";
 
 /**
  * Special offer as stored in the database

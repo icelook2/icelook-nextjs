@@ -4,16 +4,16 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 import { updateVisitPreferences } from "@/app/(main)/settings/_actions";
-import { Button } from "@/lib/ui/button";
-import { Checkbox } from "@/lib/ui/checkbox";
-import { Select } from "@/lib/ui/select";
-import { SettingsGroup, SettingsRow } from "@/lib/ui/settings-group";
-import { Textarea } from "@/lib/ui/textarea";
 import type {
   AccessibilityNeed,
   CommunicationPreference,
   VisitPreferences,
 } from "@/lib/types";
+import { Button } from "@/lib/ui/button";
+import { Checkbox } from "@/lib/ui/checkbox";
+import { Select } from "@/lib/ui/select";
+import { SettingsGroup, SettingsRow } from "@/lib/ui/settings-group";
+import { Textarea } from "@/lib/ui/textarea";
 
 interface VisitPreferencesFormProps {
   initialPreferences?: VisitPreferences | null;

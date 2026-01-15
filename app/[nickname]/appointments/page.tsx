@@ -1,9 +1,10 @@
 import { addDays, isValid, parseISO } from "date-fns";
 import { notFound, redirect } from "next/navigation";
 import { getProfile } from "@/lib/auth/session";
-import { getBeautyPageByNickname } from "@/lib/queries";
+import { getBeautyPageByNickname, getBeautyPageClients } from "@/lib/queries";
+import { getServiceGroupsWithServices } from "@/lib/queries/services";
 import { PageHeader } from "@/lib/ui/page-header";
-import { CreateScheduleButton, ScheduleView } from "./_components";
+import { FreeSlotsView } from "./_components";
 import { toDateString } from "./_lib/date-utils";
 import { getScheduleData } from "./_lib/queries";
 import { getAppointmentsForDate } from "./_lib/workday-utils";
@@ -13,36 +14,6 @@ interface AppointmentsPageProps {
   searchParams: Promise<{ date?: string }>;
 }
 
-/**
- * Calculate day statistics: appointment count and expected earnings
- */
-function calculateDayStats(
-  appointments: Array<{
-    status: string;
-    service_price_cents: number;
-    service_currency: string;
-  }>,
-) {
-  // Include pending and confirmed appointments in stats
-  const relevantAppointments = appointments.filter(
-    (apt) => apt.status === "pending" || apt.status === "confirmed",
-  );
-
-  const totalEarningsCents = relevantAppointments.reduce(
-    (sum, apt) => sum + apt.service_price_cents,
-    0,
-  );
-
-  // Get currency from first appointment, or default
-  const currency = appointments[0]?.service_currency ?? "UAH";
-
-  return {
-    appointmentCount: relevantAppointments.length,
-    totalEarningsCents,
-    currency,
-  };
-}
-
 export default async function AppointmentsPage({
   params,
   searchParams,
@@ -50,8 +21,8 @@ export default async function AppointmentsPage({
   const { nickname } = await params;
   const { date: dateParam } = await searchParams;
 
-  // Parse date from URL or use today
-  let selectedDate = new Date();
+  // Default to tomorrow
+  let selectedDate = addDays(new Date(), 1);
   if (dateParam) {
     const parsed = parseISO(dateParam);
     if (isValid(parsed)) {
@@ -71,28 +42,33 @@ export default async function AppointmentsPage({
     redirect(`/${nickname}`);
   }
 
-  // Solo creator model: only owner can access appointments view
+  // Solo creator model: only owner can access this view
   const isOwner = profile.id === beautyPage.owner_id;
 
   if (!isOwner) {
     redirect(`/${nickname}`);
   }
 
-  // Fetch schedule data for selected date + 30 days
-  const startDate = toDateString(selectedDate);
-  const endDate = toDateString(addDays(selectedDate, 30));
+  // Fetch real schedule data
+  const dateStr = toDateString(selectedDate);
+  const [scheduleData, serviceGroups, clientsResult] = await Promise.all([
+    getScheduleData(beautyPage.id, dateStr, dateStr),
+    getServiceGroupsWithServices(beautyPage.id),
+    getBeautyPageClients(beautyPage.id, { limit: 50 }),
+  ]);
 
-  const { appointments } = await getScheduleData(
-    beautyPage.id,
-    startDate,
-    endDate,
-  );
+  const { appointments, workingDays } = scheduleData;
 
-  // Get appointments for the selected date
-  const dayAppointments = getAppointmentsForDate(appointments, startDate);
+  // Get working day for selected date
+  const workingDay = workingDays.find((wd) => wd.date === dateStr) ?? null;
 
-  // Calculate day statistics
-  const dayStats = calculateDayStats(dayAppointments);
+  // Get appointments for selected date
+  const dayAppointments = getAppointmentsForDate(appointments, dateStr);
+
+  // Working hours - use working day if configured, otherwise default
+  const startTime = workingDay?.start_time ?? "09:00";
+  const endTime = workingDay?.end_time ?? "21:00";
+  const breaks = workingDay?.breaks ?? [];
 
   return (
     <>
@@ -101,17 +77,21 @@ export default async function AppointmentsPage({
         subtitle={beautyPage.name}
         backHref={`/${nickname}/settings`}
         containerClassName="mx-auto max-w-2xl"
-      >
-        <CreateScheduleButton />
-      </PageHeader>
+      />
 
       <main className="mx-auto max-w-2xl px-4 pb-8">
-        <ScheduleView
-          beautyPageId={beautyPage.id}
-          nickname={nickname}
-          appointments={appointments}
+        <FreeSlotsView
           selectedDate={selectedDate}
-          dayStats={dayStats}
+          startTime={startTime}
+          endTime={endTime}
+          breaks={breaks}
+          appointments={dayAppointments}
+          nickname={nickname}
+          isConfigured={workingDay !== null}
+          beautyPageId={beautyPage.id}
+          serviceGroups={serviceGroups}
+          clients={clientsResult.clients}
+          currency="UAH"
         />
       </main>
     </>

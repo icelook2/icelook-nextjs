@@ -70,7 +70,9 @@ export function AppointmentHistory({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-medium text-on-surface-muted">{t("title")}</h3>
+      <h3 className="text-sm font-medium text-on-surface-muted">
+        {t("title")}
+      </h3>
 
       <Paper className="overflow-hidden">
         {/* Table Header */}
@@ -103,7 +105,8 @@ export function AppointmentHistory({
         {/* Table Body */}
         <div className="divide-y divide-border">
           {displayedAppointments.map((apt) => {
-            const statusConfig = STATUS_CONFIG[apt.status] ?? STATUS_CONFIG.pending;
+            const statusConfig =
+              STATUS_CONFIG[apt.status] ?? STATUS_CONFIG.pending;
             const StatusIcon = statusConfig.icon;
 
             return (
