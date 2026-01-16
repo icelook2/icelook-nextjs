@@ -1924,5 +1924,32 @@
       "cancel": "Скасувати запис",
       "cancel_description": "Скасувати цей запис"
     }
+  },
+  "creator_schedule": {
+    "today": "Сьогодні",
+    "tomorrow": "Завтра",
+    "yesterday": "Вчора",
+    "day_off": "Вихідний",
+    "not_configured": "Робочий день не налаштований",
+    "no_slots": "Немає доступних часових слотів",
+    "available_slot": "Вільний час",
+    "no_appointment": "Немає запису",
+    "appointment": "запис",
+    "appointments": "записи",
+    "pending": "очікує",
+    "duration": {
+      "hours": "{count} год",
+      "minutes": "{count} хв",
+      "hours_minutes": "{hours} год {minutes} хв"
+    },
+    "weekdays": {
+      "mo": "Пн",
+      "tu": "Вт",
+      "we": "Ср",
+      "th": "Чт",
+      "fr": "Пт",
+      "sa": "Сб",
+      "su": "Нд"
+    }
   }
 }

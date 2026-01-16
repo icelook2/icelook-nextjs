@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
 import type { Profile } from "@/lib/auth/session";
 import { cn } from "@/lib/utils/cn";
 import { useActiveBeautyPage } from "./active-beauty-page-context";
@@ -15,26 +14,27 @@ interface BottomNavProps {
   profile: Profile | null;
 }
 
+/**
+ * Mobile bottom navigation bar.
+ *
+ * Stacking order is handled via DOM order (no z-index needed):
+ * - BottomNav is inside #root (rendered first)
+ * - Dialog portals render to <body> after #root (appear above BottomNav)
+ */
 export function BottomNav({ className, profile }: BottomNavProps) {
   const t = useTranslations();
   const { role, activeBeautyPage } = useActiveBeautyPage();
 
-  const navContext: NavContext = useMemo(
-    () => ({
-      activeNickname: activeBeautyPage?.slug ?? null,
-    }),
-    [activeBeautyPage],
-  );
+  const navContext: NavContext = {
+    activeNickname: activeBeautyPage?.slug ?? null,
+  };
 
-  const navItems = useMemo(
-    () => getNavItemsForRole(role, navContext),
-    [role, navContext],
-  );
+  const navItems = getNavItemsForRole(role, navContext);
 
   return (
     <nav
       className={cn(
-        "fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-border bg-surface",
+        "fixed bottom-0 left-0 right-0 flex h-16 items-center justify-around border-t border-border bg-surface",
         className,
       )}
     >

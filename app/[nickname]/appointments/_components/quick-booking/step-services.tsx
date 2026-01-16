@@ -1,7 +1,6 @@
 "use client";
 
-import { Check, Search } from "lucide-react";
-import { useDeferredValue, useState } from "react";
+import { Check } from "lucide-react";
 import type { ServiceGroupWithServices } from "@/lib/queries/services";
 import { formatPrice } from "@/lib/utils/price-range";
 
@@ -10,7 +9,7 @@ interface StepServicesProps {
   selectedServiceIds: string[];
   currency: string;
   onToggleService: (serviceId: string) => void;
-  showSearch: boolean;
+  searchQuery: string;
 }
 
 export function StepServices({
@@ -18,44 +17,35 @@ export function StepServices({
   selectedServiceIds,
   currency,
   onToggleService,
-  showSearch,
+  searchQuery,
 }: StepServicesProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const deferredSearch = useDeferredValue(searchQuery);
-
-  // Clear search when hiding
-  const effectiveSearch = showSearch ? deferredSearch : "";
 
   // Filter services based on search
   const filteredServiceGroups = serviceGroups
     .map((group) => ({
       ...group,
       services: group.services.filter((service) => {
-        if (!effectiveSearch) {
+        if (!searchQuery) {
           return true;
         }
-        const searchLower = effectiveSearch.toLowerCase();
+        const searchLower = searchQuery.toLowerCase();
         return service.name.toLowerCase().includes(searchLower);
       }),
     }))
     .filter((group) => group.services.length > 0);
 
   return (
-    <div className={showSearch ? "flex flex-col-reverse" : ""}>
+    <div>
       {/* Service groups */}
       <div className="pb-4">
-        {filteredServiceGroups.length === 0 && effectiveSearch && (
+        {filteredServiceGroups.length === 0 && searchQuery && (
           <p className="py-4 text-center text-sm text-muted">
             No services found
           </p>
         )}
         {filteredServiceGroups.map((group) => (
           <div key={group.id}>
-            <h3
-              className={`sticky bg-surface px-4 py-2 text-sm font-medium text-muted ${
-                showSearch ? "top-[68px]" : "top-0"
-              }`}
-            >
+            <h3 className="sticky top-0 bg-surface px-4 py-2 text-sm font-medium text-muted">
               {group.name}
             </h3>
             <div>
@@ -76,9 +66,7 @@ export function StepServices({
                     {/* Checkbox */}
                     <div
                       className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 ${
-                        isSelected
-                          ? "border-accent bg-accent"
-                          : "border-border"
+                        isSelected ? "border-accent bg-accent" : "border-border"
                       }`}
                     >
                       {isSelected && (
@@ -102,23 +90,6 @@ export function StepServices({
           </div>
         ))}
       </div>
-
-      {/* Search - rendered after content in DOM so it stacks on top, but appears first due to flex-col-reverse */}
-      {showSearch && (
-        <div className="sticky top-0 bg-surface px-4 pb-2 pt-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-            <input
-              type="text"
-              placeholder="Search services..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
-              className="w-full rounded-lg border border-border bg-surface py-2.5 pl-10 pr-4 text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

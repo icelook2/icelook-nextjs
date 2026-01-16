@@ -520,7 +520,9 @@ export async function endBreakEarly(input: {
   // Get the break to verify it exists and belongs to this beauty page
   const { data: breakData } = await supabase
     .from("working_day_breaks")
-    .select("id, working_day_id, start_time, end_time, completed_at, working_days!inner(beauty_page_id)")
+    .select(
+      "id, working_day_id, start_time, end_time, completed_at, working_days!inner(beauty_page_id)",
+    )
     .eq("id", input.breakId)
     .single();
 
@@ -530,7 +532,9 @@ export async function endBreakEarly(input: {
 
   // Verify the break belongs to this beauty page
   // The !inner join returns an object (not array) when using .single()
-  const workingDay = breakData.working_days as unknown as { beauty_page_id: string };
+  const workingDay = breakData.working_days as unknown as {
+    beauty_page_id: string;
+  };
   if (workingDay.beauty_page_id !== input.beautyPageId) {
     return { success: false, error: t("errors.not_authorized") };
   }
@@ -545,7 +549,10 @@ export async function endBreakEarly(input: {
   const currentTimeStr = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:00`;
 
   // Verify we're currently within this break
-  if (currentTimeStr < breakData.start_time || currentTimeStr >= breakData.end_time) {
+  if (
+    currentTimeStr < breakData.start_time ||
+    currentTimeStr >= breakData.end_time
+  ) {
     return { success: false, error: t("errors.break_not_active") };
   }
 

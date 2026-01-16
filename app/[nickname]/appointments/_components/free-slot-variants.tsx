@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Paper } from "@/lib/ui/paper";
 
 interface FreeSlotProps {
@@ -9,104 +10,116 @@ interface FreeSlotProps {
   onBook?: () => void;
 }
 
-function formatDuration(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes}min`;
+export function formatTime(time: string, locale: string): string {
+  const [hours, minutes] = time.split(":").map(Number);
+
+  if (locale === "en") {
+    const period = hours >= 12 ? "pm" : "am";
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes.toString().padStart(2, "0")}${period}`;
   }
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  if (remainingMinutes === 0) {
-    return `${hours}h`;
-  }
-  return `${hours}h ${remainingMinutes}min`;
+
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 }
 
-/**
- * Current variant (baseline)
- * Time | Plus circle | Available slot text
- */
-export function FreeSlotMutedPaper({
-  startTime,
-  durationMinutes,
-  onBook,
-}: FreeSlotProps) {
-  const time = startTime.slice(0, 5);
-  const duration = formatDuration(durationMinutes);
+export function FreeSlotMutedPaper({ startTime, durationMinutes, onBook }: FreeSlotProps) {
+  const t = useTranslations("creator_schedule");
+  const locale = useLocale();
+  const time = formatTime(startTime, locale);
+
+  const formatDuration = () => {
+    if (durationMinutes < 60) {
+      return t("duration.minutes", { count: durationMinutes });
+    }
+    const hours = Math.floor(durationMinutes / 60);
+    const remainingMinutes = durationMinutes % 60;
+    if (remainingMinutes === 0) {
+      return t("duration.hours", { count: hours });
+    }
+    return t("duration.hours_minutes", { hours, minutes: remainingMinutes });
+  };
 
   return (
     <button type="button" onClick={onBook} className="w-full text-left">
-      <Paper className="p-4 bg-surface/60 transition-colors hover:bg-surface dark:bg-surface/60 dark:hover:bg-surface">
+      <Paper className="bg-surface/60 p-4 transition-colors hover:bg-surface dark:bg-surface/60 dark:hover:bg-surface">
         <div className="flex items-center gap-3">
-          <span className="w-12 text-lg font-semibold text-foreground">
+          {/* Time on left */}
+          <span className="w-14 shrink-0 text-lg text-muted">
             {time}
           </span>
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-emerald-500 dark:border-emerald-400">
-            <Plus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+
+          {/* Plus icon */}
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-emerald-500 dark:border-emerald-400">
+            <Plus className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-medium text-foreground">Available slot</p>
-            <p className="text-sm text-muted">{duration}</p>
-          </div>
+
+          {/* Content */}
+          <span className="min-w-0 flex-1 text-muted">{t("available_slot")}</span>
+
+          {/* Duration on right */}
+          <span className="shrink-0 text-sm text-muted/60">{formatDuration()}</span>
         </div>
       </Paper>
     </button>
   );
 }
 
-/**
- * Available slot card for future days
- * Green dashed circle with plus icon, "Available slot" text with time and duration
- */
-export function AvailableSlot({
-  startTime,
-  durationMinutes,
-  onBook,
-}: FreeSlotProps) {
-  const time = startTime.slice(0, 5);
-  const duration = formatDuration(durationMinutes);
+export function AvailableSlot({ startTime, durationMinutes, onBook }: FreeSlotProps) {
+  const t = useTranslations("creator_schedule");
+  const locale = useLocale();
+  const time = formatTime(startTime, locale);
+
+  const formatDuration = () => {
+    if (durationMinutes < 60) {
+      return t("duration.minutes", { count: durationMinutes });
+    }
+    const hours = Math.floor(durationMinutes / 60);
+    const remainingMinutes = durationMinutes % 60;
+    if (remainingMinutes === 0) {
+      return t("duration.hours", { count: hours });
+    }
+    return t("duration.hours_minutes", { hours, minutes: remainingMinutes });
+  };
 
   return (
     <button type="button" onClick={onBook} className="w-full text-left">
-      <Paper className="p-4 bg-surface/60 transition-colors hover:bg-surface dark:bg-surface/60 dark:hover:bg-surface">
+      <Paper className="bg-surface/60 p-4 transition-colors hover:bg-surface dark:bg-surface/60 dark:hover:bg-surface">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-emerald-500 dark:border-emerald-400">
-            <Plus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          {/* Time on left */}
+          <span className="w-14 shrink-0 text-lg text-muted">
+            {time}
+          </span>
+
+          {/* Plus icon */}
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-emerald-500 dark:border-emerald-400">
+            <Plus className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-medium text-foreground">Available slot</p>
-            <p className="text-sm text-muted">
-              {time} · {duration}
-            </p>
-          </div>
+
+          {/* Content */}
+          <span className="min-w-0 flex-1 text-muted">{t("available_slot")}</span>
+
+          {/* Duration on right */}
+          <span className="shrink-0 text-sm text-muted/60">{formatDuration()}</span>
         </div>
       </Paper>
     </button>
   );
 }
-
-// ============================================
-// Past Empty Slot (for historical view)
-// Shows slots that were NOT booked on past days
-// ============================================
 
 interface PastEmptySlotProps {
   startTime: string;
 }
 
-/**
- * Past empty slot - "No appointment" style
- * Simple and clean, shows time with dimmed "No appointment" text
- */
 export function PastEmptySlot({ startTime }: PastEmptySlotProps) {
-  const time = startTime.slice(0, 5);
+  const t = useTranslations("creator_schedule");
+  const locale = useLocale();
+  const time = formatTime(startTime, locale);
 
   return (
     <Paper className="p-4 opacity-50">
       <div className="flex items-center gap-3">
-        <span className="w-12 text-lg font-semibold text-foreground">
-          {time}
-        </span>
-        <p className="text-muted">No appointment</p>
+        <span className="w-16 text-lg font-semibold text-foreground">{time}</span>
+        <p className="text-muted">{t("no_appointment")}</p>
       </div>
     </Paper>
   );

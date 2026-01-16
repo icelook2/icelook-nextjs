@@ -41,6 +41,13 @@ interface AlertDialogPortalProps {
   className?: string;
 }
 
+/**
+ * AlertDialog Portal with responsive behavior:
+ * - Mobile: iOS-style bottom sheet that slides up from bottom
+ * - Desktop (md+): Centered dialog with slide animation
+ *
+ * Uses portals to render above other content without z-index.
+ */
 function AlertDialogPortal({
   children,
   open,
@@ -61,24 +68,47 @@ function AlertDialogPortal({
               />
             }
           />
-          <BaseAlertDialog.Popup
-            render={
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 8 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className={cn(
-                  "fixed left-1/2 top-1/2 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2",
-                  "rounded-2xl bg-surface p-6 shadow-xl",
-                  "focus:outline-none",
-                  className,
-                )}
-              />
-            }
+          {/* Viewport wrapper handles positioning via flexbox */}
+          <div
+            className={cn(
+              "fixed inset-0 flex overflow-hidden",
+              // Mobile: align to bottom (sheet style)
+              "items-end justify-center",
+              // Desktop: center the dialog
+              "md:items-center",
+            )}
           >
-            {children}
-          </BaseAlertDialog.Popup>
+            <BaseAlertDialog.Popup
+              render={
+                <motion.div
+                  initial={{ opacity: 0, y: "100%" }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: "100%" }}
+                  transition={{
+                    duration: 0.3,
+                    ease: [0.32, 0.72, 0, 1], // iOS-like spring curve
+                  }}
+                  className={cn(
+                    // Base styles
+                    "w-full max-w-sm shadow-xl",
+                    "bg-surface",
+                    "focus:outline-none",
+                    // Mobile: bottom sheet with top rounded corners, adjusted padding for handle
+                    "rounded-t-2xl px-6 pb-6 pt-2",
+                    // Desktop: centered with all corners rounded, uniform padding
+                    "md:w-[calc(100%-2rem)] md:rounded-2xl md:p-6",
+                    className,
+                  )}
+                />
+              }
+            >
+              {/* iOS-style drag handle - only visible on mobile */}
+              <div className="mb-3 flex shrink-0 items-center justify-center pt-1 md:hidden">
+                <div className="h-1 w-10 rounded-full bg-muted/40" />
+              </div>
+              {children}
+            </BaseAlertDialog.Popup>
+          </div>
         </BaseAlertDialog.Portal>
       )}
     </AnimatePresence>

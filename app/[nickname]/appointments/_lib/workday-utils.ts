@@ -3,6 +3,64 @@ import { timeToMinutes } from "./time-utils";
 import type { Appointment, WorkingDayBreak } from "./types";
 
 /**
+ * Count available time slots for booking
+ *
+ * Calculates how many free slots exist given working hours,
+ * appointments, and breaks. A slot is "free" if it doesn't
+ * overlap with any appointment or break.
+ */
+export function countAvailableSlots(
+  startTime: string,
+  endTime: string,
+  appointments: Appointment[],
+  breaks: WorkingDayBreak[],
+  intervalMinutes = 30,
+): number {
+  const startMinutes = timeToMinutes(startTime);
+  const endMinutes = timeToMinutes(endTime);
+
+  // Filter only active appointments
+  const activeAppointments = appointments.filter(
+    (apt) => apt.status !== "cancelled" && apt.status !== "no_show",
+  );
+
+  // Collect all blocked time ranges
+  const blockedRanges = [
+    ...breaks.map((b) => ({
+      start: timeToMinutes(b.start_time),
+      end: timeToMinutes(b.end_time),
+    })),
+    ...activeAppointments.map((apt) => ({
+      start: timeToMinutes(apt.start_time),
+      end: timeToMinutes(apt.end_time),
+    })),
+  ].sort((a, b) => a.start - b.start);
+
+  let freeSlotCount = 0;
+
+  // Iterate through working hours in intervals
+  for (
+    let minutes = startMinutes;
+    minutes < endMinutes;
+    minutes += intervalMinutes
+  ) {
+    const slotStart = minutes;
+    const slotEnd = minutes + intervalMinutes;
+
+    // Check if this slot overlaps with any blocked range
+    const isBlocked = blockedRanges.some(
+      (range) => slotStart < range.end && slotEnd > range.start,
+    );
+
+    if (!isBlocked) {
+      freeSlotCount++;
+    }
+  }
+
+  return freeSlotCount;
+}
+
+/**
  * Get all appointments for a specific date
  * Sorted by start time
  */
@@ -260,9 +318,7 @@ export function getUpcomingBreaks(
       const startMinutes = timeToMinutes(brk.start_time);
       return startMinutes > currentMinutes;
     })
-    .sort(
-      (a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time),
-    );
+    .sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
 }
 
 /**
@@ -288,7 +344,5 @@ export function getCompletedBreaks(
       const endMinutes = timeToMinutes(brk.end_time);
       return endMinutes <= currentMinutes;
     })
-    .sort(
-      (a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time),
-    );
+    .sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
 }

@@ -1924,5 +1924,32 @@
       "cancel": "Cancel Appointment",
       "cancel_description": "Cancel this appointment"
     }
+  },
+  "creator_schedule": {
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "yesterday": "Yesterday",
+    "day_off": "Day off",
+    "not_configured": "Working day not configured",
+    "no_slots": "No time slots available",
+    "available_slot": "Available slot",
+    "no_appointment": "No appointment",
+    "appointment": "appointment",
+    "appointments": "appointments",
+    "pending": "pending",
+    "duration": {
+      "hours": "{count}h",
+      "minutes": "{count}min",
+      "hours_minutes": "{hours}h {minutes}min"
+    },
+    "weekdays": {
+      "mo": "Mo",
+      "tu": "Tu",
+      "we": "We",
+      "th": "Th",
+      "fr": "Fr",
+      "sa": "Sa",
+      "su": "Su"
+    }
   }
 }

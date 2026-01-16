@@ -38,9 +38,17 @@ export function AppointmentActionsCard({
   // Determine if confirmed appointment is upcoming or active
   const currentTimeStr = `${currentTime.getHours().toString().padStart(2, "0")}:${currentTime.getMinutes().toString().padStart(2, "0")}`;
   const isUpcoming = isConfirmed && currentTimeStr < appointment.start_time;
-  const isActive = isConfirmed && currentTimeStr >= appointment.start_time && currentTimeStr < appointment.end_time;
+  const isActive =
+    isConfirmed &&
+    currentTimeStr >= appointment.start_time &&
+    currentTimeStr < appointment.end_time;
 
-  const isLoading = isConfirming || isDeclining || isMarkingNoShow || isStarting || isCompleting;
+  const isLoading =
+    isConfirming ||
+    isDeclining ||
+    isMarkingNoShow ||
+    isStarting ||
+    isCompleting;
   const hasActions = isPending || isConfirmed;
 
   // Don't render if no actions available
@@ -154,89 +162,89 @@ export function AppointmentActionsCard({
       <h2 className="text-base font-semibold">Actions</h2>
       <div className="flex items-center gap-2">
         {/* Pending actions */}
-      {isPending && (
-        <>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleConfirm}
-            disabled={isLoading}
-          >
-            {isConfirming ? "Confirming..." : "Confirm"}
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={handleDecline}
-            disabled={isLoading}
-          >
-            {isDeclining ? "Declining..." : "Decline"}
-          </Button>
-        </>
-      )}
+        {isPending && (
+          <>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleConfirm}
+              disabled={isLoading}
+            >
+              {isConfirming ? "Confirming..." : "Confirm"}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleDecline}
+              disabled={isLoading}
+            >
+              {isDeclining ? "Declining..." : "Decline"}
+            </Button>
+          </>
+        )}
 
-      {/* Upcoming confirmed - can start early */}
-      {isUpcoming && (
-        <>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleStart}
-            disabled={isLoading}
-          >
-            {isStarting ? "Starting..." : "Start"}
-          </Button>
-          <Button variant="secondary" size="sm" onClick={handleReschedule}>
-            Reschedule
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleNoShow}
-            disabled={isLoading}
-          >
-            {isMarkingNoShow ? "Marking..." : "No-show"}
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={handleCancel}
-            disabled={isLoading}
-          >
-            {isDeclining ? "Cancelling..." : "Cancel"}
-          </Button>
-        </>
-      )}
+        {/* Upcoming confirmed - can start early */}
+        {isUpcoming && (
+          <>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleStart}
+              disabled={isLoading}
+            >
+              {isStarting ? "Starting..." : "Start"}
+            </Button>
+            <Button variant="secondary" size="sm" onClick={handleReschedule}>
+              Reschedule
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleNoShow}
+              disabled={isLoading}
+            >
+              {isMarkingNoShow ? "Marking..." : "No-show"}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isLoading}
+            >
+              {isDeclining ? "Cancelling..." : "Cancel"}
+            </Button>
+          </>
+        )}
 
-      {/* Active appointment - can complete early */}
-      {isActive && (
-        <>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleComplete}
-            disabled={isLoading}
-          >
-            {isCompleting ? "Completing..." : "Complete"}
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleNoShow}
-            disabled={isLoading}
-          >
-            {isMarkingNoShow ? "Marking..." : "No-show"}
-          </Button>
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={handleCancel}
-            disabled={isLoading}
-          >
-            {isDeclining ? "Cancelling..." : "Cancel"}
-          </Button>
-        </>
-      )}
+        {/* Active appointment - can complete early */}
+        {isActive && (
+          <>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleComplete}
+              disabled={isLoading}
+            >
+              {isCompleting ? "Completing..." : "Complete"}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleNoShow}
+              disabled={isLoading}
+            >
+              {isMarkingNoShow ? "Marking..." : "No-show"}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleCancel}
+              disabled={isLoading}
+            >
+              {isDeclining ? "Cancelling..." : "Cancel"}
+            </Button>
+          </>
+        )}
       </div>
     </section>
   );

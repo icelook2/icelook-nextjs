@@ -14,10 +14,9 @@ export {
 } from "./appointment.actions";
 
 export { createBreak, deleteBreak, updateBreak } from "./break.actions";
+export { createQuickBooking } from "./quick-booking.actions";
 export {
   createWorkingDay,
   deleteWorkingDay,
   updateWorkingDay,
 } from "./working-day.actions";
-
-export { createQuickBooking } from "./quick-booking.actions";

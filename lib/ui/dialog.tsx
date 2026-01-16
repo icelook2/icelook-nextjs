@@ -30,6 +30,15 @@ function DialogTrigger({ children, ...props }: DialogTriggerProps) {
 // Dialog Portal with Animations
 // ============================================================================
 
+/**
+ * Dialog Portal with responsive behavior:
+ * - Mobile: iOS-style bottom sheet that slides up from bottom
+ * - Desktop (md+): Centered dialog with scale animation
+ *
+ * Uses portals to render above other content without z-index.
+ * Content scrolls internally when it exceeds viewport height.
+ */
+
 interface DialogPortalProps {
   children: ReactNode;
   open?: boolean;
@@ -38,11 +47,11 @@ interface DialogPortalProps {
 }
 
 const sizeClasses = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
-  full: "max-w-4xl",
+  sm: "md:max-w-sm",
+  md: "md:max-w-md",
+  lg: "md:max-w-lg",
+  xl: "md:max-w-xl",
+  full: "md:max-w-4xl",
 };
 
 function DialogPortal({
@@ -66,25 +75,44 @@ function DialogPortal({
               />
             }
           />
-          <BaseDialog.Popup
-            render={
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 8 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className={cn(
-                  "fixed left-1/2 top-1/2 w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl shadow-xl",
-                  "bg-surface focus:outline-none",
-                  "flex max-h-[90vh] flex-col",
-                  sizeClasses[size],
-                  className,
-                )}
-              />
-            }
+          {/* Viewport wrapper handles positioning via flexbox */}
+          <div
+            className={cn(
+              "fixed inset-0 flex overflow-hidden",
+              // Mobile: align to bottom (sheet style)
+              "items-end justify-center",
+              // Desktop: center the dialog
+              "md:items-center",
+            )}
           >
-            {children}
-          </BaseDialog.Popup>
+            <BaseDialog.Popup
+              render={
+                <motion.div
+                  initial={{ opacity: 0, y: "100%" }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: "100%" }}
+                  transition={{
+                    duration: 0.3,
+                    ease: [0.32, 0.72, 0, 1], // iOS-like spring curve
+                  }}
+                  className={cn(
+                    // Base styles
+                    "w-full shadow-xl",
+                    "bg-surface focus:outline-none",
+                    "flex max-h-[90dvh] flex-col overflow-hidden",
+                    // Mobile: bottom sheet with top rounded corners
+                    "rounded-t-2xl",
+                    // Desktop: centered with all corners rounded
+                    "md:w-[calc(100%-2rem)] md:rounded-2xl",
+                    sizeClasses[size],
+                    className,
+                  )}
+                />
+              }
+            >
+              {children}
+            </BaseDialog.Popup>
+          </div>
         </BaseDialog.Portal>
       )}
     </AnimatePresence>

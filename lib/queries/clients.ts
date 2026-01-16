@@ -341,7 +341,9 @@ export async function getClientDetails(
 
   // For stats, use completed appointments if available, otherwise use defaults
   const hasCompletedAppointments = completedAppointments.length > 0;
-  const latestCompleted = hasCompletedAppointments ? completedAppointments[0] : null;
+  const latestCompleted = hasCompletedAppointments
+    ? completedAppointments[0]
+    : null;
   const oldestCompleted = hasCompletedAppointments
     ? completedAppointments[completedAppointments.length - 1]
     : null;

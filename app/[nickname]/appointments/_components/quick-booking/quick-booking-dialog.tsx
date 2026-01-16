@@ -1,8 +1,8 @@
 "use client";
 
 import { format } from "date-fns";
-import { Loader2, Search, UserPlus } from "lucide-react";
-import { useState, useTransition } from "react";
+import { ChevronRight, Loader2, Search, UserPlus } from "lucide-react";
+import { useDeferredValue, useState, useTransition } from "react";
 import type { BeautyPageClient } from "@/lib/queries/clients";
 import type { ServiceGroupWithServices } from "@/lib/queries/services";
 import { Avatar } from "@/lib/ui/avatar";
@@ -77,8 +77,10 @@ export function QuickBookingDialog({
   const [state, setState] = useState<QuickBookingState>(initialState);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [showClientSearch, setShowClientSearch] = useState(false);
-  const [showServiceSearch, setShowServiceSearch] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [serviceSearch, setServiceSearch] = useState("");
+  const deferredClientSearch = useDeferredValue(clientSearch);
+  const deferredServiceSearch = useDeferredValue(serviceSearch);
 
   // Flatten services for lookup
   const allServices = serviceGroups.flatMap((g) => g.services);
@@ -106,8 +108,8 @@ export function QuickBookingDialog({
     if (!open) {
       setState(initialState);
       setError(null);
-      setShowClientSearch(false);
-      setShowServiceSearch(false);
+      setClientSearch("");
+      setServiceSearch("");
     }
     onOpenChange(open);
   };
@@ -253,28 +255,22 @@ export function QuickBookingDialog({
             state.step === "client" ? (
               <button
                 type="button"
-                onClick={() => setShowClientSearch(!showClientSearch)}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${
-                  showClientSearch
-                    ? "bg-accent/10 text-accent"
-                    : "text-muted hover:bg-surface-hover hover:text-foreground"
-                }`}
-                aria-label="Toggle search"
+                onClick={() => goToStep("services")}
+                disabled={!canProceedFromClient}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-accent transition-colors hover:bg-accent/10 disabled:text-muted disabled:hover:bg-transparent"
+                aria-label="Next"
               >
-                <Search className="h-5 w-5" />
+                <ChevronRight className="h-6 w-6" />
               </button>
             ) : state.step === "services" ? (
               <button
                 type="button"
-                onClick={() => setShowServiceSearch(!showServiceSearch)}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${
-                  showServiceSearch
-                    ? "bg-accent/10 text-accent"
-                    : "text-muted hover:bg-surface-hover hover:text-foreground"
-                }`}
-                aria-label="Toggle search"
+                onClick={() => goToStep("confirm")}
+                disabled={!canProceedFromServices}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-accent transition-colors hover:bg-accent/10 disabled:text-muted disabled:hover:bg-transparent"
+                aria-label="Next"
               >
-                <Search className="h-5 w-5" />
+                <ChevronRight className="h-6 w-6" />
               </button>
             ) : undefined
           }
@@ -290,7 +286,7 @@ export function QuickBookingDialog({
               selectedClient={state.selectedClient}
               onSelectClient={handleSelectClient}
               onGuestMode={handleGuestMode}
-              showSearch={showClientSearch}
+              searchQuery={deferredClientSearch}
             />
           )}
 
@@ -300,7 +296,7 @@ export function QuickBookingDialog({
               selectedServiceIds={state.selectedServiceIds}
               currency={currency}
               onToggleService={handleToggleService}
-              showSearch={showServiceSearch}
+              searchQuery={deferredServiceSearch}
             />
           )}
 
@@ -321,30 +317,72 @@ export function QuickBookingDialog({
           )}
         </Dialog.Body>
 
-        <Dialog.Footer className="justify-end">
+        <Dialog.Footer className="flex-col gap-0 p-0 md:flex-row md:justify-end md:px-6 md:py-4">
           {state.step === "client" && (
-            <Button
-              onClick={() => goToStep("services")}
-              disabled={!canProceedFromClient}
-            >
-              Next
-            </Button>
+            <>
+              {/* Mobile: Search input in footer */}
+              <div className="w-full border-t border-border p-4 md:hidden">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    placeholder="Search clients..."
+                    value={clientSearch}
+                    onChange={(e) => setClientSearch(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-surface py-2.5 pl-10 pr-4 text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+              </div>
+              {/* Desktop: Next button */}
+              <div className="hidden md:block">
+                <Button
+                  onClick={() => goToStep("services")}
+                  disabled={!canProceedFromClient}
+                >
+                  Next
+                </Button>
+              </div>
+            </>
           )}
 
           {state.step === "services" && (
-            <Button
-              onClick={() => goToStep("confirm")}
-              disabled={!canProceedFromServices}
-            >
-              Next
-            </Button>
+            <>
+              {/* Mobile: Search input in footer */}
+              <div className="w-full border-t border-border p-4 md:hidden">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    placeholder="Search services..."
+                    value={serviceSearch}
+                    onChange={(e) => setServiceSearch(e.target.value)}
+                    className="w-full rounded-lg border border-border bg-surface py-2.5 pl-10 pr-4 text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+              </div>
+              {/* Desktop: Next button */}
+              <div className="hidden md:block">
+                <Button
+                  onClick={() => goToStep("confirm")}
+                  disabled={!canProceedFromServices}
+                >
+                  Next
+                </Button>
+              </div>
+            </>
           )}
 
           {state.step === "confirm" && (
-            <Button onClick={handleSubmit} disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Book now
-            </Button>
+            <div className="w-full px-4 py-4 md:w-auto md:p-0">
+              <Button
+                onClick={handleSubmit}
+                disabled={isPending}
+                className="w-full md:w-auto"
+              >
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Book now
+              </Button>
+            </div>
           )}
         </Dialog.Footer>
       </Dialog.Portal>

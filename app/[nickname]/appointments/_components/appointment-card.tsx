@@ -2,12 +2,14 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { ChevronRight } from "lucide-react";
+import { useLocale } from "next-intl";
 import Link from "next/link";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
 import { Paper } from "@/lib/ui/paper";
 import { cn } from "@/lib/utils/cn";
 import type { Appointment } from "../_lib/types";
+import { formatTime } from "./free-slot-variants";
 
 const appointmentCardVariants = cva("transition-colors", {
   variants: {
@@ -59,7 +61,8 @@ export function AppointmentCard({
   isConfirming = false,
   isDeclining = false,
 }: AppointmentCardProps) {
-  const startTime = appointment.start_time.slice(0, 5);
+  const locale = useLocale();
+  const startTime = formatTime(appointment.start_time, locale);
   const detailsHref = `/${nickname}/appointments/${appointment.id}`;
   const isPending = appointment.status === "pending";
   const isLoading = isConfirming || isDeclining;
@@ -75,7 +78,7 @@ export function AppointmentCard({
     >
       <div className="flex items-center gap-3">
         {/* Time */}
-        <span className="w-12 shrink-0 text-lg font-semibold text-foreground">
+        <span className="w-14 shrink-0 text-lg font-semibold text-foreground">
           {startTime}
         </span>
 

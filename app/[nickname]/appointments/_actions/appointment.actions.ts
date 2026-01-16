@@ -248,7 +248,8 @@ export async function startAppointmentEarly(input: {
   // Calculate new times - start now, end based on duration
   const now = new Date();
   const newStartTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-  const newEndMinutes = timeToMinutes(newStartTime) + appointment.service_duration_minutes;
+  const newEndMinutes =
+    timeToMinutes(newStartTime) + appointment.service_duration_minutes;
   const newEndTime = minutesToTime(newEndMinutes);
 
   // Update appointment start/end times
