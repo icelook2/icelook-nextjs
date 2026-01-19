@@ -13,6 +13,8 @@ import { BreakCard } from "./break-card";
 import { AvailableSlot, PastEmptySlot } from "./free-slot-variants";
 import { QuickBookingDialog, type SelectedSlot } from "./quick-booking";
 
+type FilterType = "all" | "confirmed" | "pending";
+
 interface FreeSlotsViewProps {
   selectedDate: Date;
   startTime: string;
@@ -27,12 +29,19 @@ interface FreeSlotsViewProps {
   clients: BeautyPageClient[];
   currency: string;
   hideAvailableSlots?: boolean;
+  /** Filter appointments by status */
+  filter?: FilterType;
 }
 
 type TimelineItem =
   | { type: "appointment"; data: Appointment; startMinutes: number }
   | { type: "break"; data: WorkingDayBreak; startMinutes: number }
-  | { type: "free"; startTime: string; durationMinutes: number; startMinutes: number };
+  | {
+      type: "free";
+      startTime: string;
+      durationMinutes: number;
+      startMinutes: number;
+    };
 
 function timeToMinutes(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
@@ -87,7 +96,11 @@ function buildTimeline(
     })),
   ].sort((a, b) => a.start - b.start);
 
-  for (let minutes = startMinutes; minutes < endMinutes; minutes += intervalMinutes) {
+  for (
+    let minutes = startMinutes;
+    minutes < endMinutes;
+    minutes += intervalMinutes
+  ) {
     const slotStart = minutes;
     const slotEnd = minutes + intervalMinutes;
 
@@ -136,6 +149,7 @@ export function FreeSlotsView({
   clients,
   currency,
   hideAvailableSlots = false,
+  filter = "all",
 }: FreeSlotsViewProps) {
   const t = useTranslations("creator_schedule");
   const [quickBookOpen, setQuickBookOpen] = useState(false);
@@ -181,11 +195,22 @@ export function FreeSlotsView({
     <>
       <div className="space-y-2">
         {timeline.map((item) => {
-          if (hideAvailableSlots && item.type === "free") {
+          // Hide free slots when filtering or when explicitly hidden
+          const isFiltering = filter !== "all";
+          if ((hideAvailableSlots || isFiltering) && item.type === "free") {
             return null;
           }
 
           if (item.type === "appointment") {
+            // Filter appointments based on selected filter
+            const isPending = item.data.status === "pending";
+            if (filter === "confirmed" && isPending) {
+              return null;
+            }
+            if (filter === "pending" && !isPending) {
+              return null;
+            }
+
             return (
               <AppointmentCard
                 key={`apt-${item.data.id}`}
@@ -195,12 +220,10 @@ export function FreeSlotsView({
             );
           }
 
+          // Always show breaks
           if (item.type === "break") {
             return (
-              <BreakCard
-                key={`break-${item.data.id}`}
-                breakItem={item.data}
-              />
+              <BreakCard key={`break-${item.data.id}`} breakItem={item.data} />
             );
           }
 
@@ -218,7 +241,9 @@ export function FreeSlotsView({
               key={`free-${item.startTime}`}
               startTime={item.startTime}
               durationMinutes={item.durationMinutes}
-              onBook={() => handleBookSlot(item.startTime, item.durationMinutes)}
+              onBook={() =>
+                handleBookSlot(item.startTime, item.durationMinutes)
+              }
             />
           );
         })}

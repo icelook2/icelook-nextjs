@@ -68,7 +68,7 @@ export default async function SpecialOffersSettingsPage({
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
+      <div className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
         <SpecialOffersList
           beautyPageId={beautyPage.id}
           nickname={nickname}
@@ -88,7 +88,7 @@ export default async function SpecialOffersSettingsPage({
             discountLabel: t("discount_label"),
           }}
         />
-      </main>
+      </div>
     </>
   );
 }

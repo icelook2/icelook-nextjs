@@ -23,9 +23,9 @@ export default async function AppointmentsPage() {
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <AppointmentsList upcoming={upcoming} past={past} />
-      </main>
+      </div>
     </>
   );
 }

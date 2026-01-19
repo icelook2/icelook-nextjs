@@ -1950,6 +1950,55 @@
       "fr": "Fr",
       "sa": "Sa",
       "su": "Su"
+    },
+    "week_selector": {
+      "label": "Select week {number}",
+      "short": "W{number}"
+    },
+    "menu": {
+      "label": "Schedule options",
+      "edit_hours": "Change working hours",
+      "mark_day_off": "Make it a day off",
+      "configure_day": "Set as working day",
+      "configure_schedule": "Configure working days"
+    },
+    "edit_hours": {
+      "title_edit": "Edit working hours",
+      "title_configure": "Configure working day",
+      "start_time": "Start time",
+      "end_time": "End time",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "configure_schedule_dialog": {
+      "title": "Configure Working Days",
+      "step_indicator": "Step {current} of {total}",
+      "step_select": {
+        "subtitle": "Select days to add as working days"
+      },
+      "step_hours": {
+        "subtitle": "Set working hours for each day",
+        "description": "Configure working hours for each day type. Hours will apply to all selected days of that type."
+      },
+      "step_breaks": {
+        "subtitle": "Add breaks (optional)",
+        "description": "Configure break times during your working hours. This step is optional.",
+        "add_break": "Add Break",
+        "no_breaks": "No breaks configured"
+      },
+      "step_confirm": {
+        "subtitle": "Review and confirm",
+        "description": "Review your schedule before creating the working days."
+      },
+      "continue": "Continue",
+      "cancel": "Cancel",
+      "create": "Create {count, plural, one {# Working Day} other {# Working Days}}",
+      "creating": "Creating...",
+      "error_invalid_hours": "End time must be after start time",
+      "week": "Week {number}",
+      "weekdays_label": "Weekdays",
+      "saturday_label": "Saturday",
+      "sunday_label": "Sunday"
     }
   }
 }

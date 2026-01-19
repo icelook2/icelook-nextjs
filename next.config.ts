@@ -5,8 +5,8 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
-  /* config options here */
   reactCompiler: true,
+  devIndicators: false,
 };
 
 export default withSentryConfig(withNextIntl(nextConfig), {

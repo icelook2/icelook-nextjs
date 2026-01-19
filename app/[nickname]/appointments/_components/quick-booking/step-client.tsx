@@ -21,7 +21,6 @@ export function StepClient({
   onGuestMode,
   searchQuery,
 }: StepClientProps) {
-
   // Filter clients based on search
   const filteredClients = clients.filter((client) => {
     if (!searchQuery) {

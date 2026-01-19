@@ -80,9 +80,9 @@ export default async function AnalyticsPage({
         <PeriodSelect />
       </PageHeader>
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <AnalyticsDashboard />
-      </main>
+      </div>
     </AnalyticsProvider>
   );
 }

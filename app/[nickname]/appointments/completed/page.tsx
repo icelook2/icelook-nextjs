@@ -51,9 +51,9 @@ export default async function CompletedPage({ params }: CompletedPageProps) {
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <CompletedView appointments={appointments} />
-      </main>
+      </div>
     </>
   );
 }

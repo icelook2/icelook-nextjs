@@ -66,7 +66,7 @@ export default async function ClientDetailPage({
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <div className="space-y-6">
           {/* Client Profile - Avatar + Name */}
           <ClientProfile client={details.client} />
@@ -100,7 +100,7 @@ export default async function ClientDetailPage({
           {/* Stats Grid - at the end for quick reference */}
           <ClientStats details={details} />
         </div>
-      </main>
+      </div>
     </>
   );
 }

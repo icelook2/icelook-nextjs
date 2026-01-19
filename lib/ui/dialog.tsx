@@ -2,7 +2,6 @@
 
 import { Dialog as BaseDialog } from "@base-ui/react/dialog";
 import { ArrowLeft, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
@@ -27,13 +26,13 @@ function DialogTrigger({ children, ...props }: DialogTriggerProps) {
 }
 
 // ============================================================================
-// Dialog Portal with Animations
+// Dialog Portal
 // ============================================================================
 
 /**
  * Dialog Portal with responsive behavior:
- * - Mobile: iOS-style bottom sheet that slides up from bottom
- * - Desktop (md+): Centered dialog with scale animation
+ * - Mobile: Bottom sheet style
+ * - Desktop (md+): Centered dialog
  *
  * Uses portals to render above other content without z-index.
  * Content scrolls internally when it exceeds viewport height.
@@ -60,62 +59,41 @@ function DialogPortal({
   className,
   size = "md",
 }: DialogPortalProps) {
+  if (!open) {
+    return null;
+  }
+
   return (
-    <AnimatePresence>
-      {open && (
-        <BaseDialog.Portal keepMounted>
-          <BaseDialog.Backdrop
-            render={
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                className="fixed inset-0 bg-black/70 backdrop-blur-[2px]"
-              />
-            }
-          />
-          {/* Viewport wrapper handles positioning via flexbox */}
-          <div
-            className={cn(
-              "fixed inset-0 flex overflow-hidden",
-              // Mobile: align to bottom (sheet style)
-              "items-end justify-center",
-              // Desktop: center the dialog
-              "md:items-center",
-            )}
-          >
-            <BaseDialog.Popup
-              render={
-                <motion.div
-                  initial={{ opacity: 0, y: "100%" }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: "100%" }}
-                  transition={{
-                    duration: 0.3,
-                    ease: [0.32, 0.72, 0, 1], // iOS-like spring curve
-                  }}
-                  className={cn(
-                    // Base styles
-                    "w-full shadow-xl",
-                    "bg-surface focus:outline-none",
-                    "flex max-h-[90dvh] flex-col overflow-hidden",
-                    // Mobile: bottom sheet with top rounded corners
-                    "rounded-t-2xl",
-                    // Desktop: centered with all corners rounded
-                    "md:w-[calc(100%-2rem)] md:rounded-2xl",
-                    sizeClasses[size],
-                    className,
-                  )}
-                />
-              }
-            >
-              {children}
-            </BaseDialog.Popup>
-          </div>
-        </BaseDialog.Portal>
-      )}
-    </AnimatePresence>
+    <BaseDialog.Portal keepMounted>
+      <BaseDialog.Backdrop className="fixed inset-0 bg-black/70 backdrop-blur-[2px]" />
+      {/* Viewport wrapper handles positioning via flexbox */}
+      <div
+        className={cn(
+          "fixed inset-0 flex overflow-hidden",
+          // Mobile: align to bottom (sheet style)
+          "items-end justify-center",
+          // Desktop: center the dialog
+          "md:items-center",
+        )}
+      >
+        <BaseDialog.Popup
+          className={cn(
+            // Base styles
+            "w-full shadow-xl",
+            "bg-surface focus:outline-none",
+            "flex max-h-[90dvh] flex-col overflow-hidden",
+            // Mobile: bottom sheet with top rounded corners
+            "rounded-t-2xl",
+            // Desktop: centered with all corners rounded
+            "md:w-[calc(100%-2rem)] md:rounded-2xl",
+            sizeClasses[size],
+            className,
+          )}
+        >
+          {children}
+        </BaseDialog.Popup>
+      </div>
+    </BaseDialog.Portal>
   );
 }
 

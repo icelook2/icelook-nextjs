@@ -13,7 +13,7 @@ export default async function SearchPage() {
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <div className="mx-auto max-w-2xl px-4">
+      <div className="mx-auto max-w-2xl px-4 pt-1">
         <SearchContainer />
       </div>
     </>

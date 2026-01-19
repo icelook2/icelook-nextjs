@@ -1,6 +1,8 @@
-import { Star } from "lucide-react";
+import { Settings, Star } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import type { BeautyPageInfo } from "@/lib/queries/beauty-page-profile";
+import { CircleButton } from "@/lib/ui/circle-button";
 import { VerifiedBadge } from "./verified-badge";
 import { WorkingHoursBadge } from "./working-hours-badge";
 
@@ -18,6 +20,8 @@ interface HeroSectionProps {
   info: BeautyPageInfo;
   ratingStats?: RatingStats;
   workingStatus?: WorkingStatus;
+  /** Whether current user is the owner of this beauty page */
+  isOwner?: boolean;
   translations: {
     verified: {
       title: string;
@@ -41,6 +45,7 @@ export function HeroSection({
   info,
   ratingStats,
   workingStatus,
+  isOwner,
   translations,
   onReviewsClick,
 }: HeroSectionProps) {
@@ -74,14 +79,26 @@ export function HeroSection({
 
         {/* Name, nickname, type + rating */}
         <div className="min-w-0 flex-1 space-y-1">
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h2 className="text-lg font-semibold">{info.name}</h2>
-              {info.is_verified && (
-                <VerifiedBadge translations={translations.verified} />
-              )}
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <h2 className="text-lg font-semibold">{info.name}</h2>
+                {info.is_verified && (
+                  <VerifiedBadge translations={translations.verified} />
+                )}
+              </div>
+              <p className="text-sm text-muted">@{info.slug}</p>
             </div>
-            <p className="text-sm text-muted">@{info.slug}</p>
+
+            {/* Settings gear for owner */}
+            {isOwner && (
+              <CircleButton
+                render={<Link href={`/${info.slug}/settings`} />}
+                aria-label="Settings"
+              >
+                <Settings className="h-5 w-5" />
+              </CircleButton>
+            )}
           </div>
 
           {/* Type • Rating (reviews) */}

@@ -96,7 +96,7 @@ export default async function AppointmentDetailPage({
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <AppointmentDetailsView
           appointment={appointment}
           clientHistory={clientHistory}
@@ -106,7 +106,7 @@ export default async function AppointmentDetailPage({
           creatorNotes={creatorNotes}
           serviceGroups={serviceGroups}
         />
-      </main>
+      </div>
     </>
   );
 }

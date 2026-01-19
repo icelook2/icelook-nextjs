@@ -64,13 +64,13 @@ export default async function CancellationPolicySettingsPage({
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
+      <div className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
         <CancellationPolicyForm
           beautyPageId={beautyPage.id}
           nickname={nickname}
           initialValues={initialValues}
         />
-      </main>
+      </div>
     </>
   );
 }

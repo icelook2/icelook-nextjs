@@ -43,7 +43,7 @@ export default async function ContactSettingsPage({
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
+      <div className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
         <AddressForm
           beautyPageId={beautyPage.id}
           nickname={nickname}
@@ -61,7 +61,7 @@ export default async function ContactSettingsPage({
             instagram_url: beautyPage.instagram_url,
           }}
         />
-      </main>
+      </div>
     </>
   );
 }

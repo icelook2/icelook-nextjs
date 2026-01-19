@@ -51,9 +51,9 @@ export default async function SchedulePage({ params }: SchedulePageProps) {
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <YearCalendar workingDates={workingDatesSet} />
-      </main>
+      </div>
     </>
   );
 }

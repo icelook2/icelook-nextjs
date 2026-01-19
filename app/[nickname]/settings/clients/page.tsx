@@ -46,7 +46,7 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <ClientsList
           initialClients={clients}
           initialTotal={total}
@@ -54,7 +54,7 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
           pageSize={pageSize}
           nickname={nickname}
         />
-      </main>
+      </div>
     </>
   );
 }

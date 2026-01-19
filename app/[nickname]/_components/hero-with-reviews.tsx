@@ -17,6 +17,8 @@ interface HeroWithReviewsProps {
   info: BeautyPageInfo;
   ratingStats: BeautyPageRatingStats;
   workingStatus?: WorkingStatus;
+  /** Whether current user is the owner of this beauty page */
+  isOwner?: boolean;
   translations: {
     verified: {
       title: string;
@@ -36,6 +38,7 @@ export function HeroWithReviews({
   info,
   ratingStats,
   workingStatus,
+  isOwner,
   translations,
 }: HeroWithReviewsProps) {
   const [isReviewsOpen, setIsReviewsOpen] = useState(false);
@@ -46,6 +49,7 @@ export function HeroWithReviews({
         info={info}
         ratingStats={ratingStats}
         workingStatus={workingStatus}
+        isOwner={isOwner}
         translations={{
           verified: translations.verified,
           reviews: translations.reviews,

@@ -10,11 +10,7 @@ import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageByNickname, getBeautyPageClients } from "@/lib/queries";
 import { getServiceGroupsWithServices } from "@/lib/queries/services";
 import { createClient } from "@/lib/supabase/server";
-import {
-  FreeSlotsView,
-  ScheduleFilterChips,
-  SchedulePageHeader,
-} from "./_components";
+import { FreeSlotsView, ScheduleHeader } from "./_components";
 import { toDateString } from "./_lib/date-utils";
 import { getScheduleData } from "./_lib/queries";
 import { getAppointmentsForDate } from "./_lib/workday-utils";
@@ -40,7 +36,7 @@ async function fetchWorkingDatesForCalendar(
 }
 
 /**
- * Fetch dates with appointments for calendar display
+ * Fetch dates with confirmed appointments for calendar display
  */
 async function fetchAppointmentDatesForCalendar(
   beautyPageId: string,
@@ -55,16 +51,15 @@ async function fetchAppointmentDatesForCalendar(
     .eq("beauty_page_id", beautyPageId)
     .gte("date", startDate)
     .lte("date", endDate)
-    .not("status", "in", '("cancelled","no_show")');
+    .not("status", "in", '("cancelled","no_show","pending")');
 
-  // Use Set to deduplicate dates
   return new Set(data?.map((apt: { date: string }) => apt.date) ?? []);
 }
 
 /**
- * Fetch dates with pending appointments requiring confirmation
+ * Fetch dates with pending appointments for calendar display
  */
-async function fetchPendingAppointmentDatesForCalendar(
+async function fetchPendingDatesForCalendar(
   beautyPageId: string,
   startDate: string,
   endDate: string,
@@ -79,13 +74,14 @@ async function fetchPendingAppointmentDatesForCalendar(
     .gte("date", startDate)
     .lte("date", endDate);
 
-  // Use Set to deduplicate dates
   return new Set(data?.map((apt: { date: string }) => apt.date) ?? []);
 }
 
+type FilterType = "all" | "confirmed" | "pending";
+
 interface AppointmentsPageProps {
   params: Promise<{ nickname: string }>;
-  searchParams: Promise<{ date?: string; filter?: "confirmed" | "pending" }>;
+  searchParams: Promise<{ date?: string; filter?: FilterType }>;
 }
 
 export default async function AppointmentsPage({
@@ -93,7 +89,11 @@ export default async function AppointmentsPage({
   searchParams,
 }: AppointmentsPageProps) {
   const { nickname } = await params;
-  const { date: dateParam, filter } = await searchParams;
+  const { date: dateParam, filter: filterParam } = await searchParams;
+  const filter: FilterType =
+    filterParam === "confirmed" || filterParam === "pending"
+      ? filterParam
+      : "all";
 
   // Default to today
   let selectedDate = new Date();
@@ -126,28 +126,24 @@ export default async function AppointmentsPage({
   // Fetch real schedule data
   const dateStr = toDateString(selectedDate);
 
-  // Fetch working days for calendar (3 months before and after)
+  // Calendar date range (expanded to 12 months ahead for future working days visibility)
   const calendarStart = toDateString(subMonths(startOfMonth(selectedDate), 1));
-  const calendarEnd = toDateString(addMonths(startOfMonth(selectedDate), 2));
+  const calendarEnd = toDateString(addMonths(startOfMonth(selectedDate), 12));
 
   const [
     scheduleData,
     serviceGroups,
     clientsResult,
-    workingDaysForCalendar,
+    workingDatesForCalendar,
     appointmentDatesForCalendar,
-    pendingAppointmentDatesForCalendar,
+    pendingDatesForCalendar,
   ] = await Promise.all([
     getScheduleData(beautyPage.id, dateStr, dateStr),
     getServiceGroupsWithServices(beautyPage.id),
     getBeautyPageClients(beautyPage.id, { limit: 50 }),
     fetchWorkingDatesForCalendar(beautyPage.id, calendarStart, calendarEnd),
     fetchAppointmentDatesForCalendar(beautyPage.id, calendarStart, calendarEnd),
-    fetchPendingAppointmentDatesForCalendar(
-      beautyPage.id,
-      calendarStart,
-      calendarEnd,
-    ),
+    fetchPendingDatesForCalendar(beautyPage.id, calendarStart, calendarEnd),
   ]);
 
   const { appointments, workingDays } = scheduleData;
@@ -163,7 +159,7 @@ export default async function AppointmentsPage({
   const endTime = workingDay?.end_time ?? "21:00";
   const breaks = workingDay?.breaks ?? [];
 
-  // Calculate data for calendar header visual summary
+  // Calculate appointment counts for header
   const activeAppointments = dayAppointments.filter(
     (apt) => apt.status !== "cancelled" && apt.status !== "no_show",
   );
@@ -172,54 +168,50 @@ export default async function AppointmentsPage({
     (apt) => apt.status === "pending",
   ).length;
 
-  // Filter appointments based on filter param
-  const filteredAppointments = filter
-    ? dayAppointments.filter((apt) => {
-        if (filter === "pending") {
-          return apt.status === "pending";
-        }
-        if (filter === "confirmed") {
-          return apt.status !== "pending" && apt.status !== "cancelled" && apt.status !== "no_show";
-        }
-        return true;
-      })
-    : dayAppointments;
-
   // Format working hours for display
   const workingHours = workingDay
     ? `${startTime.slice(0, 5)} – ${endTime.slice(0, 5)}`
     : null;
 
+  // Format working day info for ScheduleHeader menu
+  const workingDayInfo = workingDay
+    ? {
+        id: workingDay.id,
+        startTime: workingDay.start_time.slice(0, 5),
+        endTime: workingDay.end_time.slice(0, 5),
+      }
+    : null;
+
   return (
-    <>
-      <SchedulePageHeader
+    <div className="mx-auto max-w-2xl space-y-4 px-4 pb-8">
+      <ScheduleHeader
         selectedDate={selectedDate}
-        workingDates={workingDaysForCalendar}
+        appointmentCount={appointmentCount}
+        pendingCount={pendingCount}
         workingHours={workingHours}
+        workingDay={workingDayInfo}
+        beautyPageId={beautyPage.id}
+        nickname={nickname}
+        workingDates={workingDatesForCalendar}
+        appointmentDates={appointmentDatesForCalendar}
+        pendingDates={pendingDatesForCalendar}
+        filter={filter}
       />
 
-      <main className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
-        <ScheduleFilterChips
-          appointmentCount={appointmentCount}
-          pendingCount={pendingCount}
-          isWorkingDay={workingDay !== null}
-        />
-
-        <FreeSlotsView
-          selectedDate={selectedDate}
-          startTime={startTime}
-          endTime={endTime}
-          breaks={breaks}
-          appointments={filteredAppointments}
-          nickname={nickname}
-          isConfigured={workingDay !== null}
-          beautyPageId={beautyPage.id}
-          serviceGroups={serviceGroups}
-          clients={clientsResult.clients}
-          hideAvailableSlots={filter !== undefined}
-          currency="UAH"
-        />
-      </main>
-    </>
+      <FreeSlotsView
+        selectedDate={selectedDate}
+        startTime={startTime}
+        endTime={endTime}
+        breaks={breaks}
+        appointments={dayAppointments}
+        nickname={nickname}
+        isConfigured={workingDay !== null}
+        beautyPageId={beautyPage.id}
+        serviceGroups={serviceGroups}
+        clients={clientsResult.clients}
+        currency="UAH"
+        filter={filter}
+      />
+    </div>
   );
 }

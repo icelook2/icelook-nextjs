@@ -145,7 +145,7 @@ export default async function BeautyPageSettings({
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <div className="space-y-6">
           {/* Services */}
           <SettingsGroup title={t("groups.services")}>
@@ -198,7 +198,7 @@ export default async function BeautyPageSettings({
             ))}
           </SettingsGroup>
         </div>
-      </main>
+      </div>
     </>
   );
 }

@@ -19,7 +19,6 @@ export function StepServices({
   onToggleService,
   searchQuery,
 }: StepServicesProps) {
-
   // Filter services based on search
   const filteredServiceGroups = serviceGroups
     .map((group) => ({

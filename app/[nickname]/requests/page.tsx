@@ -58,13 +58,13 @@ export default async function RequestsPage({ params }: RequestsPageProps) {
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <RequestsView
           beautyPageId={beautyPage.id}
           nickname={nickname}
           appointments={pendingAppointments}
         />
-      </main>
+      </div>
     </>
   );
 }

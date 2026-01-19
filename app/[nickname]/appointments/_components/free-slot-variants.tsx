@@ -22,7 +22,11 @@ export function formatTime(time: string, locale: string): string {
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 }
 
-export function FreeSlotMutedPaper({ startTime, durationMinutes, onBook }: FreeSlotProps) {
+export function FreeSlotMutedPaper({
+  startTime,
+  durationMinutes,
+  onBook,
+}: FreeSlotProps) {
   const t = useTranslations("creator_schedule");
   const locale = useLocale();
   const time = formatTime(startTime, locale);
@@ -44,9 +48,7 @@ export function FreeSlotMutedPaper({ startTime, durationMinutes, onBook }: FreeS
       <Paper className="bg-surface/60 p-4 transition-colors hover:bg-surface dark:bg-surface/60 dark:hover:bg-surface">
         <div className="flex items-center gap-3">
           {/* Time on left */}
-          <span className="w-14 shrink-0 text-lg text-muted">
-            {time}
-          </span>
+          <span className="w-14 shrink-0 text-lg text-muted">{time}</span>
 
           {/* Plus icon */}
           <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-emerald-500 dark:border-emerald-400">
@@ -54,17 +56,25 @@ export function FreeSlotMutedPaper({ startTime, durationMinutes, onBook }: FreeS
           </div>
 
           {/* Content */}
-          <span className="min-w-0 flex-1 text-muted">{t("available_slot")}</span>
+          <span className="min-w-0 flex-1 text-muted">
+            {t("available_slot")}
+          </span>
 
           {/* Duration on right */}
-          <span className="shrink-0 text-sm text-muted/60">{formatDuration()}</span>
+          <span className="shrink-0 text-sm text-muted/60">
+            {formatDuration()}
+          </span>
         </div>
       </Paper>
     </button>
   );
 }
 
-export function AvailableSlot({ startTime, durationMinutes, onBook }: FreeSlotProps) {
+export function AvailableSlot({
+  startTime,
+  durationMinutes,
+  onBook,
+}: FreeSlotProps) {
   const t = useTranslations("creator_schedule");
   const locale = useLocale();
   const time = formatTime(startTime, locale);
@@ -86,9 +96,7 @@ export function AvailableSlot({ startTime, durationMinutes, onBook }: FreeSlotPr
       <Paper className="bg-surface/60 p-4 transition-colors hover:bg-surface dark:bg-surface/60 dark:hover:bg-surface">
         <div className="flex items-center gap-3">
           {/* Time on left */}
-          <span className="w-14 shrink-0 text-lg text-muted">
-            {time}
-          </span>
+          <span className="w-14 shrink-0 text-lg text-muted">{time}</span>
 
           {/* Plus icon */}
           <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-dashed border-emerald-500 dark:border-emerald-400">
@@ -96,10 +104,14 @@ export function AvailableSlot({ startTime, durationMinutes, onBook }: FreeSlotPr
           </div>
 
           {/* Content */}
-          <span className="min-w-0 flex-1 text-muted">{t("available_slot")}</span>
+          <span className="min-w-0 flex-1 text-muted">
+            {t("available_slot")}
+          </span>
 
           {/* Duration on right */}
-          <span className="shrink-0 text-sm text-muted/60">{formatDuration()}</span>
+          <span className="shrink-0 text-sm text-muted/60">
+            {formatDuration()}
+          </span>
         </div>
       </Paper>
     </button>
@@ -118,7 +130,9 @@ export function PastEmptySlot({ startTime }: PastEmptySlotProps) {
   return (
     <Paper className="p-4 opacity-50">
       <div className="flex items-center gap-3">
-        <span className="w-16 text-lg font-semibold text-foreground">{time}</span>
+        <span className="w-16 text-lg font-semibold text-foreground">
+          {time}
+        </span>
         <p className="text-muted">{t("no_appointment")}</p>
       </div>
     </Paper>

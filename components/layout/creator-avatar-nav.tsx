@@ -27,12 +27,16 @@ export function CreatorAvatarNav({ compact = false }: CreatorAvatarNavProps) {
     <Link
       href={`/${activeBeautyPage.slug}`}
       title={displayName}
-      className="group flex h-14 w-14 items-center justify-center rounded-2xl transition-all hover:bg-surface"
+      className={
+        compact
+          ? "flex items-center justify-center px-3 py-2"
+          : "group flex h-14 w-14 items-center justify-center rounded-2xl transition-all hover:bg-surface"
+      }
     >
       <Avatar
         url={activeBeautyPage.avatar_url}
         name={displayName}
-        size={compact ? "sm" : "md"}
+        size="sm"
         shape="rounded"
       />
     </Link>

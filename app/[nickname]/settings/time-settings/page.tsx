@@ -43,13 +43,13 @@ export default async function TimeSettingsPage({
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
+      <div className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
         <TimezoneForm
           beautyPageId={beautyPage.id}
           nickname={nickname}
           currentTimezone={beautyPage.timezone}
         />
-      </main>
+      </div>
     </>
   );
 }

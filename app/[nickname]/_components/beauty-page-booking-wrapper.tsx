@@ -6,7 +6,7 @@
  * Client component that wraps the beauty page content and provides
  * the booking flow functionality:
  * - Service selection context
- * - Floating booking bar
+ * - Booking bar (sticky on mobile, fixed drawer on desktop)
  * - Booking dialog
  */
 
@@ -146,9 +146,7 @@ function BookingFlowManager({
 
   return (
     <>
-      {children}
-
-      {/* Floating booking bar */}
+      {/* Sticky booking bar (rendered first for sticky positioning on mobile) */}
       <BookingBar
         currency={currency}
         locale={locale}
@@ -156,6 +154,8 @@ function BookingFlowManager({
         translations={translations.bookingBar}
         onBookClick={handleBookClick}
       />
+
+      {children}
 
       {/* Booking dialog */}
       {selectedServices.length > 0 && (

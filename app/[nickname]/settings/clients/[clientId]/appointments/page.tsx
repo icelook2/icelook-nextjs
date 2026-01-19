@@ -81,7 +81,7 @@ export default async function AppointmentsPage({
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <div className="space-y-6">
           {/* Appointments Table */}
           <AppointmentsTable
@@ -99,7 +99,7 @@ export default async function AppointmentsPage({
             />
           )}
         </div>
-      </main>
+      </div>
     </>
   );
 }

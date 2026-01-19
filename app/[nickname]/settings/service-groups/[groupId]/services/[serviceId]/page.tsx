@@ -52,13 +52,13 @@ export default async function ServiceDetailsPage({
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <ServiceDetails
           service={service}
           serviceGroup={serviceGroup}
           nickname={nickname}
         />
-      </main>
+      </div>
     </>
   );
 }

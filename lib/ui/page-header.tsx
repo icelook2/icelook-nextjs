@@ -78,8 +78,8 @@ export function PageHeader({
   const handleBack = useSmartBack(backHref || "/");
 
   return (
-    <header className={cn("bg-background pb-6", className)}>
-      <div className={cn("px-4 pt-4", containerClassName)}>
+    <header className={cn("bg-background", className)}>
+      <div className={cn("px-4", containerClassName)}>
         <div className="flex items-center gap-3">
           {backHref !== undefined && (
             <button

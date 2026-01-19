@@ -11,7 +11,7 @@ export function SearchResultCard({ result }: SearchResultCardProps) {
   return (
     <Link
       href={`/${result.slug}`}
-      className="group flex items-center gap-4 rounded-xl border border-border bg-surface p-4 transition-colors hover:border-accent/50 hover:bg-accent-soft/30"
+      className="flex items-center gap-4 rounded-xl border border-border bg-surface p-4"
     >
       {/* Avatar */}
       <Avatar

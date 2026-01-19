@@ -396,6 +396,51 @@ export type Database = {
           },
         ];
       };
+      client_notes: {
+        Row: {
+          beauty_page_id: string;
+          client_id: string | null;
+          client_phone: string | null;
+          created_at: string;
+          id: string;
+          notes: string;
+          updated_at: string;
+        };
+        Insert: {
+          beauty_page_id: string;
+          client_id?: string | null;
+          client_phone?: string | null;
+          created_at?: string;
+          id?: string;
+          notes?: string;
+          updated_at?: string;
+        };
+        Update: {
+          beauty_page_id?: string;
+          client_id?: string | null;
+          client_phone?: string | null;
+          created_at?: string;
+          id?: string;
+          notes?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_notes_beauty_page_id_fkey";
+            columns: ["beauty_page_id"];
+            isOneToOne: false;
+            referencedRelation: "beauty_pages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_notes_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;

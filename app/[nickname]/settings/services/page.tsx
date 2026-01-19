@@ -40,13 +40,13 @@ export default async function ServicesPage({ params }: ServicesPageProps) {
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <main className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl px-4 pb-8">
         <ServicesManager
           serviceGroups={serviceGroups}
           beautyPageId={beautyPage.id}
           nickname={nickname}
         />
-      </main>
+      </div>
     </>
   );
 }

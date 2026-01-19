@@ -275,12 +275,18 @@ export async function deleteWorkingDay(input: {
 // Bulk Operations
 // ============================================================================
 
+const breakSchema = z.object({
+  startTime: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format"),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format"),
+});
+
 const bulkScheduleSchema = z.object({
   toCreate: z.array(
     z.object({
       date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format"),
       startTime: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format"),
       endTime: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format"),
+      breaks: z.array(breakSchema).optional(),
     }),
   ),
   toUpdate: z.array(
@@ -308,7 +314,12 @@ export interface BulkScheduleResult {
 export async function bulkUpdateSchedule(input: {
   beautyPageId: string;
   nickname: string;
-  toCreate: Array<{ date: string; startTime: string; endTime: string }>;
+  toCreate: Array<{
+    date: string;
+    startTime: string;
+    endTime: string;
+    breaks?: Array<{ startTime: string; endTime: string }>;
+  }>;
   toUpdate: Array<{
     id: string;
     date: string;
@@ -444,7 +455,37 @@ export async function bulkUpdateSchedule(input: {
   // ============================================================================
 
   if (validation.data.toCreate.length > 0) {
-    const insertData = validation.data.toCreate.map((item) => ({
+    // Pre-check: Filter out dates that already have working days
+    // This handles race conditions where working days were created after dialog opened
+    const datesToCreate = validation.data.toCreate.map((item) => item.date);
+    const { data: existingDays } = await supabase
+      .from("working_days")
+      .select("date")
+      .eq("beauty_page_id", input.beautyPageId)
+      .in("date", datesToCreate);
+
+    const existingDatesSet = new Set(existingDays?.map((d) => d.date) ?? []);
+
+    // Filter out already existing dates and track them as skipped
+    const itemsToInsert = validation.data.toCreate.filter((item) => {
+      if (existingDatesSet.has(item.date)) {
+        result.errors.push({
+          date: item.date,
+          error: t("errors.working_day_exists"),
+        });
+        return false;
+      }
+      return true;
+    });
+
+    if (itemsToInsert.length === 0) {
+      // All dates already exist, nothing to create
+      revalidatePath(`/${input.nickname}/schedule`);
+      revalidatePath(`/${input.nickname}/appointments`);
+      return { success: true, data: result };
+    }
+
+    const insertData = itemsToInsert.map((item) => ({
       beauty_page_id: input.beautyPageId,
       date: item.date,
       start_time: `${item.startTime}:00`,
@@ -454,20 +495,22 @@ export async function bulkUpdateSchedule(input: {
     const { error: insertError, data: insertedData } = await supabase
       .from("working_days")
       .insert(insertData)
-      .select("id");
+      .select("id, date");
 
     if (insertError) {
       console.error("Error creating working days:", insertError);
       // If bulk insert fails, try individual inserts to identify specific failures
-      for (const item of validation.data.toCreate) {
-        const { error: singleError } = await supabase
+      for (const item of itemsToInsert) {
+        const { error: singleError, data: singleData } = await supabase
           .from("working_days")
           .insert({
             beauty_page_id: input.beautyPageId,
             date: item.date,
             start_time: `${item.startTime}:00`,
             end_time: `${item.endTime}:00`,
-          });
+          })
+          .select("id")
+          .single();
 
         if (singleError) {
           result.errors.push({
@@ -476,10 +519,67 @@ export async function bulkUpdateSchedule(input: {
           });
         } else {
           result.created++;
+          // Insert breaks for this working day
+          if (item.breaks && item.breaks.length > 0 && singleData) {
+            const breaksToInsert = item.breaks.map((brk) => ({
+              working_day_id: singleData.id,
+              start_time: `${brk.startTime}:00`,
+              end_time: `${brk.endTime}:00`,
+            }));
+
+            const { error: breakError } = await supabase
+              .from("working_day_breaks")
+              .insert(breaksToInsert);
+
+            if (breakError) {
+              console.error("Error inserting breaks:", breakError);
+            }
+          }
         }
       }
     } else {
-      result.created = insertedData?.length ?? validation.data.toCreate.length;
+      result.created = insertedData?.length ?? itemsToInsert.length;
+
+      // Insert breaks for all created working days
+      if (insertedData) {
+        // Create a map of date -> working_day_id
+        const dateToIdMap = new Map<string, string>();
+        for (const wd of insertedData) {
+          dateToIdMap.set(wd.date, wd.id);
+        }
+
+        // Collect all breaks to insert
+        const allBreaksToInsert: Array<{
+          working_day_id: string;
+          start_time: string;
+          end_time: string;
+        }> = [];
+
+        for (const item of itemsToInsert) {
+          const workingDayId = dateToIdMap.get(item.date);
+          if (workingDayId && item.breaks && item.breaks.length > 0) {
+            for (const brk of item.breaks) {
+              allBreaksToInsert.push({
+                working_day_id: workingDayId,
+                start_time: `${brk.startTime}:00`,
+                end_time: `${brk.endTime}:00`,
+              });
+            }
+          }
+        }
+
+        // Bulk insert all breaks
+        if (allBreaksToInsert.length > 0) {
+          const { error: breaksError } = await supabase
+            .from("working_day_breaks")
+            .insert(allBreaksToInsert);
+
+          if (breaksError) {
+            console.error("Error inserting breaks:", breaksError);
+            // Note: working days are already created, we just failed on breaks
+          }
+        }
+      }
     }
   }
 

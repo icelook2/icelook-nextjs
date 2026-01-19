@@ -7,16 +7,11 @@ export {
   PastEmptySlot,
 } from "./free-slot-variants";
 export { FreeSlotsView } from "./free-slots-view";
+export { ScheduleHeader } from "./schedule-header";
 export {
   QuickBookingDialog,
   type QuickBookingStep,
   type SelectedSlot,
 } from "./quick-booking";
-export { ScheduleFilterChips } from "./schedule-filter-chips";
-export { SchedulePageHeader } from "./schedule-page-header";
 export { SimpleDatePicker } from "./simple-date-picker";
-export {
-  WeekCalendarNav,
-  WeekCalendarDateButton,
-  WeekCalendarExpanded,
-} from "./week-calendar";
+export { TimePicker } from "./time-picker";

@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Popover } from "@/lib/ui/popover";
 
 interface VerifiedBadgeProps {
@@ -16,8 +17,25 @@ interface VerifiedBadgeProps {
  * Displayed next to beauty page names that have been officially
  * verified by Icelook. Shows a checkmark badge that reveals
  * verification details on click/hover.
+ *
+ * Uses client-only rendering to avoid Base UI hydration mismatches on Safari.
  */
 export function VerifiedBadge({ translations }: VerifiedBadgeProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Render static badge on server, interactive popover after hydration
+  if (!mounted) {
+    return (
+      <span className="inline-flex items-center text-accent">
+        <BadgeCheck className="h-5 w-5" aria-label="Verified" />
+      </span>
+    );
+  }
+
   return (
     <Popover.Root>
       <Popover.Trigger className="inline-flex cursor-pointer items-center text-accent transition-colors hover:text-accent/80">

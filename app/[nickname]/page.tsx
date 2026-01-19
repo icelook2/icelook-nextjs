@@ -1,16 +1,13 @@
-import { Settings } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageProfile } from "@/lib/queries/beauty-page-profile";
 import { getActiveSpecialOffers } from "@/lib/queries/special-offers";
-import { PageHeader } from "@/lib/ui/page-header";
 import {
   calculateOpenStatusFromWorkingDays,
   formatWorkingStatusMessage,
 } from "@/lib/utils/open-status";
-import { BeautyPageBookingWrapper } from "./_components/beauty-page-booking-wrapper";
+import { BookingBarWrapper } from "./_components/booking-bar-wrapper";
 import { ContactSection } from "./_components/contact-section";
 import { HeroWithReviews } from "./_components/hero-with-reviews";
 import { ServicesSection } from "./_components/services-section";
@@ -35,6 +32,8 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
   const specialOffers = await getActiveSpecialOffers(profile.info.id);
 
   const currentUser = await getProfile();
+
+  // Check if current user is the owner of this beauty page
   const isOwner = currentUser?.id === profile.info.owner_id;
 
   // Duration labels for services
@@ -227,95 +226,77 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
   };
 
   return (
-    <>
-      <PageHeader
-        title={profile.info.name}
-        subtitle={`@${profile.info.slug}`}
-        backHref="/"
-        containerClassName="mx-auto max-w-2xl"
-      >
-        {isOwner && (
-          <Link
-            href={`/${profile.info.slug}/settings`}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent-soft/50"
-            aria-label={t("settings")}
-          >
-            <Settings className="h-5 w-5" />
-          </Link>
-        )}
-      </PageHeader>
+    <BookingBarWrapper
+      beautyPageId={profile.info.id}
+      nickname={nickname}
+      timezone={profile.timezone}
+      currency="UAH"
+      locale="uk-UA"
+      serviceGroups={profile.serviceGroups}
+      currentUserId={currentUser?.id}
+      currentUserProfile={currentUserProfile}
+      beautyPageInfo={beautyPageInfo}
+      creatorInfo={creatorInfo}
+      durationLabels={durationLabels}
+      translations={bookingTranslations}
+    >
+      <div className="mx-auto max-w-2xl space-y-6 px-4 pb-24">
+        <HeroWithReviews
+          info={profile.info}
+          ratingStats={profile.ratingStats}
+          workingStatus={workingStatus}
+          isOwner={isOwner}
+          translations={{
+            verified: {
+              title: t("verified.title"),
+              description: t("verified.description"),
+            },
+            reviews: t("reviews"),
+            reviewsDialog: {
+              title: t("reviews_title", { name: profile.info.name }),
+              basedOnReviews: t("reviews_based_on", {
+                count: profile.ratingStats.totalReviews,
+              }),
+              noReviewsYet: t("no_reviews_yet"),
+              anonymous: t("anonymous"),
+            },
+          }}
+        />
 
-      <BeautyPageBookingWrapper
-        beautyPageId={profile.info.id}
-        nickname={nickname}
-        timezone={profile.timezone}
-        currency="UAH"
-        locale="uk-UA"
-        serviceGroups={profile.serviceGroups}
-        currentUserId={currentUser?.id}
-        currentUserProfile={currentUserProfile}
-        beautyPageInfo={beautyPageInfo}
-        creatorInfo={creatorInfo}
-        durationLabels={durationLabels}
-        translations={bookingTranslations}
-      >
-        <main className="mx-auto max-w-2xl space-y-6 px-4 pb-24">
-          <HeroWithReviews
-            info={profile.info}
-            ratingStats={profile.ratingStats}
-            workingStatus={workingStatus}
-            translations={{
-              verified: {
-                title: t("verified.title"),
-                description: t("verified.description"),
-              },
-              reviews: t("reviews"),
-              reviewsDialog: {
-                title: t("reviews_title", { name: profile.info.name }),
-                basedOnReviews: t("reviews_based_on", {
-                  count: profile.ratingStats.totalReviews,
-                }),
-                noReviewsYet: t("no_reviews_yet"),
-                anonymous: t("anonymous"),
-              },
-            }}
-          />
-
-          {/* Special Offers */}
-          {specialOffers.length > 0 && (
-            <SpecialOffersSection
-              offers={specialOffers}
-              currency="UAH"
-              locale="uk-UA"
-              translations={{
-                title: t("special_offers"),
-                today: t("today"),
-                tomorrow: t("tomorrow"),
-                bookNow: t("book_now"),
-              }}
-            />
-          )}
-
-          {/* Services with selection */}
-          <ServicesSection
-            serviceGroups={profile.serviceGroups}
-            title={t("services")}
-            emptyMessage={t("no_services_description")}
+        {/* Special Offers */}
+        {specialOffers.length > 0 && (
+          <SpecialOffersSection
+            offers={specialOffers}
             currency="UAH"
             locale="uk-UA"
-            durationLabels={durationLabels}
-          />
-
-          <ContactSection
-            contact={profile.info}
             translations={{
-              title: t("contact"),
-              viewOnMap: t("view_on_map"),
-              visitInstagram: t("visit_instagram"),
+              title: t("special_offers"),
+              today: t("today"),
+              tomorrow: t("tomorrow"),
+              bookNow: t("book_now"),
             }}
           />
-        </main>
-      </BeautyPageBookingWrapper>
-    </>
+        )}
+
+        {/* Services with selection */}
+        <ServicesSection
+          serviceGroups={profile.serviceGroups}
+          title={t("services")}
+          emptyMessage={t("no_services_description")}
+          currency="UAH"
+          locale="uk-UA"
+          durationLabels={durationLabels}
+        />
+
+        <ContactSection
+          contact={profile.info}
+          translations={{
+            title: t("contact"),
+            viewOnMap: t("view_on_map"),
+            visitInstagram: t("visit_instagram"),
+          }}
+        />
+      </div>
+    </BookingBarWrapper>
   );
 }
