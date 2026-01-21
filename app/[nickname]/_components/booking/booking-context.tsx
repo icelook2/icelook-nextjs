@@ -7,26 +7,38 @@
  * Simplified for solo creator - no specialist selection step.
  *
  * Flow: date → time → confirm → success
+ *
+ * Performance optimizations:
+ * - Fetches 6 months of working days upfront (no loading on month navigation)
+ * - Prefetches time slots when date is selected (instant time step)
  */
 
 import {
   createContext,
   type ReactNode,
-  useCallback,
   useContext,
-  useMemo,
+  useEffect,
+  useRef,
   useState,
 } from "react";
 import type { ProfileService } from "@/lib/queries/beauty-page-profile";
 import { createBooking } from "./_actions/booking.actions";
+import {
+  getAvailabilityData,
+  getWorkingDaysForRange,
+} from "./_actions/availability.actions";
 import type {
   BookingResult,
   BookingState,
   BookingStep,
   CurrentUserProfile,
   GuestInfo,
+  TimeSlot,
 } from "./_lib/booking-types";
-import { calculateEndTime } from "./_lib/slot-generation";
+import {
+  calculateEndTime,
+  generateAvailableSlots,
+} from "./_lib/slot-generation";
 
 // ============================================================================
 // Types
@@ -36,6 +48,14 @@ import { calculateEndTime } from "./_lib/slot-generation";
 export interface CreatorInfo {
   displayName: string;
   avatarUrl: string | null;
+}
+
+/** Cached time slots for a specific date */
+interface TimeSlotsCache {
+  [dateStr: string]: {
+    slots: TimeSlot[];
+    status: "loading" | "success" | "error";
+  };
 }
 
 interface BookingContextValue extends BookingState {
@@ -52,8 +72,23 @@ interface BookingContextValue extends BookingState {
   // Submission
   submitBooking: () => Promise<void>;
 
+  // Form readiness (for confirm step)
+  isConfirmFormReady: boolean;
+  setConfirmFormReady: (ready: boolean) => void;
+
   // Reset
   reset: () => void;
+
+  // Working days (prefetched for smooth navigation)
+  workingDays: Set<string>;
+  isWorkingDaysLoading: boolean;
+
+  // Time slots (prefetched when date is selected)
+  getTimeSlotsForDate: (dateStr: string) => {
+    slots: TimeSlot[];
+    status: "loading" | "success" | "error";
+  } | null;
+  prefetchTimeSlotsForDate: (date: Date) => void;
 
   // Derived from props
   beautyPageId: string;
@@ -82,7 +117,16 @@ interface BookingProviderProps {
   currentUserId?: string;
   currentUserProfile?: CurrentUserProfile;
   creatorInfo: CreatorInfo;
+  /** Called when booking is successfully completed */
+  onBookingSuccess?: () => void;
 }
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/** Number of months to prefetch working days for */
+const PREFETCH_MONTHS = 6;
 
 // ============================================================================
 // Context
@@ -118,8 +162,11 @@ export function BookingProvider({
   currentUserId,
   currentUserProfile,
   creatorInfo,
+  onBookingSuccess,
 }: BookingProviderProps) {
-  // State - starts at date selection (no specialist step)
+  // -------------------------------------------------------------------------
+  // Core booking state
+  // -------------------------------------------------------------------------
   const [step, setStep] = useState<BookingStep>("date");
   const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState<string | null>(null);
@@ -127,49 +174,162 @@ export function BookingProvider({
   const [result, setResult] = useState<BookingResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isConfirmFormReady, setConfirmFormReady] = useState(false);
 
-  // Step order for navigation (no specialist step)
+  // -------------------------------------------------------------------------
+  // Working days (prefetched for 6 months)
+  // -------------------------------------------------------------------------
+  const [workingDays, setWorkingDays] = useState<Set<string>>(new Set());
+  const [isWorkingDaysLoading, setIsWorkingDaysLoading] = useState(true);
+
+  // -------------------------------------------------------------------------
+  // Time slots cache (prefetched when date is selected)
+  // -------------------------------------------------------------------------
+  const [timeSlotsCache, setTimeSlotsCache] = useState<TimeSlotsCache>({});
+  const prefetchingDatesRef = useRef<Set<string>>(new Set());
+
+  // -------------------------------------------------------------------------
+  // Prefetch working days on mount
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    const fetchWorkingDays = async () => {
+      setIsWorkingDaysLoading(true);
+
+      const today = new Date();
+      const endDate = new Date(today);
+      endDate.setMonth(endDate.getMonth() + PREFETCH_MONTHS);
+
+      const startDateStr = formatDateToYYYYMMDD(today);
+      const endDateStr = formatDateToYYYYMMDD(endDate);
+
+      const result = await getWorkingDaysForRange(
+        beautyPageId,
+        startDateStr,
+        endDateStr,
+      );
+
+      if (result.success) {
+        setWorkingDays(new Set(result.data));
+      }
+
+      setIsWorkingDaysLoading(false);
+    };
+
+    fetchWorkingDays();
+  }, [beautyPageId]);
+
+  // -------------------------------------------------------------------------
+  // Time slots prefetching
+  // -------------------------------------------------------------------------
+  const prefetchTimeSlotsForDate = (prefetchDate: Date) => {
+    const dateStr = formatDateToYYYYMMDD(prefetchDate);
+
+    // Skip if already cached or currently prefetching
+    if (timeSlotsCache[dateStr] || prefetchingDatesRef.current.has(dateStr)) {
+      return;
+    }
+
+    // Mark as prefetching
+    prefetchingDatesRef.current.add(dateStr);
+
+    // Set loading state
+    setTimeSlotsCache((prev) => ({
+      ...prev,
+      [dateStr]: { slots: [], status: "loading" },
+    }));
+
+    // Fetch in background
+    getAvailabilityData({
+      beautyPageId,
+      startDate: dateStr,
+      endDate: dateStr,
+    }).then((result) => {
+      prefetchingDatesRef.current.delete(dateStr);
+
+      if (!result.success) {
+        setTimeSlotsCache((prev) => ({
+          ...prev,
+          [dateStr]: { slots: [], status: "error" },
+        }));
+        return;
+      }
+
+      const {
+        workingDays: workingDaysData,
+        appointments,
+        bookingSettings,
+      } = result.data;
+
+      // Find working day for selected date
+      const workingDay =
+        workingDaysData.find((wd) => wd.date === dateStr) ?? null;
+
+      // Generate slots
+      const slots = generateAvailableSlots({
+        workingDay,
+        appointments,
+        serviceDurationMinutes: totalDurationMinutes,
+        slotIntervalMinutes: 30,
+        minNoticeHours: bookingSettings?.minBookingNoticeHours ?? 0,
+        date: prefetchDate,
+        timezone,
+      });
+
+      setTimeSlotsCache((prev) => ({
+        ...prev,
+        [dateStr]: { slots, status: "success" },
+      }));
+    });
+  };
+
+  const getTimeSlotsForDate = (dateStr: string) => {
+    return timeSlotsCache[dateStr] ?? null;
+  };
+
+  // -------------------------------------------------------------------------
+  // Navigation
+  // -------------------------------------------------------------------------
   const stepOrder: BookingStep[] = ["date", "time", "confirm", "success"];
 
-  // Navigation
-  const goToStep = useCallback((newStep: BookingStep) => {
+  const goToStep = (newStep: BookingStep) => {
     setStep(newStep);
     setError(null);
-  }, []);
+  };
 
-  const canGoBack = useMemo(() => {
-    const currentIndex = stepOrder.indexOf(step);
-    return currentIndex > 0 && step !== "success";
-  }, [step]);
+  const currentIndex = stepOrder.indexOf(step);
+  const canGoBack = currentIndex > 0 && step !== "success";
 
-  const goBack = useCallback(() => {
-    const currentIndex = stepOrder.indexOf(step);
+  const goBack = () => {
     if (currentIndex > 0) {
       setStep(stepOrder[currentIndex - 1]);
       setError(null);
     }
-  }, [step]);
+  };
 
+  // -------------------------------------------------------------------------
   // Selections
-  const selectDate = useCallback((selected: Date) => {
+  // -------------------------------------------------------------------------
+  const selectDate = (selected: Date) => {
     setDate(selected);
     setTime(null); // Reset time when date changes
     setStep("time");
     setError(null);
-  }, []);
+  };
 
-  const selectTime = useCallback((selected: string) => {
+  const selectTime = (selected: string) => {
     setTime(selected);
     setStep("confirm");
     setError(null);
-  }, []);
+  };
 
-  const setGuestInfo = useCallback((info: GuestInfo) => {
+  const setGuestInfo = (info: GuestInfo) => {
     setGuestInfoState(info);
-  }, []);
+  };
 
+  // -------------------------------------------------------------------------
   // Submission
-  const submitBooking = useCallback(async () => {
+  // -------------------------------------------------------------------------
+  const submitBooking = async () => {
     if (!date || !time) {
       setError("Missing required booking information");
       return;
@@ -206,6 +366,8 @@ export function BookingProvider({
 
       if (bookingResult.success) {
         setStep("success");
+        // Clear selected services on success
+        onBookingSuccess?.();
       } else {
         setError(bookingResult.message);
       }
@@ -215,18 +377,12 @@ export function BookingProvider({
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    date,
-    time,
-    guestInfo,
-    beautyPageId,
-    selectedServices,
-    totalDurationMinutes,
-    currentUserId,
-  ]);
+  };
 
+  // -------------------------------------------------------------------------
   // Reset
-  const reset = useCallback(() => {
+  // -------------------------------------------------------------------------
+  const reset = () => {
     setStep("date");
     setDate(null);
     setTime(null);
@@ -234,76 +390,63 @@ export function BookingProvider({
     setResult(null);
     setIsSubmitting(false);
     setError(null);
-  }, []);
+    setConfirmFormReady(false);
+    // Note: We don't reset workingDays or timeSlotsCache to preserve prefetched data
+  };
 
+  // -------------------------------------------------------------------------
   // Context value
-  const value: BookingContextValue = useMemo(
-    () => ({
-      // State
-      step,
-      date,
-      time,
-      guestInfo,
-      result,
-      isSubmitting,
-      error,
+  // -------------------------------------------------------------------------
+  const value: BookingContextValue = {
+    // State
+    step,
+    date,
+    time,
+    guestInfo,
+    result,
+    isSubmitting,
+    error,
 
-      // Navigation
-      goToStep,
-      goBack,
-      canGoBack,
+    // Navigation
+    goToStep,
+    goBack,
+    canGoBack,
 
-      // Selections
-      selectDate,
-      selectTime,
-      setGuestInfo,
+    // Selections
+    selectDate,
+    selectTime,
+    setGuestInfo,
 
-      // Submission
-      submitBooking,
+    // Submission
+    submitBooking,
 
-      // Reset
-      reset,
+    // Form readiness
+    isConfirmFormReady,
+    setConfirmFormReady,
 
-      // Props
-      beautyPageId,
-      selectedServices,
-      totalPriceCents,
-      totalDurationMinutes,
-      timezone,
-      currency,
-      locale,
-      currentUserId,
-      currentUserProfile,
-      creatorInfo,
-    }),
-    [
-      step,
-      date,
-      time,
-      guestInfo,
-      result,
-      isSubmitting,
-      error,
-      goToStep,
-      goBack,
-      canGoBack,
-      selectDate,
-      selectTime,
-      setGuestInfo,
-      submitBooking,
-      reset,
-      beautyPageId,
-      selectedServices,
-      totalPriceCents,
-      totalDurationMinutes,
-      timezone,
-      currency,
-      locale,
-      currentUserId,
-      currentUserProfile,
-      creatorInfo,
-    ],
-  );
+    // Reset
+    reset,
+
+    // Working days
+    workingDays,
+    isWorkingDaysLoading,
+
+    // Time slots
+    getTimeSlotsForDate,
+    prefetchTimeSlotsForDate,
+
+    // Props
+    beautyPageId,
+    selectedServices,
+    totalPriceCents,
+    totalDurationMinutes,
+    timezone,
+    currency,
+    locale,
+    currentUserId,
+    currentUserProfile,
+    creatorInfo,
+  };
 
   return (
     <BookingContext.Provider value={value}>{children}</BookingContext.Provider>

@@ -199,6 +199,9 @@ export async function getNextAppointment(
 // Client-side Queries (for client's appointment history)
 // ============================================================================
 
+/** Default page size for past appointments */
+export const PAST_APPOINTMENTS_PAGE_SIZE = 10;
+
 export type ClientAppointment = Pick<
   Tables<"appointments">,
   | "id"
@@ -207,6 +210,7 @@ export type ClientAppointment = Pick<
   | "end_time"
   | "timezone"
   | "status"
+  | "service_id"
   | "service_name"
   | "service_price_cents"
   | "service_currency"
@@ -225,6 +229,8 @@ export type ClientAppointment = Pick<
   beauty_page_avatar_url: string | null;
   /** Beauty page address */
   beauty_page_address: string | null;
+  /** Individual services in this appointment */
+  appointment_services: AppointmentService[];
 };
 
 /**
@@ -247,6 +253,7 @@ export async function getClientAppointments(
       end_time,
       timezone,
       status,
+      service_id,
       service_name,
       service_price_cents,
       service_currency,
@@ -254,6 +261,12 @@ export async function getClientAppointments(
       creator_display_name,
       client_notes,
       created_at,
+      appointment_services (
+        id,
+        service_name,
+        price_cents,
+        duration_minutes
+      ),
       beauty_pages!appointments_beauty_page_id_fkey (
         name,
         slug,
@@ -286,6 +299,7 @@ export async function getClientAppointments(
       end_time: row.end_time,
       timezone: row.timezone,
       status: row.status,
+      service_id: row.service_id,
       service_name: row.service_name,
       service_price_cents: row.service_price_cents,
       service_currency: row.service_currency,
@@ -300,6 +314,7 @@ export async function getClientAppointments(
       beauty_page_slug: beautyPage?.slug ?? null,
       beauty_page_avatar_url: beautyPage?.logo_url ?? null,
       beauty_page_address: beautyPage?.address ?? null,
+      appointment_services: row.appointment_services ?? [],
     };
   });
 
@@ -333,4 +348,320 @@ export async function getClientAppointments(
     );
 
   return { upcoming, past };
+}
+
+export type ClientPastAppointmentsResult = {
+  results: ClientAppointment[];
+  hasMore: boolean;
+};
+
+/**
+ * Fetches past appointments for a client with pagination.
+ * Past appointments are those with date < today OR terminal status (completed/cancelled/no_show).
+ *
+ * @param clientId - The client's user ID
+ * @param options - Pagination options
+ * @returns Paginated past appointments with hasMore flag
+ */
+export async function getClientPastAppointments(
+  clientId: string,
+  options: {
+    offset?: number;
+    limit?: number;
+  } = {},
+): Promise<ClientPastAppointmentsResult> {
+  const { offset = 0, limit = PAST_APPOINTMENTS_PAGE_SIZE } = options;
+  const supabase = await createClient();
+
+  const today = new Date().toISOString().split("T")[0];
+
+  // Past appointments: date < today OR terminal status (completed/cancelled/no_show)
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(
+      `
+      id,
+      date,
+      start_time,
+      end_time,
+      timezone,
+      status,
+      service_id,
+      service_name,
+      service_price_cents,
+      service_currency,
+      service_duration_minutes,
+      creator_display_name,
+      client_notes,
+      created_at,
+      appointment_services (
+        id,
+        service_name,
+        price_cents,
+        duration_minutes
+      ),
+      beauty_pages!appointments_beauty_page_id_fkey (
+        name,
+        slug,
+        logo_url,
+        avatar_url,
+        address
+      )
+    `,
+    )
+    .eq("client_id", clientId)
+    .or(
+      `date.lt.${today},status.eq.completed,status.eq.cancelled,status.eq.no_show`,
+    )
+    .order("date", { ascending: false })
+    .order("start_time", { ascending: false })
+    .range(offset, offset + limit); // Request limit + 1 for hasMore detection
+
+  if (error) {
+    console.error("Error fetching client past appointments:", error);
+    throw error;
+  }
+
+  const allResults = data ?? [];
+
+  // Check if there are more results beyond this page
+  const hasMore = allResults.length > limit;
+
+  // Transform and return only the requested number of results
+  const resultsToTransform = hasMore ? allResults.slice(0, limit) : allResults;
+
+  const results: ClientAppointment[] = resultsToTransform.map((row) => {
+    const beautyPageData = row.beauty_pages;
+    const beautyPage = Array.isArray(beautyPageData)
+      ? beautyPageData[0]
+      : beautyPageData;
+
+    return {
+      id: row.id,
+      date: row.date,
+      start_time: row.start_time,
+      end_time: row.end_time,
+      timezone: row.timezone,
+      status: row.status,
+      service_id: row.service_id,
+      service_name: row.service_name,
+      service_price_cents: row.service_price_cents,
+      service_currency: row.service_currency,
+      service_duration_minutes: row.service_duration_minutes,
+      creator_display_name: row.creator_display_name,
+      client_notes: row.client_notes,
+      created_at: row.created_at,
+      creator_avatar_url:
+        beautyPage?.avatar_url ?? beautyPage?.logo_url ?? null,
+      beauty_page_name: beautyPage?.name ?? null,
+      beauty_page_slug: beautyPage?.slug ?? null,
+      beauty_page_avatar_url: beautyPage?.logo_url ?? null,
+      beauty_page_address: beautyPage?.address ?? null,
+      appointment_services: row.appointment_services ?? [],
+    };
+  });
+
+  return { results, hasMore };
+}
+
+/**
+ * Fetches a single appointment for a client by ID
+ * Returns null if appointment doesn't exist or doesn't belong to the client
+ */
+export async function getClientAppointmentById(
+  clientId: string,
+  appointmentId: string,
+): Promise<ClientAppointment | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(
+      `
+      id,
+      date,
+      start_time,
+      end_time,
+      timezone,
+      status,
+      service_id,
+      service_name,
+      service_price_cents,
+      service_currency,
+      service_duration_minutes,
+      creator_display_name,
+      client_notes,
+      created_at,
+      appointment_services (
+        id,
+        service_name,
+        price_cents,
+        duration_minutes
+      ),
+      beauty_pages!appointments_beauty_page_id_fkey (
+        name,
+        slug,
+        logo_url,
+        avatar_url,
+        address
+      )
+    `,
+    )
+    .eq("id", appointmentId)
+    .eq("client_id", clientId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      // No rows returned - appointment not found or doesn't belong to client
+      return null;
+    }
+    console.error("Error fetching client appointment:", error);
+    throw error;
+  }
+
+  // Transform nested data into flat structure
+  const beautyPageData = data.beauty_pages;
+  const beautyPage = Array.isArray(beautyPageData)
+    ? beautyPageData[0]
+    : beautyPageData;
+
+  return {
+    id: data.id,
+    date: data.date,
+    start_time: data.start_time,
+    end_time: data.end_time,
+    timezone: data.timezone,
+    status: data.status,
+    service_id: data.service_id,
+    service_name: data.service_name,
+    service_price_cents: data.service_price_cents,
+    service_currency: data.service_currency,
+    service_duration_minutes: data.service_duration_minutes,
+    creator_display_name: data.creator_display_name,
+    client_notes: data.client_notes,
+    created_at: data.created_at,
+    creator_avatar_url: beautyPage?.avatar_url ?? beautyPage?.logo_url ?? null,
+    beauty_page_name: beautyPage?.name ?? null,
+    beauty_page_slug: beautyPage?.slug ?? null,
+    beauty_page_avatar_url: beautyPage?.logo_url ?? null,
+    beauty_page_address: beautyPage?.address ?? null,
+    appointment_services: data.appointment_services ?? [],
+  };
+}
+
+/**
+ * Fetches all unique dates that have appointments for a client.
+ * Returns dates in YYYY-MM-DD format.
+ * Used for the calendar filter on the appointments page.
+ */
+export async function getClientAppointmentDates(
+  clientId: string,
+): Promise<Set<string>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("date")
+    .eq("client_id", clientId);
+
+  if (error) {
+    console.error("Error fetching client appointment dates:", error);
+    throw error;
+  }
+
+  // Extract unique dates into a Set
+  const dates = new Set<string>();
+  for (const row of data ?? []) {
+    dates.add(row.date);
+  }
+
+  return dates;
+}
+
+/**
+ * Fetches all appointments for a client on a specific date.
+ * Returns appointments sorted by time.
+ */
+export async function getClientAppointmentsByDate(
+  clientId: string,
+  date: string,
+): Promise<ClientAppointment[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(
+      `
+      id,
+      date,
+      start_time,
+      end_time,
+      timezone,
+      status,
+      service_id,
+      service_name,
+      service_price_cents,
+      service_currency,
+      service_duration_minutes,
+      creator_display_name,
+      client_notes,
+      created_at,
+      appointment_services (
+        id,
+        service_name,
+        price_cents,
+        duration_minutes
+      ),
+      beauty_pages!appointments_beauty_page_id_fkey (
+        name,
+        slug,
+        logo_url,
+        avatar_url,
+        address
+      )
+    `,
+    )
+    .eq("client_id", clientId)
+    .eq("date", date)
+    .order("start_time", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching client appointments by date:", error);
+    throw error;
+  }
+
+  // Transform nested data into flat structure
+  const appointments: ClientAppointment[] = (data ?? []).map((row) => {
+    const beautyPageData = row.beauty_pages;
+    const beautyPage = Array.isArray(beautyPageData)
+      ? beautyPageData[0]
+      : beautyPageData;
+
+    return {
+      id: row.id,
+      date: row.date,
+      start_time: row.start_time,
+      end_time: row.end_time,
+      timezone: row.timezone,
+      status: row.status,
+      service_id: row.service_id,
+      service_name: row.service_name,
+      service_price_cents: row.service_price_cents,
+      service_currency: row.service_currency,
+      service_duration_minutes: row.service_duration_minutes,
+      creator_display_name: row.creator_display_name,
+      client_notes: row.client_notes,
+      created_at: row.created_at,
+      creator_avatar_url:
+        beautyPage?.avatar_url ?? beautyPage?.logo_url ?? null,
+      beauty_page_name: beautyPage?.name ?? null,
+      beauty_page_slug: beautyPage?.slug ?? null,
+      beauty_page_avatar_url: beautyPage?.logo_url ?? null,
+      beauty_page_address: beautyPage?.address ?? null,
+      appointment_services: row.appointment_services ?? [],
+    };
+  });
+
+  return appointments;
 }

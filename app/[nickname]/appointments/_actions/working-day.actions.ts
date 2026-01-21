@@ -215,11 +215,15 @@ export async function updateWorkingDay(input: {
 
 /**
  * Delete a working day (cascades breaks)
+ *
+ * @param force - Skip appointment check (used when appointments are intentionally
+ *                left on day being marked as day off)
  */
 export async function deleteWorkingDay(input: {
   id: string;
   beautyPageId: string;
   nickname: string;
+  force?: boolean;
 }): Promise<ActionResult> {
   const t = await getTranslations("schedule");
 
@@ -231,7 +235,7 @@ export async function deleteWorkingDay(input: {
 
   const supabase = await createClient();
 
-  // Check for appointments on this day
+  // Check for appointments on this day (skip if force is true)
   const { data: workingDay } = await supabase
     .from("working_days")
     .select("date")
@@ -243,15 +247,17 @@ export async function deleteWorkingDay(input: {
     return { success: false, error: t("errors.not_found") };
   }
 
-  const { count: appointmentCount } = await supabase
-    .from("appointments")
-    .select("*", { count: "exact", head: true })
-    .eq("beauty_page_id", input.beautyPageId)
-    .eq("date", workingDay.date)
-    .neq("status", "cancelled");
+  if (!input.force) {
+    const { count: appointmentCount } = await supabase
+      .from("appointments")
+      .select("*", { count: "exact", head: true })
+      .eq("beauty_page_id", input.beautyPageId)
+      .eq("date", workingDay.date)
+      .neq("status", "cancelled");
 
-  if (appointmentCount && appointmentCount > 0) {
-    return { success: false, error: t("errors.has_appointments") };
+    if (appointmentCount && appointmentCount > 0) {
+      return { success: false, error: t("errors.has_appointments") };
+    }
   }
 
   // Delete working day (breaks cascade)
@@ -267,8 +273,111 @@ export async function deleteWorkingDay(input: {
   }
 
   revalidatePath(`/${input.nickname}/schedule`);
+  revalidatePath(`/${input.nickname}/appointments`);
 
   return { success: true };
+}
+
+// ============================================================================
+// Day Off Appointments
+// ============================================================================
+
+/** Appointment data needed for the day-off dialog */
+export interface DayOffAppointment {
+  id: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: "pending" | "confirmed";
+  clientName: string;
+  clientPhone: string | null;
+  serviceName: string;
+  serviceDurationMinutes: number;
+}
+
+/**
+ * Get active appointments for a specific date
+ * Used by the day-off dialog to show appointments that need handling
+ */
+export async function getAppointmentsForWorkingDay(input: {
+  beautyPageId: string;
+  date: string;
+}): Promise<ActionResult<DayOffAppointment[]>> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("appointments")
+    .select(
+      "id, date, start_time, end_time, status, client_name, client_phone, service_name, service_duration_minutes",
+    )
+    .eq("beauty_page_id", input.beautyPageId)
+    .eq("date", input.date)
+    .in("status", ["pending", "confirmed"])
+    .order("start_time");
+
+  if (error) {
+    console.error("Error fetching appointments for working day:", error);
+    return { success: false, error: "Failed to fetch appointments" };
+  }
+
+  const appointments: DayOffAppointment[] = (data ?? []).map((apt) => ({
+    id: apt.id,
+    date: apt.date,
+    startTime: apt.start_time,
+    endTime: apt.end_time,
+    status: apt.status as "pending" | "confirmed",
+    clientName: apt.client_name,
+    clientPhone: apt.client_phone,
+    serviceName: apt.service_name,
+    serviceDurationMinutes: apt.service_duration_minutes,
+  }));
+
+  return { success: true, data: appointments };
+}
+
+/**
+ * Get working days with times for rescheduling
+ * Returns working days from tomorrow onwards (excludes past dates)
+ */
+export async function getWorkingDaysForReschedule(input: {
+  beautyPageId: string;
+  excludeDate?: string;
+}): Promise<
+  ActionResult<Array<{ date: string; startTime: string; endTime: string }>>
+> {
+  const supabase = await createClient();
+
+  // Get tomorrow's date as minimum
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDate = tomorrow.toISOString().split("T")[0];
+
+  let query = supabase
+    .from("working_days")
+    .select("date, start_time, end_time")
+    .eq("beauty_page_id", input.beautyPageId)
+    .gte("date", minDate)
+    .order("date")
+    .limit(60); // Limit to ~2 months of working days
+
+  if (input.excludeDate) {
+    query = query.neq("date", input.excludeDate);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching working days for reschedule:", error);
+    return { success: false, error: "Failed to fetch working days" };
+  }
+
+  const workingDays = (data ?? []).map((wd) => ({
+    date: wd.date,
+    startTime: wd.start_time.slice(0, 5), // Remove seconds
+    endTime: wd.end_time.slice(0, 5),
+  }));
+
+  return { success: true, data: workingDays };
 }
 
 // ============================================================================
@@ -588,6 +697,79 @@ export async function bulkUpdateSchedule(input: {
   revalidatePath(`/${input.nickname}/appointments`);
 
   return { success: true, data: result };
+}
+
+// ============================================================================
+// Day Off with Appointment Changes (Atomic Operation)
+// ============================================================================
+
+/** Change to apply to an appointment when marking day off */
+export interface AppointmentChange {
+  appointmentId: string;
+  action: "reschedule" | "cancel";
+  newDate?: string;
+  newStartTime?: string;
+  newEndTime?: string;
+  cancelReason?: string;
+}
+
+/**
+ * Mark a day as day off with batched appointment changes (atomic via RPC)
+ *
+ * This function handles everything in a single database transaction:
+ * 1. Validates all reschedule targets for conflicts
+ * 2. Reschedules specified appointments to new dates/times
+ * 3. Cancels specified appointments
+ * 4. Deletes the working day
+ *
+ * If any operation fails, the entire transaction rolls back.
+ */
+export async function markDayOffWithChanges(input: {
+  workingDayId: string;
+  beautyPageId: string;
+  nickname: string;
+  changes: AppointmentChange[];
+}): Promise<ActionResult<{ rescheduled: number; cancelled: number }>> {
+  const t = await getTranslations("schedule");
+
+  // Check authorization
+  const authorization = await verifyCanManageSchedule(input.beautyPageId);
+  if (!authorization.authorized) {
+    return { success: false, error: authorization.error };
+  }
+
+  const supabase = await createClient();
+
+  // Call RPC - everything happens in single transaction
+  const { data, error } = await supabase.rpc("mark_day_as_off", {
+    p_working_day_id: input.workingDayId,
+    p_beauty_page_id: input.beautyPageId,
+    p_user_id: authorization.userId,
+    p_changes: input.changes,
+  });
+
+  if (error) {
+    console.error("Error calling mark_day_as_off RPC:", error);
+    return { success: false, error: t("errors.update_failed") };
+  }
+
+  // RPC returns JSONB with success/error fields
+  if (!data.success) {
+    console.error("mark_day_as_off RPC returned error:", data.error);
+    return { success: false, error: data.error || t("errors.update_failed") };
+  }
+
+  // Revalidate paths
+  revalidatePath(`/${input.nickname}/appointments`);
+  revalidatePath(`/${input.nickname}/schedule`);
+
+  return {
+    success: true,
+    data: {
+      rescheduled: data.rescheduled ?? 0,
+      cancelled: data.cancelled ?? 0,
+    },
+  };
 }
 
 // ============================================================================

@@ -246,6 +246,25 @@ export async function createQuickBooking(
       };
     }
 
+    // Insert individual services into appointment_services junction table
+    const { error: servicesInsertError } = await supabase
+      .from("appointment_services")
+      .insert(
+        serviceDetails.map((s) => ({
+          appointment_id: appointment.id,
+          service_id: s.id,
+          service_name: s.name,
+          duration_minutes: s.duration_minutes,
+          price_cents: s.price_cents,
+        })),
+      );
+
+    if (servicesInsertError) {
+      console.error("Error inserting appointment services:", servicesInsertError);
+      // Note: Appointment is already created, so we don't fail the booking
+      // The appointment still has the aggregated service data
+    }
+
     // Revalidate the schedule page
     revalidatePath(`/${validated.nickname}/appointments`);
 

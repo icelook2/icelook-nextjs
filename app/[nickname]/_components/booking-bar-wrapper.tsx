@@ -108,6 +108,17 @@ interface BookingBarContentProps {
   };
 }
 
+/** Snapshot of selected services when dialog opens */
+interface DialogServicesSnapshot {
+  services: typeof useServiceSelection extends () => {
+    selectedServices: infer T;
+  }
+    ? T
+    : never;
+  totalPriceCents: number;
+  totalDurationMinutes: number;
+}
+
 function BookingBarContent({
   children,
   beautyPageId,
@@ -123,8 +134,14 @@ function BookingBarContent({
   translations,
 }: BookingBarContentProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { selectedServices, totalPriceCents, totalDurationMinutes } =
-    useServiceSelection();
+  const [dialogSnapshot, setDialogSnapshot] =
+    useState<DialogServicesSnapshot | null>(null);
+  const {
+    selectedServices,
+    totalPriceCents,
+    totalDurationMinutes,
+    clearSelection,
+  } = useServiceSelection();
 
   // Hide/show bottom nav based on selection
   const bottomNavVisibility = useBottomNavVisibilityOptional();
@@ -151,11 +168,26 @@ function BookingBarContent({
   }, [bottomNavVisibility]);
 
   const handleBookClick = () => {
+    // Snapshot the current selection when opening the dialog
+    setDialogSnapshot({
+      services: selectedServices,
+      totalPriceCents,
+      totalDurationMinutes,
+    });
     setIsDialogOpen(true);
   };
 
   const handleDialogClose = (open: boolean) => {
     setIsDialogOpen(open);
+    if (!open) {
+      // Clear snapshot when dialog closes
+      setDialogSnapshot(null);
+    }
+  };
+
+  const handleBookingSuccess = () => {
+    // Clear the page selection when booking succeeds
+    clearSelection();
   };
 
   return (
@@ -174,8 +206,8 @@ function BookingBarContent({
       {/* Page content */}
       {children}
 
-      {/* Booking dialog */}
-      {selectedServices.length > 0 && (
+      {/* Booking dialog - uses snapshot of services taken when opened */}
+      {dialogSnapshot && (
         <BookingDialog
           open={isDialogOpen}
           onOpenChange={handleDialogClose}
@@ -184,15 +216,16 @@ function BookingBarContent({
           timezone={timezone}
           currency={currency}
           locale={locale}
-          selectedServices={selectedServices}
-          totalPriceCents={totalPriceCents}
-          totalDurationMinutes={totalDurationMinutes}
+          selectedServices={dialogSnapshot.services}
+          totalPriceCents={dialogSnapshot.totalPriceCents}
+          totalDurationMinutes={dialogSnapshot.totalDurationMinutes}
           currentUserId={currentUserId}
           currentUserProfile={currentUserProfile}
           translations={translations.bookingDialog}
           beautyPageInfo={beautyPageInfo}
           creatorInfo={creatorInfo}
           durationLabels={durationLabels}
+          onBookingSuccess={handleBookingSuccess}
         />
       )}
     </>

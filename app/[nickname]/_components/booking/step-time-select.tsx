@@ -5,15 +5,19 @@
  *
  * Displays available time slots for the selected date.
  * Uses beautyPageId to fetch availability (not specialist).
+ *
+ * Performance optimizations:
+ * - Uses prefetched time slots from context when available
+ * - Falls back to fetching if not prefetched
+ * - Typically instant because date selection triggers prefetch
  */
 
 import { Clock, Loader2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/lib/ui/button";
 import { cn } from "@/lib/utils/cn";
-import { getAvailabilityData } from "./_actions/availability.actions";
 import type { TimeSlot } from "./_lib/booking-types";
-import { formatSlotTime, generateAvailableSlots } from "./_lib/slot-generation";
+import { formatSlotTime } from "./_lib/slot-generation";
 import { useBooking } from "./booking-context";
 
 interface StepTimeSelectProps {
@@ -31,102 +35,98 @@ interface StepTimeSelectProps {
 
 export function StepTimeSelect({ translations }: StepTimeSelectProps) {
   const {
-    beautyPageId,
-    totalDurationMinutes,
     date,
     time,
     selectTime,
-    timezone,
+    getTimeSlotsForDate,
+    prefetchTimeSlotsForDate,
   } = useBooking();
+
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTime, setSelectedTime] = useState<string | null>(time);
 
-  // Fetch availability and generate slots when date changes
+  // Use prefetched data or fetch if not available
   useEffect(() => {
     if (!date) {
       return;
     }
 
-    const fetchAndGenerateSlots = async () => {
-      setIsLoading(true);
+    const dateStr = formatDateToYYYYMMDD(date);
+    const cached = getTimeSlotsForDate(dateStr);
 
-      const dateStr = formatDateToYYYYMMDD(date);
-
-      const result = await getAvailabilityData({
-        beautyPageId,
-        startDate: dateStr,
-        endDate: dateStr,
-      });
-
-      if (!result.success) {
-        setSlots([]);
-        setIsLoading(false);
-        return;
-      }
-
-      const { workingDays, appointments, bookingSettings } = result.data;
-
-      // Find working day for selected date
-      const workingDay = workingDays.find((wd) => wd.date === dateStr) ?? null;
-
-      // Generate slots
-      const generatedSlots = generateAvailableSlots({
-        workingDay,
-        appointments,
-        serviceDurationMinutes: totalDurationMinutes,
-        slotIntervalMinutes: 30,
-        minNoticeHours: bookingSettings?.minBookingNoticeHours ?? 0,
-        date,
-        timezone,
-      });
-
-      setSlots(generatedSlots);
+    // If we have successful cached data, use it immediately
+    if (cached?.status === "success") {
+      setSlots(cached.slots);
       setIsLoading(false);
-    };
-
-    fetchAndGenerateSlots();
-  }, [beautyPageId, totalDurationMinutes, date, timezone]);
-
-  // Filter to only available slots and group by time of day
-  const slotGroups = useMemo(() => {
-    const availableSlots = slots.filter((s) => s.available);
-
-    const morning: TimeSlot[] = [];
-    const afternoon: TimeSlot[] = [];
-    const evening: TimeSlot[] = [];
-
-    for (const slot of availableSlots) {
-      const hour = Number.parseInt(slot.time.split(":")[0], 10);
-      if (hour < 12) {
-        morning.push(slot);
-      } else if (hour < 17) {
-        afternoon.push(slot);
-      } else {
-        evening.push(slot);
-      }
+      return;
     }
 
-    return { morning, afternoon, evening };
-  }, [slots]);
+    // If still loading (prefetch in progress), wait for it
+    if (cached?.status === "loading") {
+      setIsLoading(true);
+      // The prefetch will update the cache, we'll re-run this effect
+      return;
+    }
 
-  // Check if any slots are available
-  const hasAvailableSlots = useMemo(
-    () => slots.some((s) => s.available),
-    [slots],
-  );
+    // No cache - need to fetch (fallback for edge cases)
+    setIsLoading(true);
+
+    // Trigger prefetch which will populate the cache
+    prefetchTimeSlotsForDate(date);
+  }, [date, getTimeSlotsForDate, prefetchTimeSlotsForDate]);
+
+  // Watch for cache updates when loading
+  useEffect(() => {
+    if (!date || !isLoading) {
+      return;
+    }
+
+    const dateStr = formatDateToYYYYMMDD(date);
+    const cached = getTimeSlotsForDate(dateStr);
+
+    if (cached?.status === "success") {
+      setSlots(cached.slots);
+      setIsLoading(false);
+    } else if (cached?.status === "error") {
+      setSlots([]);
+      setIsLoading(false);
+    }
+  }, [date, getTimeSlotsForDate, isLoading]);
+
+  // Filter to only available slots and group by time of day
+  const availableSlots = slots.filter((s) => s.available);
+
+  const slotGroups = {
+    morning: [] as TimeSlot[],
+    afternoon: [] as TimeSlot[],
+    evening: [] as TimeSlot[],
+  };
+
+  for (const slot of availableSlots) {
+    const hour = Number.parseInt(slot.time.split(":")[0], 10);
+    if (hour < 12) {
+      slotGroups.morning.push(slot);
+    } else if (hour < 17) {
+      slotGroups.afternoon.push(slot);
+    } else {
+      slotGroups.evening.push(slot);
+    }
+  }
+
+  const hasAvailableSlots = availableSlots.length > 0;
 
   // Handle slot click
-  const handleSlotClick = useCallback((slotTime: string) => {
+  const handleSlotClick = (slotTime: string) => {
     setSelectedTime(slotTime);
-  }, []);
+  };
 
   // Handle next button
-  const handleNext = useCallback(() => {
+  const handleNext = () => {
     if (selectedTime) {
       selectTime(selectedTime);
     }
-  }, [selectedTime, selectTime]);
+  };
 
   return (
     <div className="flex flex-col">

@@ -2,9 +2,50 @@
 
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
+import {
+  type ClientAppointment,
+  getClientPastAppointments,
+  PAST_APPOINTMENTS_PAGE_SIZE,
+} from "@/lib/queries/appointments";
+import type { Enums } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 type ActionResult = { success: true } | { success: false; error: string };
+type ClientCancellationReason = Enums<"client_cancellation_reason">;
+
+type LoadMoreResult =
+  | { success: true; results: ClientAppointment[]; hasMore: boolean }
+  | { success: false; error: string };
+
+/**
+ * Load more past appointments with pagination.
+ */
+export async function loadMorePastAppointments(
+  offset: number,
+): Promise<LoadMoreResult> {
+  const t = await getTranslations("appointments");
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: t("not_authenticated") };
+  }
+
+  try {
+    const { results, hasMore } = await getClientPastAppointments(user.id, {
+      offset,
+      limit: PAST_APPOINTMENTS_PAGE_SIZE,
+    });
+
+    return { success: true, results, hasMore };
+  } catch (error) {
+    console.error("Error loading more past appointments:", error);
+    return { success: false, error: t("load_failed") };
+  }
+}
 
 /**
  * Cancels a client's appointment.
@@ -12,6 +53,7 @@ type ActionResult = { success: true } | { success: false; error: string };
  */
 export async function cancelClientAppointment(
   appointmentId: string,
+  reason: ClientCancellationReason,
 ): Promise<ActionResult> {
   const t = await getTranslations("appointments");
   const supabase = await createClient();
@@ -45,12 +87,14 @@ export async function cancelClientAppointment(
     return { success: false, error: t("cancel_failed") };
   }
 
-  // Update status to cancelled
+  // Update status to cancelled with reason
   const { error } = await supabase
     .from("appointments")
     .update({
       status: "cancelled",
       cancelled_at: new Date().toISOString(),
+      cancelled_by: "client",
+      client_cancellation_reason: reason,
     })
     .eq("id", appointmentId);
 
@@ -60,6 +104,7 @@ export async function cancelClientAppointment(
   }
 
   revalidatePath("/appointments");
+  revalidatePath(`/appointments/${appointmentId}`);
 
   return { success: true };
 }

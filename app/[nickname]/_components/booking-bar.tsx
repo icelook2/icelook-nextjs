@@ -14,7 +14,7 @@
  * replacing the BottomNav. User can click X to clear selection and return to nav.
  */
 
-import { Clock, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/lib/ui/button";
@@ -54,7 +54,7 @@ interface BookingBarProps {
 
 function formatServiceCount(
   count: number,
-  translations: { serviceSelected: string; servicesSelected: string }
+  translations: { serviceSelected: string; servicesSelected: string },
 ): string {
   return count === 1
     ? translations.serviceSelected
@@ -100,7 +100,9 @@ function MobileStickyBar({
         </button>
         <div className="min-w-0 flex-1">
           <span className="text-sm font-medium">{serviceCount} </span>
-          <span className="text-sm text-muted">· {formatPrice(totalPriceCents, currency, locale)}</span>
+          <span className="text-sm text-muted">
+            · {formatPrice(totalPriceCents, currency, locale)}
+          </span>
         </div>
         <Button size="sm" onClick={onBookClick}>
           {translations.bookNow}
@@ -148,32 +150,37 @@ function DesktopSideDrawer({
     return null;
   }
 
+  const formattedPrice = formatPrice(totalPriceCents, currency, locale);
+  const formattedDuration = formatDuration(
+    totalDurationMinutes,
+    durationLabels,
+  );
+  const serviceText = formatServiceCount(serviceCount, translations);
+
   const content = (
-    <div className="fixed bottom-4 right-4 hidden w-64 rounded-2xl border border-border bg-surface p-4 shadow-xl sm:block">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <span className="font-semibold">{formatServiceCount(serviceCount, translations)}</span>
-          <button
-            type="button"
-            onClick={onClearSelection}
-            className="rounded-full p-1 hover:bg-surface-hover"
-            aria-label={translations.clearSelection}
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="space-y-1 text-sm text-muted">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            {formatDuration(totalDurationMinutes, durationLabels)}
+    <div className="fixed bottom-4 right-4 hidden w-64 sm:block">
+      <div className="rounded-2xl border border-border bg-surface p-4 shadow-xl">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-semibold">{formattedPrice}</div>
+              <div className="text-xs text-muted">
+                {serviceText} · {formattedDuration}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClearSelection}
+              className="rounded-full p-1 hover:bg-surface-hover"
+              aria-label={translations.clearSelection}
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <div className="font-medium text-foreground">
-            {formatPrice(totalPriceCents, currency, locale)}
-          </div>
+          <Button className="w-full" onClick={onBookClick}>
+            {translations.bookNow}
+          </Button>
         </div>
-        <Button className="w-full" onClick={onBookClick}>
-          {translations.bookNow}
-        </Button>
       </div>
     </div>
   );

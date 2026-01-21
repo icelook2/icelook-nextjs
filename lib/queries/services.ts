@@ -114,3 +114,131 @@ export async function getServiceGroupServiceCount(
 
   return count ?? 0;
 }
+
+// ============================================================================
+// Rebooking Query
+// ============================================================================
+
+/** Data needed to rebook a service */
+export type RebookingData = {
+  /** Service info for booking */
+  service: {
+    id: string;
+    name: string;
+    price_cents: number;
+    duration_minutes: number;
+    display_order: number;
+  };
+  /** Beauty page info for booking context */
+  beautyPage: {
+    id: string;
+    slug: string;
+    name: string;
+    address: string | null;
+    avatar_url: string | null;
+    timezone: string;
+    currency: string;
+    locale: string;
+  };
+  /** Creator info for display */
+  creator: {
+    display_name: string;
+    avatar_url: string | null;
+  };
+};
+
+/**
+ * Fetches all data needed to rebook a service.
+ * Used by the "Book Again" feature on the appointments page.
+ *
+ * @param serviceId - The service ID to rebook
+ * @returns RebookingData or null if service not found
+ */
+export async function getServiceForRebooking(
+  serviceId: string,
+): Promise<RebookingData | null> {
+  const supabase = await createClient();
+
+  // Fetch service with service_group -> beauty_page -> owner (creator)
+  const { data, error } = await supabase
+    .from("services")
+    .select(
+      `
+      id,
+      name,
+      price_cents,
+      duration_minutes,
+      display_order,
+      service_groups!inner (
+        beauty_pages!inner (
+          id,
+          slug,
+          name,
+          address,
+          avatar_url,
+          timezone,
+          currency,
+          locale,
+          users!beauty_pages_owner_id_fkey (
+            display_name,
+            avatar_url
+          )
+        )
+      )
+    `,
+    )
+    .eq("id", serviceId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      // No rows returned - service not found
+      return null;
+    }
+    console.error("Error fetching service for rebooking:", error);
+    return null;
+  }
+
+  // Extract nested data - Supabase returns arrays for nested relations
+  const serviceGroupData = data.service_groups;
+  const serviceGroup = Array.isArray(serviceGroupData)
+    ? serviceGroupData[0]
+    : serviceGroupData;
+
+  const beautyPageData = serviceGroup?.beauty_pages;
+  const beautyPage = Array.isArray(beautyPageData)
+    ? beautyPageData[0]
+    : beautyPageData;
+
+  const creatorData = beautyPage?.users;
+  const creator = Array.isArray(creatorData) ? creatorData[0] : creatorData;
+
+  if (!beautyPage || !creator) {
+    console.error("Missing beauty page or creator data for rebooking");
+    return null;
+  }
+
+  return {
+    service: {
+      id: data.id,
+      name: data.name,
+      price_cents: data.price_cents,
+      duration_minutes: data.duration_minutes,
+      display_order: data.display_order,
+    },
+    beautyPage: {
+      id: beautyPage.id,
+      slug: beautyPage.slug,
+      name: beautyPage.name,
+      address: beautyPage.address,
+      avatar_url: beautyPage.avatar_url,
+      timezone: beautyPage.timezone,
+      currency: beautyPage.currency,
+      locale: beautyPage.locale,
+    },
+    creator: {
+      display_name: creator.display_name ?? beautyPage.name,
+      avatar_url: creator.avatar_url ?? beautyPage.avatar_url,
+    },
+  };
+}

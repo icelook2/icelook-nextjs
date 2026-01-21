@@ -16,8 +16,8 @@ const statusStyles: Record<AppointmentStatus, string> = {
   confirmed:
     "bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400",
   completed: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
-  cancelled: "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400",
-  no_show: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
+  cancelled: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
+  no_show: "bg-gray-100 text-gray-700 dark:bg-gray-500/20 dark:text-gray-400",
 };
 
 interface StatusBadgeProps {

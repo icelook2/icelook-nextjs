@@ -12,8 +12,14 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
 import { Menu } from "@/lib/ui/menu";
-import { deleteWorkingDay } from "../_actions/working-day.actions";
+import {
+  deleteWorkingDay,
+  getAppointmentsForWorkingDay,
+  getWorkingDaysForReschedule,
+  type DayOffAppointment,
+} from "../_actions/working-day.actions";
 import { ConfigureScheduleDialog } from "./configure-schedule";
+import { DayOffAppointmentsDialog } from "./day-off-appointments";
 import { EditWorkingHoursDialog } from "./edit-working-hours-dialog";
 
 const localeMap = { en: enUS, uk } as const;
@@ -56,6 +62,15 @@ export function ScheduleMenu({
   const [editHoursOpen, setEditHoursOpen] = useState(false);
   const [configureScheduleOpen, setConfigureScheduleOpen] = useState(false);
 
+  // Day-off dialog state
+  const [dayOffDialogOpen, setDayOffDialogOpen] = useState(false);
+  const [dayOffAppointments, setDayOffAppointments] = useState<
+    DayOffAppointment[]
+  >([]);
+  const [workingDaysForReschedule, setWorkingDaysForReschedule] = useState<
+    Array<{ date: string; startTime: string; endTime: string }>
+  >([]);
+
   const isWorkingDay = workingDay !== null;
   const formattedDate = format(selectedDate, "d MMMM", {
     locale: dateFnsLocale,
@@ -67,15 +82,44 @@ export function ScheduleMenu({
     }
 
     startTransition(async () => {
-      const result = await deleteWorkingDay({
-        id: workingDay.id,
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+
+      // First, check if there are any appointments on this day
+      const appointmentsResult = await getAppointmentsForWorkingDay({
         beautyPageId,
-        nickname,
+        date: dateStr,
       });
 
-      if (!result.success) {
-        // TODO: Show toast notification with error
-        console.error(result.error);
+      if (!appointmentsResult.success) {
+        console.error(appointmentsResult.error);
+        return;
+      }
+
+      const appointments = appointmentsResult.data ?? [];
+
+      if (appointments.length === 0) {
+        // No appointments - delete working day directly
+        const result = await deleteWorkingDay({
+          id: workingDay.id,
+          beautyPageId,
+          nickname,
+        });
+
+        if (!result.success) {
+          console.error(result.error);
+        }
+      } else {
+        // Has appointments - fetch working days for rescheduling and open dialog
+        const workingDaysResult = await getWorkingDaysForReschedule({
+          beautyPageId,
+          excludeDate: dateStr,
+        });
+
+        setDayOffAppointments(appointments);
+        setWorkingDaysForReschedule(
+          workingDaysResult.success ? (workingDaysResult.data ?? []) : [],
+        );
+        setDayOffDialogOpen(true);
       }
     });
   };
@@ -154,6 +198,19 @@ export function ScheduleMenu({
         beautyPageId={beautyPageId}
         nickname={nickname}
       />
+
+      {workingDay && (
+        <DayOffAppointmentsDialog
+          open={dayOffDialogOpen}
+          onOpenChange={setDayOffDialogOpen}
+          workingDayId={workingDay.id}
+          workingDayDate={selectedDate}
+          beautyPageId={beautyPageId}
+          nickname={nickname}
+          appointments={dayOffAppointments}
+          workingDays={workingDaysForReschedule}
+        />
+      )}
     </>
   );
 }

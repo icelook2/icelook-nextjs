@@ -83,6 +83,10 @@ export type Database = {
         Row: {
           beauty_page_id: string;
           cancelled_at: string | null;
+          cancelled_by: Database["public"]["Enums"]["cancelled_by_role"] | null;
+          client_cancellation_reason:
+            | Database["public"]["Enums"]["client_cancellation_reason"]
+            | null;
           client_email: string | null;
           client_id: string | null;
           client_name: string;
@@ -90,6 +94,9 @@ export type Database = {
           client_phone: string;
           completed_at: string | null;
           created_at: string;
+          creator_cancellation_reason:
+            | Database["public"]["Enums"]["creator_cancellation_reason"]
+            | null;
           creator_display_name: string;
           creator_notes: string | null;
           date: string;
@@ -109,6 +116,10 @@ export type Database = {
         Insert: {
           beauty_page_id: string;
           cancelled_at?: string | null;
+          cancelled_by?: Database["public"]["Enums"]["cancelled_by_role"] | null;
+          client_cancellation_reason?:
+            | Database["public"]["Enums"]["client_cancellation_reason"]
+            | null;
           client_email?: string | null;
           client_id?: string | null;
           client_name: string;
@@ -116,6 +127,9 @@ export type Database = {
           client_phone: string;
           completed_at?: string | null;
           created_at?: string;
+          creator_cancellation_reason?:
+            | Database["public"]["Enums"]["creator_cancellation_reason"]
+            | null;
           creator_display_name: string;
           creator_notes?: string | null;
           date: string;
@@ -135,6 +149,10 @@ export type Database = {
         Update: {
           beauty_page_id?: string;
           cancelled_at?: string | null;
+          cancelled_by?: Database["public"]["Enums"]["cancelled_by_role"] | null;
+          client_cancellation_reason?:
+            | Database["public"]["Enums"]["client_cancellation_reason"]
+            | null;
           client_email?: string | null;
           client_id?: string | null;
           client_name?: string;
@@ -142,6 +160,9 @@ export type Database = {
           client_phone?: string;
           completed_at?: string | null;
           created_at?: string;
+          creator_cancellation_reason?:
+            | Database["public"]["Enums"]["creator_cancellation_reason"]
+            | null;
           creator_display_name?: string;
           creator_notes?: string | null;
           date?: string;
@@ -640,6 +661,21 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "no_show";
+      cancelled_by_role: "client" | "creator";
+      client_cancellation_reason:
+        | "changed_plans"
+        | "scheduling_conflict"
+        | "found_alternative"
+        | "financial_reasons"
+        | "feeling_unwell"
+        | "other";
+      creator_cancellation_reason:
+        | "personal_emergency"
+        | "illness"
+        | "scheduling_conflict"
+        | "equipment_issue"
+        | "double_booking"
+        | "other";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -779,6 +815,23 @@ export const Constants = {
         "completed",
         "cancelled",
         "no_show",
+      ],
+      cancelled_by_role: ["client", "creator"],
+      client_cancellation_reason: [
+        "changed_plans",
+        "scheduling_conflict",
+        "found_alternative",
+        "financial_reasons",
+        "feeling_unwell",
+        "other",
+      ],
+      creator_cancellation_reason: [
+        "personal_emergency",
+        "illness",
+        "scheduling_conflict",
+        "equipment_issue",
+        "double_booking",
+        "other",
       ],
     },
   },

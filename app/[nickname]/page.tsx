@@ -2,12 +2,14 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageProfile } from "@/lib/queries/beauty-page-profile";
+import { getActiveBundles } from "@/lib/queries/bundles";
 import { getActiveSpecialOffers } from "@/lib/queries/special-offers";
 import {
   calculateOpenStatusFromWorkingDays,
   formatWorkingStatusMessage,
 } from "@/lib/utils/open-status";
 import { BookingBarWrapper } from "./_components/booking-bar-wrapper";
+import { BundlesSection } from "./_components/bundles-section";
 import { ContactSection } from "./_components/contact-section";
 import { HeroWithReviews } from "./_components/hero-with-reviews";
 import { ServicesSection } from "./_components/services-section";
@@ -21,6 +23,7 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
   const { nickname } = await params;
   const t = await getTranslations("beauty_page");
   const tBooking = await getTranslations("booking");
+  const tBookingDialog = await getTranslations("beauty_page.booking");
 
   const profile = await getBeautyPageProfile(nickname);
 
@@ -28,8 +31,11 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
     notFound();
   }
 
-  // Fetch special offers for this beauty page
-  const specialOffers = await getActiveSpecialOffers(profile.info.id);
+  // Fetch special offers and bundles for this beauty page
+  const [specialOffers, bundles] = await Promise.all([
+    getActiveSpecialOffers(profile.info.id),
+    getActiveBundles(profile.info.id),
+  ]);
 
   const currentUser = await getProfile();
 
@@ -42,24 +48,9 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
     hour: t("duration_hour"),
   };
 
-  // Month names for calendar
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  // Weekday names for calendar (starting from Monday)
-  const weekdayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  // Month names and weekday names from translations
+  const monthNames = tBookingDialog.raw("date.month_names") as string[];
+  const weekdayNames = tBookingDialog.raw("date.weekday_names") as string[];
 
   // Beauty page info for booking
   const beautyPageInfo = {
@@ -112,114 +103,115 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
         "{count}",
       ),
       bookNow: tBooking("book_now"),
-      clearSelection: "Clear selection",
+      clearSelection: t("selection.clear_selection"),
     },
     bookingDialog: {
-      dialogTitle: tBooking("title"),
-      cancel: tBooking("close"),
+      dialogTitle: tBookingDialog("dialog_title"),
+      cancel: tBookingDialog("cancel"),
       steps: {
         date: {
-          title: tBooking("step_datetime"),
-          subtitle: tBooking("select_date"),
+          title: tBookingDialog("date.title"),
+          subtitle: tBookingDialog("date.subtitle"),
           monthNames,
           weekdayNames,
-          today: "Today",
-          loading: "Loading...",
-          noAvailability: tBooking("no_working_day"),
-          nextButton: tBooking("continue"),
+          today: tBookingDialog("date.today"),
+          loading: tBookingDialog("date.loading"),
+          noAvailability: tBookingDialog("date.no_availability"),
+          nextButton: tBookingDialog("date.next_button"),
         },
         time: {
-          title: tBooking("step_datetime"),
-          subtitle: tBooking("select_time"),
-          loading: "Loading...",
-          noSlots: tBooking("no_available_slots"),
-          morning: "Morning",
-          afternoon: "Afternoon",
-          evening: "Evening",
-          nextButton: tBooking("continue"),
+          title: tBookingDialog("time.title"),
+          subtitle: tBookingDialog("time.subtitle"),
+          loading: tBookingDialog("time.loading"),
+          noSlots: tBookingDialog("time.no_slots"),
+          morning: tBookingDialog("time.morning"),
+          afternoon: tBookingDialog("time.afternoon"),
+          evening: tBookingDialog("time.evening"),
+          nextButton: tBookingDialog("time.next_button"),
         },
         confirm: {
-          title: tBooking("step_confirmation"),
-          subtitle: tBooking("booking_summary"),
+          title: tBookingDialog("confirm.title"),
+          subtitle: tBookingDialog("confirm.subtitle"),
           summary: {
-            who: "Who",
-            when: "When",
-            where: "Where",
-            what: "What",
-            price: tBooking("price"),
-            duration: tBooking("duration"),
+            who: tBookingDialog("confirm.summary.who"),
+            when: tBookingDialog("confirm.summary.when"),
+            where: tBookingDialog("confirm.summary.where"),
+            what: tBookingDialog("confirm.summary.what"),
+            price: tBookingDialog("confirm.summary.price"),
+            duration: tBookingDialog("confirm.summary.duration"),
           },
           form: {
-            name: tBooking("guest_name"),
-            namePlaceholder: tBooking("guest_name_placeholder"),
-            phone: tBooking("guest_phone"),
-            phonePlaceholder: tBooking("guest_phone_placeholder"),
-            email: "Email",
-            emailPlaceholder: "your@email.com",
-            notes: tBooking("notes"),
-            notesPlaceholder: tBooking("notes_placeholder"),
+            name: tBookingDialog("confirm.form.name"),
+            namePlaceholder: tBookingDialog("confirm.form.name_placeholder"),
+            phone: tBookingDialog("confirm.form.phone"),
+            phonePlaceholder: tBookingDialog("confirm.form.phone_placeholder"),
+            email: tBookingDialog("confirm.form.email"),
+            emailPlaceholder: tBookingDialog("confirm.form.email_placeholder"),
+            notes: tBookingDialog("confirm.form.notes"),
+            notesPlaceholder: tBookingDialog("confirm.form.notes_placeholder"),
           },
           validation: {
-            nameTooShort: "Name is too short",
-            nameTooLong: "Name is too long",
-            phoneTooShort: tBooking("phone_too_short"),
-            phoneTooLong: tBooking("phone_too_long"),
-            phoneInvalidFormat: "Invalid phone format",
-            emailInvalid: "Invalid email address",
-            notesTooLong: "Notes are too long",
+            nameTooShort: tBookingDialog("confirm.validation.name_too_short"),
+            nameTooLong: tBookingDialog("confirm.validation.name_too_long"),
+            phoneTooShort: tBookingDialog("confirm.validation.phone_too_short"),
+            phoneTooLong: tBookingDialog("confirm.validation.phone_too_long"),
+            phoneInvalidFormat: tBookingDialog(
+              "confirm.validation.phone_invalid_format",
+            ),
+            emailInvalid: tBookingDialog("confirm.validation.email_invalid"),
+            notesTooLong: tBookingDialog("confirm.validation.notes_too_long"),
           },
           visitPreferences: {
-            title: tBooking("confirm.visit_preferences.title"),
-            subtitle: tBooking("confirm.visit_preferences.subtitle"),
-            communicationLabel: tBooking(
+            title: tBookingDialog("confirm.visit_preferences.title"),
+            subtitle: tBookingDialog("confirm.visit_preferences.subtitle"),
+            communicationLabel: tBookingDialog(
               "confirm.visit_preferences.communication_label",
             ),
-            communicationQuiet: tBooking(
+            communicationQuiet: tBookingDialog(
               "confirm.visit_preferences.communication_quiet",
             ),
-            communicationFriendly: tBooking(
+            communicationFriendly: tBookingDialog(
               "confirm.visit_preferences.communication_friendly",
             ),
-            communicationChatty: tBooking(
+            communicationChatty: tBookingDialog(
               "confirm.visit_preferences.communication_chatty",
             ),
-            accessibilityLabel: tBooking(
+            accessibilityLabel: tBookingDialog(
               "confirm.visit_preferences.accessibility_label",
             ),
-            accessibilityWheelchair: tBooking(
+            accessibilityWheelchair: tBookingDialog(
               "confirm.visit_preferences.accessibility_wheelchair",
             ),
-            accessibilityHearing: tBooking(
+            accessibilityHearing: tBookingDialog(
               "confirm.visit_preferences.accessibility_hearing",
             ),
-            accessibilityVision: tBooking(
+            accessibilityVision: tBookingDialog(
               "confirm.visit_preferences.accessibility_vision",
             ),
-            accessibilitySensory: tBooking(
+            accessibilitySensory: tBookingDialog(
               "confirm.visit_preferences.accessibility_sensory",
             ),
-            allergiesLabel: tBooking(
+            allergiesLabel: tBookingDialog(
               "confirm.visit_preferences.allergies_label",
             ),
-            allergiesPlaceholder: tBooking(
+            allergiesPlaceholder: tBookingDialog(
               "confirm.visit_preferences.allergies_placeholder",
             ),
           },
-          submit: tBooking("confirm_booking"),
-          submitting: "Booking...",
+          submit: tBookingDialog("confirm.submit"),
+          submitting: tBookingDialog("confirm.submitting"),
         },
         success: {
-          title: tBooking("success_title"),
-          confirmedMessage: tBooking("success_message"),
-          pendingMessage: tBooking("success_pending_message"),
-          appointmentId: "Booking ID",
+          title: tBookingDialog("success.title"),
+          confirmedMessage: tBookingDialog("success.confirmed_message"),
+          pendingMessage: tBookingDialog("success.pending_message"),
           summary: {
-            specialist: "Specialist",
-            dateTime: tBooking("date_time"),
-            services: tBooking("services"),
+            specialist: tBookingDialog("success.summary.specialist"),
+            dateTime: tBookingDialog("success.summary.date_time"),
+            services: tBookingDialog("success.summary.services"),
           },
-          viewAppointment: tBooking("view_appointments"),
-          close: tBooking("done"),
+          viewAppointment: tBookingDialog("success.view_appointment"),
+          close: tBookingDialog("success.close"),
         },
       },
     },
@@ -274,6 +266,20 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
               today: t("today"),
               tomorrow: t("tomorrow"),
               bookNow: t("book_now"),
+            }}
+          />
+        )}
+
+        {/* Service Bundles */}
+        {bundles.length > 0 && (
+          <BundlesSection
+            bundles={bundles}
+            currency="UAH"
+            locale="uk-UA"
+            translations={{
+              title: t("bundles"),
+              selectPackage: t("select_package"),
+              services: t("services"),
             }}
           />
         )}

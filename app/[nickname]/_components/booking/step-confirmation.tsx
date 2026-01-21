@@ -12,8 +12,8 @@
 
 import { Collapsible } from "@base-ui/react/collapsible";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronDown, Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import type {
   AccessibilityNeed,
@@ -22,7 +22,6 @@ import type {
 } from "@/lib/types";
 import { ACCESSIBILITY_OPTIONS, COMMUNICATION_OPTIONS } from "@/lib/types";
 import { Avatar } from "@/lib/ui/avatar";
-import { Button } from "@/lib/ui/button";
 import { Checkbox } from "@/lib/ui/checkbox";
 import { Select } from "@/lib/ui/select";
 import { formatDuration, formatPrice } from "@/lib/utils/price-range";
@@ -100,10 +99,10 @@ export function StepConfirmation({
     totalDurationMinutes,
     currency,
     locale,
-    isSubmitting,
     error,
     submitBooking,
     setGuestInfo,
+    setConfirmFormReady,
     currentUserProfile,
     creatorInfo,
   } = useBooking();
@@ -204,6 +203,11 @@ export function StepConfirmation({
   const formIsValid = isAuthenticated
     ? authForm.formState.isValid
     : guestForm.formState.isValid;
+
+  // Report form validity to context for sticky footer button
+  useEffect(() => {
+    setConfirmFormReady(formIsValid);
+  }, [formIsValid, setConfirmFormReady]);
 
   // Calculate formatted values
   const formattedDate = useMemo(() => {
@@ -440,24 +444,6 @@ export function StepConfirmation({
             )}
           </form>
         )}
-      </div>
-
-      {/* Footer with actions */}
-      <div className="flex justify-end border-t border-border px-4 py-3">
-        <Button
-          type="submit"
-          form="booking-form"
-          disabled={!formIsValid || isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {translations.submitting}
-            </>
-          ) : (
-            translations.submit
-          )}
-        </Button>
       </div>
     </div>
   );

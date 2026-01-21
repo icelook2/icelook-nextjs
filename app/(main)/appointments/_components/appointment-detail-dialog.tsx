@@ -2,13 +2,15 @@
 
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import type { ClientAppointment } from "@/lib/queries/appointments";
+import type { Enums } from "@/lib/supabase/database.types";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
 import { formatDuration, formatPrice } from "@/lib/utils/price-range";
+import { CancelAppointmentDialog } from "../[id]/_components/cancel-appointment-dialog";
 import { cancelClientAppointment } from "../_actions/appointment.actions";
 import { StatusBadge } from "./status-badge";
 
@@ -25,8 +27,10 @@ export function AppointmentDetailDialog({
 }: AppointmentDetailDialogProps) {
   const t = useTranslations("appointments");
   const locale = useLocale();
+  const format = useFormatter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   if (!appointment) {
     return null;
@@ -71,15 +75,27 @@ export function AppointmentDetailDialog({
     !appointment.client_notes.trim().startsWith("{") &&
     !appointment.client_notes.trim().startsWith("[");
 
-  function handleCancel() {
+  // Format the appointment date for the cancel dialog
+  const cancelDialogDate = format.dateTime(new Date(appointment.date), {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
+  function handleCancelClick() {
+    setCancelDialogOpen(true);
+  }
+
+  function handleConfirmCancel(reason: Enums<"client_cancellation_reason">) {
     if (!appointment) {
       return;
     }
     const appointmentId = appointment.id;
     setError(null);
     startTransition(async () => {
-      const result = await cancelClientAppointment(appointmentId);
+      const result = await cancelClientAppointment(appointmentId, reason);
       if (result.success) {
+        setCancelDialogOpen(false);
         onOpenChange(false);
       } else {
         setError(result.error);
@@ -196,7 +212,7 @@ export function AppointmentDetailDialog({
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
               {t("keep")}
             </Button>
-            <Button variant="danger" onClick={handleCancel} loading={isPending}>
+            <Button variant="danger" onClick={handleCancelClick}>
               {t("cancel")}
             </Button>
           </Dialog.Footer>
@@ -208,6 +224,15 @@ export function AppointmentDetailDialog({
           </Dialog.Footer>
         )}
       </Dialog.Portal>
+
+      <CancelAppointmentDialog
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+        onConfirm={handleConfirmCancel}
+        specialistName={appointment.creator_display_name}
+        appointmentDate={cancelDialogDate}
+        isPending={isPending}
+      />
     </Dialog.Root>
   );
 }

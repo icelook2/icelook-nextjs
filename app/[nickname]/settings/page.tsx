@@ -5,6 +5,7 @@ import {
   Clock,
   CreditCard,
   MapPin,
+  Package,
   Scissors,
   Tag,
   Users,
@@ -54,6 +55,15 @@ export default async function BeautyPageSettings({
       description: t("nav.services_description"),
       iconClassName:
         "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
+      disabled: false,
+    },
+    {
+      href: `/${nickname}/settings/bundles`,
+      icon: Package,
+      title: t("nav.bundles"),
+      description: t("nav.bundles_description"),
+      iconClassName:
+        "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400",
       disabled: false,
     },
     {

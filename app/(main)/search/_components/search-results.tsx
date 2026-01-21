@@ -45,7 +45,7 @@ export function SearchResults({
 
   // Results
   return (
-    <div className="grid gap-3" aria-label={t("results_label")}>
+    <div className="grid gap-1" aria-label={t("results_label")}>
       {results.map((result) => (
         <SearchResultCard key={result.id} result={result} />
       ))}

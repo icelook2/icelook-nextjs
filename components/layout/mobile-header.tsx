@@ -10,12 +10,7 @@ interface MobileHeaderProps {
 
 export function MobileHeader({ className }: MobileHeaderProps) {
   return (
-    <header
-      className={cn(
-        "pt-[env(safe-area-inset-top,0px)]",
-        className,
-      )}
-    >
+    <header className={cn("pt-[env(safe-area-inset-top,0px)]", className)}>
       <div className="flex h-14 items-center px-4">
         <Link
           href="/"

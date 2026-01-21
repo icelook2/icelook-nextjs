@@ -9,8 +9,10 @@
  * Flow: date → time → confirm → success
  */
 
-import { useCallback, useMemo } from "react";
+import { Loader2 } from "lucide-react";
+import { useMemo } from "react";
 import type { ProfileService } from "@/lib/queries/beauty-page-profile";
+import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
 import type { BookingStep, CurrentUserProfile } from "./_lib/booking-types";
 import {
@@ -53,6 +55,8 @@ export interface BookingDialogProps {
     min: string;
     hour: string;
   };
+  /** Called when booking is successfully completed */
+  onBookingSuccess?: () => void;
 }
 
 export interface BookingDialogTranslations {
@@ -162,10 +166,11 @@ export function BookingDialog({
   beautyPageInfo,
   creatorInfo,
   durationLabels,
+  onBookingSuccess,
 }: BookingDialogProps) {
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     onOpenChange(false);
-  }, [onOpenChange]);
+  };
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -181,6 +186,7 @@ export function BookingDialog({
           currentUserId={currentUserId}
           currentUserProfile={currentUserProfile}
           creatorInfo={creatorInfo}
+          onBookingSuccess={onBookingSuccess}
         >
           <BookingDialogContent
             translations={translations}
@@ -214,7 +220,8 @@ function BookingDialogContent({
   durationLabels,
   onClose,
 }: BookingDialogContentProps) {
-  const { step, canGoBack, goBack, date } = useBooking();
+  const { step, canGoBack, goBack, date, isSubmitting, isConfirmFormReady } =
+    useBooking();
 
   // Format date for subtitle (shown on time and confirm steps)
   const formattedDate = useMemo(() => {
@@ -232,7 +239,7 @@ function BookingDialogContent({
   const showSubtitle = step === "time" || step === "confirm";
 
   return (
-    <div className="flex max-h-[85vh] flex-col">
+    <>
       {/* Header - only show for non-success steps */}
       {step !== "success" && (
         <Dialog.Header
@@ -248,7 +255,7 @@ function BookingDialogContent({
       )}
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <Dialog.Body className="p-0">
         <StepContent
           step={step}
           translations={translations}
@@ -256,8 +263,28 @@ function BookingDialogContent({
           durationLabels={durationLabels}
           onClose={onClose}
         />
-      </div>
-    </div>
+      </Dialog.Body>
+
+      {/* Sticky Footer - only show for confirm step */}
+      {step === "confirm" && (
+        <Dialog.Footer className="justify-end">
+          <Button
+            type="submit"
+            form="booking-form"
+            disabled={!isConfirmFormReady || isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {translations.steps.confirm.submitting}
+              </>
+            ) : (
+              translations.steps.confirm.submit
+            )}
+          </Button>
+        </Dialog.Footer>
+      )}
+    </>
   );
 }
 
