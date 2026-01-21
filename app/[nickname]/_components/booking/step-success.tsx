@@ -21,6 +21,10 @@ interface StepSuccessProps {
     title: string;
     confirmedMessage: string;
     pendingMessage: string;
+    /** Title shown for reschedule success */
+    rescheduledTitle?: string;
+    /** Message shown for reschedule success */
+    rescheduledMessage?: string;
     summary: {
       specialist: string;
       dateTime: string;
@@ -51,6 +55,7 @@ export function StepSuccess({
     currency,
     locale,
     creatorInfo,
+    isRescheduleMode,
   } = useBooking();
 
   // Format display values
@@ -87,15 +92,27 @@ export function StepSuccess({
     [selectedServices],
   );
 
-  // Get status message
+  // Get title and status message (different for reschedule vs new booking)
+  const displayTitle = useMemo(() => {
+    if (isRescheduleMode && translations.rescheduledTitle) {
+      return translations.rescheduledTitle;
+    }
+    return translations.title;
+  }, [isRescheduleMode, translations]);
+
   const statusMessage = useMemo(() => {
     if (!result || !result.success) {
       return "";
     }
+    // For reschedule, show rescheduled message
+    if (isRescheduleMode && translations.rescheduledMessage) {
+      return translations.rescheduledMessage;
+    }
+    // For regular booking, show confirmed or pending message
     return result.status === "confirmed"
       ? translations.confirmedMessage
       : translations.pendingMessage;
-  }, [result, translations]);
+  }, [result, translations, isRescheduleMode]);
 
   if (!date || !time || !result || !result.success) {
     return null;
@@ -111,7 +128,7 @@ export function StepSuccess({
       {/* Title and message */}
       <div className="text-center">
         <h3 className="text-xl font-semibold text-foreground">
-          {translations.title}
+          {displayTitle}
         </h3>
         <p className="mt-1 text-sm text-muted">{statusMessage}</p>
       </div>
@@ -163,12 +180,22 @@ export function StepSuccess({
 
       {/* Action buttons */}
       <div className="flex w-full flex-col gap-2">
-        <Link href="/appointments" className="w-full">
-          <Button className="w-full">{translations.viewAppointment}</Button>
-        </Link>
-        <Button variant="ghost" onClick={onClose} className="w-full">
-          {translations.close}
-        </Button>
+        {isRescheduleMode ? (
+          // When rescheduling, user is already on the appointment page - just show Close
+          <Button onClick={onClose} className="w-full">
+            {translations.close}
+          </Button>
+        ) : (
+          // For new bookings, show both View Appointment and Close
+          <>
+            <Link href={`/appointments/${result.appointmentId}`} className="w-full">
+              <Button className="w-full">{translations.viewAppointment}</Button>
+            </Link>
+            <Button variant="ghost" onClick={onClose} className="w-full">
+              {translations.close}
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

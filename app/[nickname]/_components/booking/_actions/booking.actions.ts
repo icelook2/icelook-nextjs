@@ -303,21 +303,30 @@ export async function createBooking(
 
 /**
  * Check if a time slot is available (no conflicting appointments)
+ * @param excludeAppointmentId - Appointment to exclude (for rescheduling - appointment shouldn't block itself)
  */
-async function isSlotAvailable(
+export async function isSlotAvailable(
   supabase: Awaited<ReturnType<typeof createClient>>,
   beautyPageId: string,
   date: string,
   startTime: string,
   endTime: string,
+  excludeAppointmentId?: string,
 ): Promise<boolean> {
   // Fetch existing appointments for the date
-  const { data: appointments, error } = await supabase
+  let query = supabase
     .from("appointments")
     .select("start_time, end_time")
     .eq("beauty_page_id", beautyPageId)
     .eq("date", date)
     .in("status", ["pending", "confirmed"]);
+
+  // Exclude the appointment being rescheduled (so it doesn't block itself)
+  if (excludeAppointmentId) {
+    query = query.neq("id", excludeAppointmentId);
+  }
+
+  const { data: appointments, error } = await query;
 
   if (error) {
     console.error("Error checking slot availability:", error);

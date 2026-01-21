@@ -18,6 +18,7 @@ import type { BookingStep, CurrentUserProfile } from "./_lib/booking-types";
 import {
   BookingProvider,
   type CreatorInfo,
+  type RescheduleData,
   useBooking,
 } from "./booking-context";
 import { StepConfirmation } from "./step-confirmation";
@@ -57,10 +58,16 @@ export interface BookingDialogProps {
   };
   /** Called when booking is successfully completed */
   onBookingSuccess?: () => void;
+  /** Original price from a previous booking (for rebooking flow when price changed) */
+  originalPriceCents?: number;
+  /** Reschedule mode data - when set, we're rescheduling an existing appointment */
+  rescheduleData?: RescheduleData;
 }
 
 export interface BookingDialogTranslations {
   dialogTitle: string;
+  /** Title shown when in reschedule mode */
+  rescheduleDialogTitle?: string;
   cancel: string;
   steps: {
     date: {
@@ -130,6 +137,8 @@ export interface BookingDialogTranslations {
       };
       submit: string;
       submitting: string;
+      /** Notice shown when price differs from original booking (rebooking flow) */
+      priceChangedNotice: string;
     };
     success: {
       title: string;
@@ -167,6 +176,8 @@ export function BookingDialog({
   creatorInfo,
   durationLabels,
   onBookingSuccess,
+  originalPriceCents,
+  rescheduleData,
 }: BookingDialogProps) {
   const handleClose = () => {
     onOpenChange(false);
@@ -187,6 +198,8 @@ export function BookingDialog({
           currentUserProfile={currentUserProfile}
           creatorInfo={creatorInfo}
           onBookingSuccess={onBookingSuccess}
+          originalPriceCents={originalPriceCents}
+          rescheduleData={rescheduleData}
         >
           <BookingDialogContent
             translations={translations}
@@ -220,8 +233,20 @@ function BookingDialogContent({
   durationLabels,
   onClose,
 }: BookingDialogContentProps) {
-  const { step, canGoBack, goBack, date, isSubmitting, isConfirmFormReady } =
-    useBooking();
+  const {
+    step,
+    canGoBack,
+    goBack,
+    date,
+    isSubmitting,
+    isConfirmFormReady,
+    isRescheduleMode,
+  } = useBooking();
+
+  // Determine dialog title based on mode
+  const dialogTitle = isRescheduleMode
+    ? (translations.rescheduleDialogTitle ?? translations.dialogTitle)
+    : translations.dialogTitle;
 
   // Format date for subtitle (shown on time and confirm steps)
   const formattedDate = useMemo(() => {
@@ -250,7 +275,7 @@ function BookingDialogContent({
           showCloseButton
           className="border-b-0"
         >
-          {translations.dialogTitle}
+          {dialogTitle}
         </Dialog.Header>
       )}
 

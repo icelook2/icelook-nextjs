@@ -8,13 +8,23 @@ import type {
 import type { ServiceGroupWithServices } from "@/lib/queries/services";
 import type { VisitPreferences } from "@/lib/types/visit-preferences";
 import { isEmptyPreferences } from "@/lib/types/visit-preferences";
-import { AppointmentActionsCard } from "./appointment-actions-card";
+import {
+  AppointmentActionsCard,
+  type ActionConfirmationTranslations,
+  type QuickRescheduleTranslations,
+} from "./appointment-actions-card";
+import { AppointmentDateTimeCard } from "./appointment-date-time-card";
 import { ClientDetailsCard } from "./client-details-card";
 import { ClientNotesCard } from "./client-notes-card";
 import { CreatorNotesEditableCard } from "./creator-notes-editable-card";
 import { LastAppointmentCard } from "./last-appointment-card";
 import { ServicesCard } from "./services-card";
 import { VisitPreferencesCard } from "./visit-preferences-card";
+
+export interface DateTimeTranslations {
+  date: string;
+  time: string;
+}
 
 interface AppointmentDetailsViewProps {
   appointment: Appointment;
@@ -24,6 +34,9 @@ interface AppointmentDetailsViewProps {
   beautyPageId: string;
   creatorNotes: string | null;
   serviceGroups: ServiceGroupWithServices[];
+  rescheduleTranslations: QuickRescheduleTranslations;
+  actionTranslations: ActionConfirmationTranslations;
+  dateTimeTranslations: DateTimeTranslations;
 }
 
 export function AppointmentDetailsView({
@@ -34,6 +47,9 @@ export function AppointmentDetailsView({
   beautyPageId,
   creatorNotes,
   serviceGroups,
+  rescheduleTranslations,
+  actionTranslations,
+  dateTimeTranslations,
 }: AppointmentDetailsViewProps) {
   // Track current time for determining if appointment is upcoming or active
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -68,12 +84,21 @@ export function AppointmentDetailsView({
         nickname={nickname}
       />
 
-      {/* 2. ACTIONS - Call, Confirm, Decline, etc. */}
+      {/* 2. DATE & TIME - When is the appointment? */}
+      <AppointmentDateTimeCard
+        date={appointment.date}
+        startTime={appointment.start_time}
+        translations={dateTimeTranslations}
+      />
+
+      {/* 3. ACTIONS - Call, Confirm, Decline, etc. */}
       <AppointmentActionsCard
         appointment={appointment}
         beautyPageId={beautyPageId}
         nickname={nickname}
         currentTime={currentTime}
+        rescheduleTranslations={rescheduleTranslations}
+        actionTranslations={actionTranslations}
       />
 
       {/* 3. VISIT PREFERENCES - Accessibility & communication needs */}

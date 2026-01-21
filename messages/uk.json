@@ -958,6 +958,7 @@
     },
     "booking": {
       "dialog_title": "Записатися на прийом",
+      "reschedule_dialog_title": "Перенести запис",
       "cancel": "Скасувати",
       "specialist": {
         "title": "Оберіть спеціаліста",
@@ -1000,6 +1001,8 @@
       "confirm": {
         "title": "Підтвердження запису",
         "subtitle": "Перевірте та завершіть запис",
+        "reschedule_title": "Підтвердити перенесення",
+        "reschedule_subtitle": "Перевірте нову дату та час",
         "summary": {
           "who": "Хто",
           "when": "Коли",
@@ -1043,12 +1046,17 @@
           "notes_too_long": "Примітки мають містити не більше 500 символів"
         },
         "submit": "Підтвердити запис",
-        "submitting": "Записуємо..."
+        "submitting": "Записуємо...",
+        "reschedule_submit": "Підтвердити перенесення",
+        "reschedule_submitting": "Переносимо...",
+        "price_changed_notice": "Ціна на цю послугу була оновлена з моменту вашого запису."
       },
       "success": {
         "title": "Запис підтверджено!",
         "confirmed_message": "Ваш запис підтверджено.",
         "pending_message": "Ваш запис очікує на підтвердження.",
+        "rescheduled_title": "Запис перенесено!",
+        "rescheduled_message": "Ваш запис перенесено на новий час.",
         "summary": {
           "specialist": "Спеціаліст",
           "date_time": "Дата та час",
@@ -1446,6 +1454,7 @@
     "status_message_cancelled": "Цей запис було скасовано",
     "status_message_no_show": "Ви пропустили цей запис",
     "cancel": "Скасувати",
+    "reschedule": "Перенести",
     "keep": "Залишити",
     "cancel_confirm_title": "Скасувати запис?",
     "cancel_confirm_message": "Ви впевнені, що хочете скасувати запис до {specialist} на {date}?",
@@ -1491,7 +1500,8 @@
     "clear_filter": "Скинути фільтр",
     "filtered_subtitle": "Записи за {date}",
     "no_appointments_for_date": "Немає записів на цю дату",
-    "try_another_date": "Оберіть іншу дату в календарі"
+    "try_another_date": "Оберіть іншу дату в календарі",
+    "cannot_rebook_service_unavailable": "Цей запис неможливо повторити, оскільки послуга більше недоступна у цього спеціаліста."
   },
   "team": {
     "page_title": "Команда",
@@ -1991,6 +2001,12 @@
       "reschedule_description": "Змінити дату або час",
       "cancel": "Скасувати запис",
       "cancel_description": "Скасувати цей запис"
+    },
+    "reschedule_dialog": {
+      "service_unavailable": "Послуга більше недоступна",
+      "fetch_error": "Не вдалося завантажити дані запису",
+      "loading": "Завантаження...",
+      "close": "Закрити"
     }
   },
   "creator_schedule": {

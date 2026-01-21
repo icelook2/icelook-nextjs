@@ -11,12 +11,28 @@ import {
 } from "@/app/[nickname]/appointments/_actions";
 import type { Appointment } from "@/lib/queries/appointments";
 import { Button } from "@/lib/ui/button";
+import {
+  ActionConfirmationDialog,
+  type ActionConfirmationTranslations,
+  type ActionType,
+} from "./action-confirmation-dialog";
+import {
+  QuickRescheduleDialog,
+  type QuickRescheduleTranslations,
+} from "./quick-reschedule-dialog";
+
+// Re-export types for parent components
+export type { QuickRescheduleTranslations, ActionConfirmationTranslations };
 
 interface AppointmentActionsCardProps {
   appointment: Appointment;
   beautyPageId: string;
   nickname: string;
   currentTime: Date;
+  /** Translations for the reschedule dialog */
+  rescheduleTranslations: QuickRescheduleTranslations;
+  /** Translations for action confirmation dialogs */
+  actionTranslations: ActionConfirmationTranslations;
 }
 
 export function AppointmentActionsCard({
@@ -24,6 +40,8 @@ export function AppointmentActionsCard({
   beautyPageId,
   nickname,
   currentTime,
+  rescheduleTranslations,
+  actionTranslations,
 }: AppointmentActionsCardProps) {
   const router = useRouter();
   const [isConfirming, setIsConfirming] = useState(false);
@@ -31,17 +49,41 @@ export function AppointmentActionsCard({
   const [isMarkingNoShow, setIsMarkingNoShow] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    open: boolean;
+    actionType: ActionType;
+  }>({ open: false, actionType: "confirm" });
 
   const isPending = appointment.status === "pending";
   const isConfirmed = appointment.status === "confirmed";
 
-  // Determine if confirmed appointment is upcoming or active
+  // Build full datetime strings for accurate comparison (date + time)
+  const appointmentDate = appointment.date; // "YYYY-MM-DD"
+  const todayStr = `${currentTime.getFullYear()}-${String(currentTime.getMonth() + 1).padStart(2, "0")}-${String(currentTime.getDate()).padStart(2, "0")}`;
   const currentTimeStr = `${currentTime.getHours().toString().padStart(2, "0")}:${currentTime.getMinutes().toString().padStart(2, "0")}`;
-  const isUpcoming = isConfirmed && currentTimeStr < appointment.start_time;
+
+  // Determine if confirmed appointment is upcoming or active
+  // Compare dates first, then times if same date
+  const isFutureDate = appointmentDate > todayStr;
+  const isSameDate = appointmentDate === todayStr;
+  const isUpcoming =
+    isConfirmed &&
+    (isFutureDate || (isSameDate && currentTimeStr < appointment.start_time));
   const isActive =
     isConfirmed &&
+    isSameDate &&
     currentTimeStr >= appointment.start_time &&
     currentTimeStr < appointment.end_time;
+
+  // Past confirmed appointment - time has passed but not marked as complete/no-show
+  // This happens when the appointment slot ended but specialist didn't update status
+  const isPastConfirmed =
+    isConfirmed &&
+    !isUpcoming &&
+    !isActive &&
+    (appointmentDate < todayStr ||
+      (isSameDate && currentTimeStr >= appointment.end_time));
 
   const isLoading =
     isConfirming ||
@@ -56,7 +98,37 @@ export function AppointmentActionsCard({
     return null;
   }
 
-  const handleConfirm = async () => {
+  // Open confirmation dialog for an action
+  const openConfirmationDialog = (actionType: ActionType) => {
+    setConfirmationDialog({ open: true, actionType });
+  };
+
+  const closeConfirmationDialog = () => {
+    setConfirmationDialog((prev) => ({ ...prev, open: false }));
+  };
+
+  // Execute action after confirmation
+  const executeConfirmedAction = async () => {
+    const { actionType } = confirmationDialog;
+
+    switch (actionType) {
+      case "confirm":
+        await handleConfirmAction();
+        break;
+      case "complete":
+        await handleCompleteAction();
+        break;
+      case "cancel":
+        await handleCancelAction();
+        break;
+      case "no_show":
+        await handleNoShowAction();
+        break;
+    }
+    closeConfirmationDialog();
+  };
+
+  const handleConfirmAction = async () => {
     setIsConfirming(true);
     try {
       const result = await confirmAppointment({
@@ -89,11 +161,10 @@ export function AppointmentActionsCard({
   };
 
   const handleReschedule = () => {
-    // TODO: Implement reschedule dialog/navigation
-    console.log("Reschedule clicked");
+    setIsRescheduleDialogOpen(true);
   };
 
-  const handleCancel = async () => {
+  const handleCancelAction = async () => {
     setIsDeclining(true);
     try {
       const result = await cancelAppointment({
@@ -109,7 +180,7 @@ export function AppointmentActionsCard({
     }
   };
 
-  const handleNoShow = async () => {
+  const handleNoShowAction = async () => {
     setIsMarkingNoShow(true);
     try {
       const result = await markNoShow({
@@ -141,7 +212,7 @@ export function AppointmentActionsCard({
     }
   };
 
-  const handleComplete = async () => {
+  const handleCompleteAction = async () => {
     setIsCompleting(true);
     try {
       const result = await completeAppointment({
@@ -167,7 +238,7 @@ export function AppointmentActionsCard({
             <Button
               variant="primary"
               size="sm"
-              onClick={handleConfirm}
+              onClick={() => openConfirmationDialog("confirm")}
               disabled={isLoading}
             >
               {isConfirming ? "Confirming..." : "Confirm"}
@@ -200,7 +271,7 @@ export function AppointmentActionsCard({
             <Button
               variant="secondary"
               size="sm"
-              onClick={handleNoShow}
+              onClick={() => openConfirmationDialog("no_show")}
               disabled={isLoading}
             >
               {isMarkingNoShow ? "Marking..." : "No-show"}
@@ -208,7 +279,7 @@ export function AppointmentActionsCard({
             <Button
               variant="danger"
               size="sm"
-              onClick={handleCancel}
+              onClick={() => openConfirmationDialog("cancel")}
               disabled={isLoading}
             >
               {isDeclining ? "Cancelling..." : "Cancel"}
@@ -222,7 +293,7 @@ export function AppointmentActionsCard({
             <Button
               variant="primary"
               size="sm"
-              onClick={handleComplete}
+              onClick={() => openConfirmationDialog("complete")}
               disabled={isLoading}
             >
               {isCompleting ? "Completing..." : "Complete"}
@@ -230,7 +301,7 @@ export function AppointmentActionsCard({
             <Button
               variant="secondary"
               size="sm"
-              onClick={handleNoShow}
+              onClick={() => openConfirmationDialog("no_show")}
               disabled={isLoading}
             >
               {isMarkingNoShow ? "Marking..." : "No-show"}
@@ -238,14 +309,61 @@ export function AppointmentActionsCard({
             <Button
               variant="danger"
               size="sm"
-              onClick={handleCancel}
+              onClick={() => openConfirmationDialog("cancel")}
               disabled={isLoading}
             >
               {isDeclining ? "Cancelling..." : "Cancel"}
             </Button>
           </>
         )}
+
+        {/* Past confirmed - need to finalize status */}
+        {isPastConfirmed && (
+          <>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => openConfirmationDialog("complete")}
+              disabled={isLoading}
+            >
+              {isCompleting ? "Completing..." : "Complete"}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => openConfirmationDialog("no_show")}
+              disabled={isLoading}
+            >
+              {isMarkingNoShow ? "Marking..." : "No-show"}
+            </Button>
+          </>
+        )}
       </div>
+
+      {/* Action Confirmation Dialog */}
+      <ActionConfirmationDialog
+        open={confirmationDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeConfirmationDialog();
+          }
+        }}
+        onConfirm={executeConfirmedAction}
+        actionType={confirmationDialog.actionType}
+        clientName={appointment.client_name}
+        isPending={isLoading}
+        translations={actionTranslations}
+      />
+
+      {/* Reschedule Dialog */}
+      <QuickRescheduleDialog
+        appointment={isRescheduleDialogOpen ? appointment : null}
+        beautyPageId={beautyPageId}
+        nickname={nickname}
+        onClose={() => setIsRescheduleDialogOpen(false)}
+        onSuccess={() => router.refresh()}
+        translations={rescheduleTranslations}
+      />
     </section>
   );
 }

@@ -958,6 +958,7 @@
     },
     "booking": {
       "dialog_title": "Book Appointment",
+      "reschedule_dialog_title": "Reschedule Appointment",
       "cancel": "Cancel",
       "specialist": {
         "title": "Choose Specialist",
@@ -1000,6 +1001,8 @@
       "confirm": {
         "title": "Confirm Booking",
         "subtitle": "Review and complete your booking",
+        "reschedule_title": "Confirm Reschedule",
+        "reschedule_subtitle": "Review new date and time",
         "summary": {
           "who": "Who",
           "when": "When",
@@ -1043,12 +1046,17 @@
           "notes_too_long": "Notes must be at most 500 characters"
         },
         "submit": "Confirm Booking",
-        "submitting": "Booking..."
+        "submitting": "Booking...",
+        "reschedule_submit": "Confirm Reschedule",
+        "reschedule_submitting": "Rescheduling...",
+        "price_changed_notice": "The price for this service has been updated since your original booking."
       },
       "success": {
         "title": "Booking Confirmed!",
         "confirmed_message": "Your appointment has been confirmed.",
         "pending_message": "Your appointment is pending confirmation.",
+        "rescheduled_title": "Appointment Rescheduled!",
+        "rescheduled_message": "Your appointment has been moved to the new time.",
         "summary": {
           "specialist": "Specialist",
           "date_time": "Date & Time",
@@ -1446,6 +1454,7 @@
     "status_message_cancelled": "This appointment was cancelled",
     "status_message_no_show": "You missed this appointment",
     "cancel": "Cancel",
+    "reschedule": "Reschedule",
     "keep": "Keep",
     "cancel_confirm_title": "Cancel Appointment?",
     "cancel_confirm_message": "Are you sure you want to cancel this appointment with {specialist} on {date}?",
@@ -1491,7 +1500,8 @@
     "clear_filter": "Clear filter",
     "filtered_subtitle": "Appointments for {date}",
     "no_appointments_for_date": "No appointments on this date",
-    "try_another_date": "Select another date from the calendar"
+    "try_another_date": "Select another date from the calendar",
+    "cannot_rebook_service_unavailable": "This appointment cannot be rebooked because the service is no longer available from this specialist."
   },
   "team": {
     "page_title": "Team",
@@ -1991,6 +2001,12 @@
       "reschedule_description": "Change the date or time",
       "cancel": "Cancel Appointment",
       "cancel_description": "Cancel this appointment"
+    },
+    "reschedule_dialog": {
+      "service_unavailable": "Service is no longer available",
+      "fetch_error": "Failed to load appointment data",
+      "loading": "Loading...",
+      "close": "Close"
     }
   },
   "creator_schedule": {

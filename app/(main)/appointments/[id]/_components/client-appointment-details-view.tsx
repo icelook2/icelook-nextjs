@@ -9,6 +9,7 @@ import {
   AlertCircle,
   XOctagon,
   ChevronRight,
+  Info,
 } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -23,6 +24,7 @@ import {
   QuickBookingDialog,
   type QuickBookingTranslations,
 } from "../../_components/quick-booking-dialog";
+import type { QuickRescheduleTranslations } from "../../_components/quick-reschedule-dialog";
 import { ClientAppointmentActionsCard } from "./client-appointment-actions-card";
 
 type Props = {
@@ -31,8 +33,12 @@ type Props = {
   currentUserId?: string;
   /** Current user profile for rebooking */
   currentUserProfile?: CurrentUserProfile;
+  /** Client's name (from current user profile) */
+  clientName: string;
   /** Translations for quick booking dialog */
   quickBookingTranslations: QuickBookingTranslations;
+  /** Translations for quick reschedule dialog */
+  quickRescheduleTranslations: QuickRescheduleTranslations;
 };
 
 const statusConfig = {
@@ -72,7 +78,9 @@ export function ClientAppointmentDetailsView({
   appointment,
   currentUserId,
   currentUserProfile,
+  clientName,
   quickBookingTranslations,
+  quickRescheduleTranslations,
 }: Props) {
   const t = useTranslations("appointments");
   const locale = useLocale();
@@ -230,18 +238,33 @@ export function ClientAppointmentDetailsView({
 
       {/* 6. Actions - What can user do */}
       {isPast ? (
-        <div className="pt-2">
-          <Button
-            className="w-full"
-            variant="primary"
-            onClick={() => setShowBookingDialog(true)}
-          >
-            <RefreshCcw className="h-4 w-4" />
-            {t("book_again")}
-          </Button>
-        </div>
+        appointment.canRebook ? (
+          <div className="pt-2">
+            <Button
+              className="w-full"
+              variant="primary"
+              onClick={() => setShowBookingDialog(true)}
+            >
+              <RefreshCcw className="h-4 w-4" />
+              {t("book_again")}
+            </Button>
+          </div>
+        ) : (
+          <Paper className="p-4">
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-muted shrink-0 mt-0.5" />
+              <p className="text-sm text-muted">
+                {t("cannot_rebook_service_unavailable")}
+              </p>
+            </div>
+          </Paper>
+        )
       ) : (
-        <ClientAppointmentActionsCard appointment={appointment} />
+        <ClientAppointmentActionsCard
+          appointment={appointment}
+          clientName={clientName}
+          rescheduleTranslations={quickRescheduleTranslations}
+        />
       )}
 
       {/* Quick Booking Dialog */}

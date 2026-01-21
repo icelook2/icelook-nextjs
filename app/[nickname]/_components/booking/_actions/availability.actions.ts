@@ -44,7 +44,7 @@ export async function getAvailabilityData(
 ): Promise<ActionResult<AvailabilityData>> {
   try {
     const supabase = await createClient();
-    const { beautyPageId, startDate, endDate } = input;
+    const { beautyPageId, startDate, endDate, excludeAppointmentId } = input;
 
     // Fetch working days with breaks
     const { data: workingDaysRaw, error: workingDaysError } = await supabase
@@ -87,13 +87,21 @@ export async function getAvailabilityData(
     }));
 
     // Fetch appointments (pending and confirmed only)
-    const { data: appointmentsRaw, error: appointmentsError } = await supabase
+    // Optionally exclude an appointment (for rescheduling - appointment shouldn't block itself)
+    let appointmentsQuery = supabase
       .from("appointments")
       .select("id, start_time, end_time, status")
       .eq("beauty_page_id", beautyPageId)
       .gte("date", startDate)
       .lte("date", endDate)
       .in("status", ["pending", "confirmed"]);
+
+    if (excludeAppointmentId) {
+      appointmentsQuery = appointmentsQuery.neq("id", excludeAppointmentId);
+    }
+
+    const { data: appointmentsRaw, error: appointmentsError } =
+      await appointmentsQuery;
 
     if (appointmentsError) {
       console.error("Error fetching appointments:", appointmentsError);

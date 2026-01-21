@@ -78,6 +78,8 @@ interface StepConfirmationProps {
     visitPreferences: VisitPreferencesTranslations;
     submit: string;
     submitting: string;
+    /** Notice shown when price differs from original booking */
+    priceChangedNotice?: string;
   };
   beautyPageInfo: BeautyPageInfo;
   durationLabels: {
@@ -105,10 +107,19 @@ export function StepConfirmation({
     setConfirmFormReady,
     currentUserProfile,
     creatorInfo,
+    originalPriceCents,
+    isRescheduleMode,
+    rescheduleData,
   } = useBooking();
 
   // Determine if user is authenticated with profile data
   const isAuthenticated = !!currentUserProfile?.name;
+
+  // Handle reschedule submit (no form data needed)
+  const handleRescheduleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitBooking();
+  };
 
   // Visit preferences state - pre-fill from profile for authenticated users
   const [communication, setCommunication] = useState<
@@ -200,9 +211,12 @@ export function StepConfirmation({
   };
 
   // Get form validity based on auth status
-  const formIsValid = isAuthenticated
-    ? authForm.formState.isValid
-    : guestForm.formState.isValid;
+  // In reschedule mode, form is always valid (no input needed)
+  const formIsValid = isRescheduleMode
+    ? true
+    : isAuthenticated
+      ? authForm.formState.isValid
+      : guestForm.formState.isValid;
 
   // Report form validity to context for sticky footer button
   useEffect(() => {
@@ -238,6 +252,49 @@ export function StepConfirmation({
     return formatDuration(totalDurationMinutes, durationLabels);
   }, [totalDurationMinutes, durationLabels]);
 
+  // Format original price for comparison display (when rebooking with price change)
+  const formattedOriginalPrice = useMemo(() => {
+    if (!originalPriceCents) {
+      return null;
+    }
+    return formatPrice(originalPriceCents, currency, locale);
+  }, [originalPriceCents, currency, locale]);
+
+  // Check if price has changed (for rebooking flow)
+  const hasPriceChanged = originalPriceCents !== undefined && originalPriceCents !== totalPriceCents;
+
+  // Format original date/time for reschedule mode
+  const formattedOriginalDate = useMemo(() => {
+    if (!rescheduleData?.originalDate) {
+      return null;
+    }
+    const originalDate = new Date(rescheduleData.originalDate + "T00:00:00");
+    return originalDate.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  }, [rescheduleData?.originalDate]);
+
+  const formattedOriginalTime = useMemo(() => {
+    if (!rescheduleData?.originalStartTime) {
+      return null;
+    }
+    const endTime = calculateEndTime(
+      rescheduleData.originalStartTime,
+      totalDurationMinutes,
+    );
+    return `${formatSlotTime(rescheduleData.originalStartTime, false)} – ${formatSlotTime(endTime, false)}`;
+  }, [rescheduleData?.originalStartTime, totalDurationMinutes]);
+
+  // Check if date/time has changed (for reschedule flow)
+  const hasDateTimeChanged =
+    isRescheduleMode &&
+    rescheduleData &&
+    (rescheduleData.originalDate !== date?.toISOString().split("T")[0] ||
+      rescheduleData.originalStartTime !== time);
+
   if (!date || !time) {
     return null;
   }
@@ -265,6 +322,18 @@ export function StepConfirmation({
           {/* When */}
           <SummaryRow label={translations.summary.when}>
             <div>
+              {/* Show original date/time crossed out when rescheduling */}
+              {hasDateTimeChanged && formattedOriginalDate && formattedOriginalTime && (
+                <div className="mb-1">
+                  <div className="text-sm text-muted line-through">
+                    {formattedOriginalDate}
+                  </div>
+                  <div className="text-sm text-muted line-through">
+                    {formattedOriginalTime} ({formattedDuration})
+                  </div>
+                </div>
+              )}
+              {/* New date/time */}
               <div className="font-medium text-foreground">{formattedDate}</div>
               <div className="text-sm text-muted">
                 {formattedTime} ({formattedDuration})
@@ -298,14 +367,40 @@ export function StepConfirmation({
 
           {/* Price */}
           <SummaryRow label={translations.summary.price}>
-            <span className="font-semibold text-foreground">
-              {formattedPrice}
-            </span>
+            <div>
+              <span className="font-semibold text-foreground">
+                {formattedPrice}
+              </span>
+              {hasPriceChanged && formattedOriginalPrice && (
+                <span className="ml-2 text-sm text-muted line-through">
+                  {formattedOriginalPrice}
+                </span>
+              )}
+            </div>
           </SummaryRow>
+
+          {/* Price change notice */}
+          {hasPriceChanged && (
+            <div className="rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 px-3 py-2">
+              <p className="text-sm text-amber-700 dark:text-amber-400">
+                {translations.priceChangedNotice}
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Form - different for authenticated vs guest users */}
-        {isAuthenticated ? (
+        {/* Form - different for reschedule, authenticated, and guest users */}
+        {isRescheduleMode ? (
+          // Reschedule mode - no form needed, just a simple confirmation
+          <form id="booking-form" onSubmit={handleRescheduleSubmit}>
+            {/* Error message */}
+            {error && (
+              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                {error}
+              </div>
+            )}
+          </form>
+        ) : isAuthenticated ? (
           // Authenticated user form - visit preferences only
           <form
             id="booking-form"

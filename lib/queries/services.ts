@@ -178,9 +178,8 @@ export async function getServiceForRebooking(
           avatar_url,
           timezone,
           currency,
-          locale,
-          users!beauty_pages_owner_id_fkey (
-            display_name,
+          profiles!beauty_pages_owner_id_fkey (
+            full_name,
             avatar_url
           )
         )
@@ -210,13 +209,16 @@ export async function getServiceForRebooking(
     ? beautyPageData[0]
     : beautyPageData;
 
-  const creatorData = beautyPage?.users;
+  const creatorData = beautyPage?.profiles;
   const creator = Array.isArray(creatorData) ? creatorData[0] : creatorData;
 
   if (!beautyPage || !creator) {
     console.error("Missing beauty page or creator data for rebooking");
     return null;
   }
+
+  // Derive locale from currency (UAH -> uk, else default to en)
+  const locale = beautyPage.currency === "UAH" ? "uk" : "en";
 
   return {
     service: {
@@ -234,10 +236,10 @@ export async function getServiceForRebooking(
       avatar_url: beautyPage.avatar_url,
       timezone: beautyPage.timezone,
       currency: beautyPage.currency,
-      locale: beautyPage.locale,
+      locale,
     },
     creator: {
-      display_name: creator.display_name ?? beautyPage.name,
+      display_name: creator.full_name ?? beautyPage.name,
       avatar_url: creator.avatar_url ?? beautyPage.avatar_url,
     },
   };

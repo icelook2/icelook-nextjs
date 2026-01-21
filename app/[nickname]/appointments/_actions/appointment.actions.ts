@@ -363,7 +363,10 @@ export async function rescheduleAppointment(input: {
     return { success: false, error: t("errors.update_failed") };
   }
 
+  // Revalidate creator's schedule view
   revalidatePath(`/${input.nickname}/schedule`);
+  // Revalidate client's appointment detail page so they see updated time
+  revalidatePath(`/appointments/${input.appointmentId}`);
 
   return { success: true };
 }

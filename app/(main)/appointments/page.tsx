@@ -62,7 +62,6 @@ export default async function AppointmentsPage({ searchParams }: PageProps) {
     serviceUnavailable: t("service_unavailable"),
     fetchError: t("fetch_error"),
     loading: t("loading_service"),
-    priceChanged: t("price_changed"),
     close: t("close"),
     durationLabels,
     bookingDialog: {
@@ -160,6 +159,7 @@ export default async function AppointmentsPage({ searchParams }: PageProps) {
           },
           submit: tBookingDialog("confirm.submit"),
           submitting: tBookingDialog("confirm.submitting"),
+          priceChangedNotice: tBookingDialog("confirm.price_changed_notice"),
         },
         success: {
           title: tBookingDialog("success.title"),

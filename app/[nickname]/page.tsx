@@ -200,6 +200,7 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
           },
           submit: tBookingDialog("confirm.submit"),
           submitting: tBookingDialog("confirm.submitting"),
+          priceChangedNotice: tBookingDialog("confirm.price_changed_notice"),
         },
         success: {
           title: tBookingDialog("success.title"),

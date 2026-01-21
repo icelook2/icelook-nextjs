@@ -93,6 +93,8 @@ export interface GetAvailabilityInput {
   startDate: string;
   /** Date in YYYY-MM-DD format */
   endDate: string;
+  /** Appointment ID to exclude from conflict detection (for rescheduling) */
+  excludeAppointmentId?: string;
 }
 
 /** Booking settings for the beauty page */

@@ -27,6 +27,7 @@ import {
   getAvailabilityData,
   getWorkingDaysForRange,
 } from "./_actions/availability.actions";
+import { rescheduleAppointment } from "@/app/[nickname]/appointments/_actions/appointment.actions";
 import type {
   BookingResult,
   BookingState,
@@ -48,6 +49,20 @@ import {
 export interface CreatorInfo {
   displayName: string;
   avatarUrl: string | null;
+}
+
+/** Data for rescheduling an existing appointment */
+export interface RescheduleData {
+  /** The appointment ID being rescheduled */
+  appointmentId: string;
+  /** Beauty page nickname for revalidation */
+  nickname: string;
+  /** Client name for display */
+  clientName: string;
+  /** Original date (for display) */
+  originalDate: string;
+  /** Original start time (for display) */
+  originalStartTime: string;
 }
 
 /** Cached time slots for a specific date */
@@ -103,6 +118,12 @@ interface BookingContextValue extends BookingState {
   currentUserId?: string;
   currentUserProfile?: CurrentUserProfile;
   creatorInfo: CreatorInfo;
+  /** Original price from previous booking (for rebooking when price changed) */
+  originalPriceCents?: number;
+  /** Reschedule mode data - when set, we're rescheduling an existing appointment */
+  rescheduleData?: RescheduleData;
+  /** Whether we're in reschedule mode */
+  isRescheduleMode: boolean;
 }
 
 interface BookingProviderProps {
@@ -119,6 +140,10 @@ interface BookingProviderProps {
   creatorInfo: CreatorInfo;
   /** Called when booking is successfully completed */
   onBookingSuccess?: () => void;
+  /** Original price from previous booking (for rebooking when price changed) */
+  originalPriceCents?: number;
+  /** Reschedule mode data - when set, we're rescheduling an existing appointment */
+  rescheduleData?: RescheduleData;
 }
 
 // ============================================================================
@@ -163,7 +188,11 @@ export function BookingProvider({
   currentUserProfile,
   creatorInfo,
   onBookingSuccess,
+  originalPriceCents,
+  rescheduleData,
 }: BookingProviderProps) {
+  // Determine if we're in reschedule mode
+  const isRescheduleMode = !!rescheduleData;
   // -------------------------------------------------------------------------
   // Core booking state
   // -------------------------------------------------------------------------
@@ -239,10 +268,12 @@ export function BookingProvider({
     }));
 
     // Fetch in background
+    // In reschedule mode, exclude the appointment being rescheduled so it doesn't block itself
     getAvailabilityData({
       beautyPageId,
       startDate: dateStr,
       endDate: dateStr,
+      excludeAppointmentId: rescheduleData?.appointmentId,
     }).then((result) => {
       prefetchingDatesRef.current.delete(dateStr);
 
@@ -345,31 +376,56 @@ export function BookingProvider({
       // Calculate end time based on total duration
       const endTime = calculateEndTime(time, totalDurationMinutes);
 
-      // Prepare client info
-      const clientInfo = guestInfo ?? {
-        name: "",
-        phone: "",
-      };
+      // Handle reschedule mode differently
+      if (isRescheduleMode && rescheduleData) {
+        const rescheduleResult = await rescheduleAppointment({
+          appointmentId: rescheduleData.appointmentId,
+          beautyPageId,
+          nickname: rescheduleData.nickname,
+          newDate: dateStr,
+          newStartTime: time,
+          newEndTime: endTime,
+        });
 
-      const bookingResult = await createBooking({
-        beautyPageId,
-        serviceIds: selectedServices.map((s) => s.id),
-        date: dateStr,
-        startTime: time,
-        endTime,
-        clientInfo,
-        clientId: currentUserId,
-        visitPreferences: guestInfo?.visitPreferences,
-      });
-
-      setResult(bookingResult);
-
-      if (bookingResult.success) {
-        setStep("success");
-        // Clear selected services on success
-        onBookingSuccess?.();
+        if (rescheduleResult.success) {
+          // Create a success result compatible with BookingResult
+          setResult({
+            success: true,
+            appointmentId: rescheduleData.appointmentId,
+            status: "confirmed", // Rescheduled appointments keep their status
+          });
+          setStep("success");
+          onBookingSuccess?.();
+        } else {
+          setError(rescheduleResult.error);
+        }
       } else {
-        setError(bookingResult.message);
+        // Regular booking flow
+        const clientInfo = guestInfo ?? {
+          name: "",
+          phone: "",
+        };
+
+        const bookingResult = await createBooking({
+          beautyPageId,
+          serviceIds: selectedServices.map((s) => s.id),
+          date: dateStr,
+          startTime: time,
+          endTime,
+          clientInfo,
+          clientId: currentUserId,
+          visitPreferences: guestInfo?.visitPreferences,
+        });
+
+        setResult(bookingResult);
+
+        if (bookingResult.success) {
+          setStep("success");
+          // Clear selected services on success
+          onBookingSuccess?.();
+        } else {
+          setError(bookingResult.message);
+        }
       }
     } catch (err) {
       console.error("Booking submission error:", err);
@@ -446,6 +502,9 @@ export function BookingProvider({
     currentUserId,
     currentUserProfile,
     creatorInfo,
+    originalPriceCents,
+    rescheduleData,
+    isRescheduleMode,
   };
 
   return (

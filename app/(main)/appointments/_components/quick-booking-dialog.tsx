@@ -46,8 +46,6 @@ export interface QuickBookingTranslations {
   fetchError: string;
   /** Loading message */
   loading: string;
-  /** Price changed notice */
-  priceChanged: string;
   /** Close button */
   close: string;
   /** Duration labels */
@@ -132,7 +130,7 @@ export function QuickBookingDialog({
       avatarUrl: rebookingData.creator.avatar_url,
     };
 
-    // Check if price changed
+    // Check if price changed - pass original price for comparison on confirm step
     const priceChanged =
       rebookingData.service.price_cents !== appointment.service_price_cents;
 
@@ -140,12 +138,13 @@ export function QuickBookingDialog({
       service,
       beautyPageInfo,
       creatorInfo,
-      priceChanged,
       beautyPageId: rebookingData.beautyPage.id,
       nickname: rebookingData.beautyPage.slug,
       timezone: rebookingData.beautyPage.timezone,
       currency: rebookingData.beautyPage.currency,
       locale: rebookingData.beautyPage.locale,
+      // Only pass original price if it's different (for showing change on confirm step)
+      originalPriceCents: priceChanged ? appointment.service_price_cents : undefined,
     };
   };
 
@@ -187,33 +186,25 @@ export function QuickBookingDialog({
   // Ready state - show BookingDialog
   if (isOpen && dialogProps) {
     return (
-      <>
-        {/* Price changed notice (shown above the dialog) */}
-        {dialogProps.priceChanged && (
-          <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-lg text-sm font-medium z-50 shadow-lg">
-            {translations.priceChanged}
-          </div>
-        )}
-        <BookingDialog
-          open={isOpen}
-          onOpenChange={handleOpenChange}
-          beautyPageId={dialogProps.beautyPageId}
-          nickname={dialogProps.nickname}
-          timezone={dialogProps.timezone}
-          currency={dialogProps.currency}
-          locale={dialogProps.locale}
-          selectedServices={[dialogProps.service]}
-          totalPriceCents={dialogProps.service.price_cents}
-          totalDurationMinutes={dialogProps.service.duration_minutes}
-          currentUserId={currentUserId}
-          currentUserProfile={currentUserProfile}
-          translations={translations.bookingDialog}
-          beautyPageInfo={dialogProps.beautyPageInfo}
-          creatorInfo={dialogProps.creatorInfo}
-          durationLabels={translations.durationLabels}
-          onBookingSuccess={onClose}
-        />
-      </>
+      <BookingDialog
+        open={isOpen}
+        onOpenChange={handleOpenChange}
+        beautyPageId={dialogProps.beautyPageId}
+        nickname={dialogProps.nickname}
+        timezone={dialogProps.timezone}
+        currency={dialogProps.currency}
+        locale={dialogProps.locale}
+        selectedServices={[dialogProps.service]}
+        totalPriceCents={dialogProps.service.price_cents}
+        totalDurationMinutes={dialogProps.service.duration_minutes}
+        currentUserId={currentUserId}
+        currentUserProfile={currentUserProfile}
+        translations={translations.bookingDialog}
+        beautyPageInfo={dialogProps.beautyPageInfo}
+        creatorInfo={dialogProps.creatorInfo}
+        durationLabels={translations.durationLabels}
+        originalPriceCents={dialogProps.originalPriceCents}
+      />
     );
   }
 

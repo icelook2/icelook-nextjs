@@ -10,7 +10,7 @@ export type AppointmentStatus = Enums<"appointment_status">;
 /** Individual service within an appointment */
 export type AppointmentService = Pick<
   Tables<"appointment_services">,
-  "id" | "service_name" | "price_cents" | "duration_minutes"
+  "id" | "service_id" | "service_name" | "price_cents" | "duration_minutes"
 >;
 
 /** Appointment with individual services */
@@ -65,6 +65,7 @@ export async function getAppointmentById(
       *,
       appointment_services (
         id,
+        service_id,
         service_name,
         price_cents,
         duration_minutes
@@ -231,6 +232,8 @@ export type ClientAppointment = Pick<
   beauty_page_address: string | null;
   /** Individual services in this appointment */
   appointment_services: AppointmentService[];
+  /** Whether the appointment can be rebooked (service still exists) */
+  canRebook: boolean;
 };
 
 /**
@@ -263,6 +266,7 @@ export async function getClientAppointments(
       created_at,
       appointment_services (
         id,
+        service_id,
         service_name,
         price_cents,
         duration_minutes
@@ -315,6 +319,8 @@ export async function getClientAppointments(
       beauty_page_avatar_url: beautyPage?.logo_url ?? null,
       beauty_page_address: beautyPage?.address ?? null,
       appointment_services: row.appointment_services ?? [],
+      // Default to true in list views - actual check happens on detail page
+      canRebook: true,
     };
   });
 
@@ -396,6 +402,7 @@ export async function getClientPastAppointments(
       created_at,
       appointment_services (
         id,
+        service_id,
         service_name,
         price_cents,
         duration_minutes
@@ -458,6 +465,8 @@ export async function getClientPastAppointments(
       beauty_page_avatar_url: beautyPage?.logo_url ?? null,
       beauty_page_address: beautyPage?.address ?? null,
       appointment_services: row.appointment_services ?? [],
+      // Default to true in list views - actual check happens on detail page
+      canRebook: true,
     };
   });
 
@@ -494,6 +503,7 @@ export async function getClientAppointmentById(
       created_at,
       appointment_services (
         id,
+        service_id,
         service_name,
         price_cents,
         duration_minutes
@@ -504,6 +514,15 @@ export async function getClientAppointmentById(
         logo_url,
         avatar_url,
         address
+      ),
+      services (
+        id,
+        service_groups (
+          id,
+          beauty_pages (
+            id
+          )
+        )
       )
     `,
     )
@@ -526,6 +545,22 @@ export async function getClientAppointmentById(
     ? beautyPageData[0]
     : beautyPageData;
 
+  // Check if the service still exists with its full chain (service → service_group → beauty_page)
+  // This determines if the appointment can be rebooked
+  const serviceData = data.services;
+  const service = Array.isArray(serviceData) ? serviceData[0] : serviceData;
+  const serviceGroupData = service?.service_groups;
+  const serviceGroup = Array.isArray(serviceGroupData)
+    ? serviceGroupData[0]
+    : serviceGroupData;
+  const serviceBeautyPageData = serviceGroup?.beauty_pages;
+  const serviceBeautyPage = Array.isArray(serviceBeautyPageData)
+    ? serviceBeautyPageData[0]
+    : serviceBeautyPageData;
+
+  // canRebook is true only if the full chain exists
+  const canRebook = Boolean(service && serviceGroup && serviceBeautyPage);
+
   return {
     id: data.id,
     date: data.date,
@@ -547,6 +582,7 @@ export async function getClientAppointmentById(
     beauty_page_avatar_url: beautyPage?.logo_url ?? null,
     beauty_page_address: beautyPage?.address ?? null,
     appointment_services: data.appointment_services ?? [],
+    canRebook,
   };
 }
 
@@ -609,6 +645,7 @@ export async function getClientAppointmentsByDate(
       created_at,
       appointment_services (
         id,
+        service_id,
         service_name,
         price_cents,
         duration_minutes
@@ -660,6 +697,8 @@ export async function getClientAppointmentsByDate(
       beauty_page_avatar_url: beautyPage?.logo_url ?? null,
       beauty_page_address: beautyPage?.address ?? null,
       appointment_services: row.appointment_services ?? [],
+      // Default to true in list views - actual check happens on detail page
+      canRebook: true,
     };
   });
 
