@@ -13,6 +13,7 @@
  * - Prefetches time slots when date is selected (instant time step)
  */
 
+import { format } from "date-fns";
 import {
   createContext,
   type ReactNode,
@@ -21,20 +22,24 @@ import {
   useRef,
   useState,
 } from "react";
+import { rescheduleAppointment } from "@/app/[nickname]/appointments/_actions/appointment.actions";
 import type { ProfileService } from "@/lib/queries/beauty-page-profile";
-import { createBooking } from "./_actions/booking.actions";
+import type { PublicBundle } from "@/lib/types/bundles";
 import {
   getAvailabilityData,
   getWorkingDaysForRange,
 } from "./_actions/availability.actions";
-import { rescheduleAppointment } from "@/app/[nickname]/appointments/_actions/appointment.actions";
+import { createBooking } from "./_actions/booking.actions";
 import type {
   BookingResult,
   BookingState,
   BookingStep,
+  CreatorInfo,
   CurrentUserProfile,
   GuestInfo,
+  RescheduleData,
   TimeSlot,
+  TimeSlotsCache,
 } from "./_lib/booking-types";
 import {
   calculateEndTime,
@@ -44,34 +49,6 @@ import {
 // ============================================================================
 // Types
 // ============================================================================
-
-/** Creator info for display in booking flow */
-export interface CreatorInfo {
-  displayName: string;
-  avatarUrl: string | null;
-}
-
-/** Data for rescheduling an existing appointment */
-export interface RescheduleData {
-  /** The appointment ID being rescheduled */
-  appointmentId: string;
-  /** Beauty page nickname for revalidation */
-  nickname: string;
-  /** Client name for display */
-  clientName: string;
-  /** Original date (for display) */
-  originalDate: string;
-  /** Original start time (for display) */
-  originalStartTime: string;
-}
-
-/** Cached time slots for a specific date */
-interface TimeSlotsCache {
-  [dateStr: string]: {
-    slots: TimeSlot[];
-    status: "loading" | "success" | "error";
-  };
-}
 
 interface BookingContextValue extends BookingState {
   // Navigation
@@ -108,6 +85,10 @@ interface BookingContextValue extends BookingState {
   // Derived from props
   beautyPageId: string;
   selectedServices: ProfileService[];
+  /** Selected bundle (if booking a bundle instead of individual services) */
+  selectedBundle?: PublicBundle | null;
+  /** Whether we're in bundle booking mode */
+  isBundleMode: boolean;
   /** Total price for all selected services */
   totalPriceCents: number;
   /** Total duration for all selected services */
@@ -130,6 +111,8 @@ interface BookingProviderProps {
   children: ReactNode;
   beautyPageId: string;
   selectedServices: ProfileService[];
+  /** Selected bundle (if booking a bundle instead of individual services) */
+  selectedBundle?: PublicBundle | null;
   totalPriceCents: number;
   totalDurationMinutes: number;
   timezone: string;
@@ -179,6 +162,7 @@ export function BookingProvider({
   children,
   beautyPageId,
   selectedServices,
+  selectedBundle,
   totalPriceCents,
   totalDurationMinutes,
   timezone,
@@ -191,8 +175,9 @@ export function BookingProvider({
   originalPriceCents,
   rescheduleData,
 }: BookingProviderProps) {
-  // Determine if we're in reschedule mode
+  // Determine modes
   const isRescheduleMode = !!rescheduleData;
+  const isBundleMode = !!selectedBundle;
   // -------------------------------------------------------------------------
   // Core booking state
   // -------------------------------------------------------------------------
@@ -228,8 +213,8 @@ export function BookingProvider({
       const endDate = new Date(today);
       endDate.setMonth(endDate.getMonth() + PREFETCH_MONTHS);
 
-      const startDateStr = formatDateToYYYYMMDD(today);
-      const endDateStr = formatDateToYYYYMMDD(endDate);
+      const startDateStr = format(today, "yyyy-MM-dd");
+      const endDateStr = format(endDate, "yyyy-MM-dd");
 
       const result = await getWorkingDaysForRange(
         beautyPageId,
@@ -251,7 +236,7 @@ export function BookingProvider({
   // Time slots prefetching
   // -------------------------------------------------------------------------
   const prefetchTimeSlotsForDate = (prefetchDate: Date) => {
-    const dateStr = formatDateToYYYYMMDD(prefetchDate);
+    const dateStr = format(prefetchDate, "yyyy-MM-dd");
 
     // Skip if already cached or currently prefetching
     if (timeSlotsCache[dateStr] || prefetchingDatesRef.current.has(dateStr)) {
@@ -295,6 +280,14 @@ export function BookingProvider({
       const workingDay =
         workingDaysData.find((wd) => wd.date === dateStr) ?? null;
 
+      // Extract service time windows for filtering
+      // Only individual services have time windows (bundles use full working hours)
+      // If user selects bundle + services, we respect the services' time windows
+      const serviceTimeWindows = selectedServices.map((s) => ({
+        availableFromTime: s.available_from_time,
+        availableToTime: s.available_to_time,
+      }));
+
       // Generate slots
       const slots = generateAvailableSlots({
         workingDay,
@@ -304,6 +297,7 @@ export function BookingProvider({
         minNoticeHours: bookingSettings?.minBookingNoticeHours ?? 0,
         date: prefetchDate,
         timezone,
+        serviceTimeWindows,
       });
 
       setTimeSlotsCache((prev) => ({
@@ -371,7 +365,7 @@ export function BookingProvider({
 
     try {
       // Format date as YYYY-MM-DD
-      const dateStr = formatDateToYYYYMMDD(date);
+      const dateStr = format(date, "yyyy-MM-dd");
 
       // Calculate end time based on total duration
       const endTime = calculateEndTime(time, totalDurationMinutes);
@@ -406,15 +400,31 @@ export function BookingProvider({
           phone: "",
         };
 
+        // Get service IDs - combine bundle services + individual selected services
+        const bundleServiceIds = selectedBundle
+          ? selectedBundle.services.map((s) => s.id)
+          : [];
+        const individualServiceIds = selectedServices.map((s) => s.id);
+        const serviceIdsToBook = [...bundleServiceIds, ...individualServiceIds];
+
         const bookingResult = await createBooking({
           beautyPageId,
-          serviceIds: selectedServices.map((s) => s.id),
+          serviceIds: serviceIdsToBook,
           date: dateStr,
           startTime: time,
           endTime,
           clientInfo,
           clientId: currentUserId,
           visitPreferences: guestInfo?.visitPreferences,
+          // Bundle booking information (if bundle selected)
+          ...(selectedBundle
+            ? {
+                bundleId: selectedBundle.id,
+                bundlePriceCents: selectedBundle.discounted_total_cents,
+                bundleDurationMinutes: selectedBundle.total_duration_minutes,
+                bundleName: selectedBundle.name,
+              }
+            : {}),
         });
 
         setResult(bookingResult);
@@ -494,6 +504,8 @@ export function BookingProvider({
     // Props
     beautyPageId,
     selectedServices,
+    selectedBundle,
+    isBundleMode,
     totalPriceCents,
     totalDurationMinutes,
     timezone,
@@ -510,18 +522,4 @@ export function BookingProvider({
   return (
     <BookingContext.Provider value={value}>{children}</BookingContext.Provider>
   );
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-/**
- * Format Date to YYYY-MM-DD string
- */
-function formatDateToYYYYMMDD(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }

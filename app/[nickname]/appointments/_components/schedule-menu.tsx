@@ -13,10 +13,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
 import { Menu } from "@/lib/ui/menu";
 import {
+  type DayOffAppointment,
   deleteWorkingDay,
   getAppointmentsForWorkingDay,
   getWorkingDaysForReschedule,
-  type DayOffAppointment,
 } from "../_actions/working-day.actions";
 import { ConfigureScheduleDialog } from "./configure-schedule";
 import { DayOffAppointmentsDialog } from "./day-off-appointments";

@@ -2,7 +2,7 @@
 
 import { ChevronDown, Loader2, Users } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import type { BeautyPageClient } from "@/lib/queries/clients";
 import { Button } from "@/lib/ui/button";
 import { SettingsGroup } from "@/lib/ui/settings-group";
@@ -43,35 +43,32 @@ export function ClientsList({
   // Debounce timer for search
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Handle search with debounce
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setSearch(value);
+  // Handle search with debounce (React Compiler handles optimization)
+  function handleSearchChange(value: string) {
+    setSearch(value);
 
-      // Clear existing timer
-      if (searchTimerRef.current) {
-        clearTimeout(searchTimerRef.current);
-      }
+    // Clear existing timer
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
 
-      // Debounce search
-      searchTimerRef.current = setTimeout(async () => {
-        setIsSearching(true);
+    // Debounce search
+    searchTimerRef.current = setTimeout(async () => {
+      setIsSearching(true);
 
-        const result = await loadClients({
-          nickname,
-          search: value || undefined,
-          offset: 0,
-          limit: pageSize,
-        });
+      const result = await loadClients({
+        nickname,
+        search: value || undefined,
+        offset: 0,
+        limit: pageSize,
+      });
 
-        setClients(result.clients);
-        setTotal(result.total);
-        setHasMore(result.hasMore);
-        setIsSearching(false);
-      }, 300);
-    },
-    [nickname],
-  );
+      setClients(result.clients);
+      setTotal(result.total);
+      setHasMore(result.hasMore);
+      setIsSearching(false);
+    }, 300);
+  }
 
   // Cleanup timer on unmount
   useEffect(() => {

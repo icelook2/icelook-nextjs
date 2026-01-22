@@ -4,25 +4,16 @@ import { Calendar, ChevronDown, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import type { CurrentUserProfile } from "@/app/[nickname]/_components/booking/_lib/booking-types";
 import type { ClientAppointment } from "@/lib/queries/appointments";
 import { Button } from "@/lib/ui/button";
 import { loadMorePastAppointments } from "../_actions";
 import { AppointmentCard } from "./appointment-card";
-import {
-  QuickBookingDialog,
-  type QuickBookingTranslations,
-} from "./quick-booking-dialog";
+import { LeaveReviewDialog } from "./leave-review-dialog";
 
 interface AppointmentsListProps {
   upcoming: ClientAppointment[];
   initialPast: ClientAppointment[];
   initialHasMore: boolean;
-  /** Current user info for rebooking */
-  currentUserId?: string;
-  currentUserProfile?: CurrentUserProfile;
-  /** Translations for quick booking dialog */
-  quickBookingTranslations: QuickBookingTranslations;
   /** When true, shows a flat list without sections (for date filtering) */
   isFiltered?: boolean;
 }
@@ -31,9 +22,6 @@ export function AppointmentsList({
   upcoming,
   initialPast,
   initialHasMore,
-  currentUserId,
-  currentUserProfile,
-  quickBookingTranslations,
   isFiltered = false,
 }: AppointmentsListProps) {
   const t = useTranslations("appointments");
@@ -44,8 +32,8 @@ export function AppointmentsList({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoadingMore, startLoadingMore] = useTransition();
 
-  // State for quick booking dialog
-  const [rebookingAppointment, setRebookingAppointment] =
+  // State for leave review dialog
+  const [reviewingAppointment, setReviewingAppointment] =
     useState<ClientAppointment | null>(null);
 
   const hasNoAppointments =
@@ -61,12 +49,32 @@ export function AppointmentsList({
     });
   }
 
-  function handleBookAgain(appointment: ClientAppointment) {
-    setRebookingAppointment(appointment);
+  function handleLeaveReview(appointment: ClientAppointment) {
+    setReviewingAppointment(appointment);
   }
 
-  function handleCloseBookingDialog() {
-    setRebookingAppointment(null);
+  function handleCloseReviewDialog() {
+    setReviewingAppointment(null);
+  }
+
+  function handleReviewSuccess(appointmentId: string, rating: number) {
+    // Update the appointment in local state to show the review immediately
+    setPastAppointments((prev) =>
+      prev.map((apt) =>
+        apt.id === appointmentId
+          ? {
+              ...apt,
+              hasReview: true,
+              review: {
+                id: crypto.randomUUID(),
+                rating,
+                comment: null,
+                created_at: new Date().toISOString(),
+              },
+            }
+          : apt,
+      ),
+    );
   }
 
   // Empty state - different message for filtered vs unfiltered
@@ -103,18 +111,16 @@ export function AppointmentsList({
             <AppointmentCard
               key={appointment.id}
               appointment={appointment}
-              onBookAgain={handleBookAgain}
+              onLeaveReview={handleLeaveReview}
             />
           ))}
         </div>
 
-        {/* Quick Booking Dialog */}
-        <QuickBookingDialog
-          appointment={rebookingAppointment}
-          onClose={handleCloseBookingDialog}
-          currentUserId={currentUserId}
-          currentUserProfile={currentUserProfile}
-          translations={quickBookingTranslations}
+        {/* Leave Review Dialog */}
+        <LeaveReviewDialog
+          appointment={reviewingAppointment}
+          onClose={handleCloseReviewDialog}
+          onSuccess={handleReviewSuccess}
         />
       </>
     );
@@ -135,7 +141,7 @@ export function AppointmentsList({
                 <AppointmentCard
                   key={appointment.id}
                   appointment={appointment}
-                  onBookAgain={handleBookAgain}
+                  onLeaveReview={handleLeaveReview}
                 />
               ))}
             </div>
@@ -155,7 +161,7 @@ export function AppointmentsList({
                   <AppointmentCard
                     key={appointment.id}
                     appointment={appointment}
-                    onBookAgain={handleBookAgain}
+                    onLeaveReview={handleLeaveReview}
                   />
                 ))}
               </div>
@@ -190,13 +196,11 @@ export function AppointmentsList({
         )}
       </div>
 
-      {/* Quick Booking Dialog */}
-      <QuickBookingDialog
-        appointment={rebookingAppointment}
-        onClose={handleCloseBookingDialog}
-        currentUserId={currentUserId}
-        currentUserProfile={currentUserProfile}
-        translations={quickBookingTranslations}
+      {/* Leave Review Dialog */}
+      <LeaveReviewDialog
+        appointment={reviewingAppointment}
+        onClose={handleCloseReviewDialog}
+        onSuccess={handleReviewSuccess}
       />
     </>
   );

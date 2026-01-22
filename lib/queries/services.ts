@@ -18,6 +18,8 @@ export type Service = {
   price_cents: number;
   duration_minutes: number;
   display_order: number;
+  available_from_time: string | null;
+  available_to_time: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -128,6 +130,8 @@ export type RebookingData = {
     price_cents: number;
     duration_minutes: number;
     display_order: number;
+    available_from_time: string | null;
+    available_to_time: string | null;
   };
   /** Beauty page info for booking context */
   beautyPage: {
@@ -169,6 +173,8 @@ export async function getServiceForRebooking(
       price_cents,
       duration_minutes,
       display_order,
+      available_from_time,
+      available_to_time,
       service_groups!inner (
         beauty_pages!inner (
           id,
@@ -227,6 +233,8 @@ export async function getServiceForRebooking(
       price_cents: data.price_cents,
       duration_minutes: data.duration_minutes,
       display_order: data.display_order,
+      available_from_time: data.available_from_time,
+      available_to_time: data.available_to_time,
     },
     beautyPage: {
       id: beautyPage.id,

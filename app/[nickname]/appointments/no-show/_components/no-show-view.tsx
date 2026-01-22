@@ -2,7 +2,6 @@
 
 import { UserX } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useMemo } from "react";
 import { Paper } from "@/lib/ui/paper";
 import { AppointmentCard } from "../../_components/appointment-card";
 import { toDateString } from "../../_lib/date-utils";
@@ -18,16 +17,10 @@ export function NoShowView({ appointments }: NoShowViewProps) {
 
   const todayStr = toDateString(new Date());
 
-  // Get today's appointments
-  const todayAppointments = useMemo(
-    () => getAppointmentsForDate(appointments, todayStr),
-    [appointments, todayStr],
-  );
-
-  // Get no-show appointments
-  const noShowAppointments = useMemo(
-    () => todayAppointments.filter((apt) => apt.status === "no_show"),
-    [todayAppointments],
+  // Derived values (React Compiler handles optimization)
+  const todayAppointments = getAppointmentsForDate(appointments, todayStr);
+  const noShowAppointments = todayAppointments.filter(
+    (apt) => apt.status === "no_show",
   );
 
   if (noShowAppointments.length === 0) {

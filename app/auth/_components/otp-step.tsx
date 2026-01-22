@@ -3,13 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useTransition,
-} from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/lib/ui/button";
@@ -34,10 +28,9 @@ export function OtpStep({ email, redirectTo, onBack }: OtpStepProps) {
   const [cooldown, setCooldown] = useState(COOLDOWN_SECONDS);
   const [isResending, setIsResending] = useState(false);
 
-  const formSchema = useMemo(() => {
-    const schemas = createTranslatedSchemas((key) => tValidation(key));
-    return z.object({ code: schemas.otp });
-  }, [tValidation]);
+  // Schema (React Compiler handles optimization)
+  const schemas = createTranslatedSchemas((key) => tValidation(key));
+  const formSchema = z.object({ code: schemas.otp });
 
   type FormData = z.infer<typeof formSchema>;
 
@@ -74,7 +67,7 @@ export function OtpStep({ email, redirectTo, onBack }: OtpStepProps) {
     });
   }
 
-  const handleResend = useCallback(async () => {
+  async function handleResend() {
     if (cooldown > 0 || isResending) {
       return;
     }
@@ -91,7 +84,7 @@ export function OtpStep({ email, redirectTo, onBack }: OtpStepProps) {
     }
 
     setIsResending(false);
-  }, [cooldown, isResending, email]);
+  }
 
   const error = errors.code?.message || serverError;
   const canResend = cooldown <= 0 && !isResending;

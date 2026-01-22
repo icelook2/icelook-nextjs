@@ -10,8 +10,8 @@ import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
 import { formatDuration, formatPrice } from "@/lib/utils/price-range";
-import { CancelAppointmentDialog } from "../[id]/_components/cancel-appointment-dialog";
 import { cancelClientAppointment } from "../_actions/appointment.actions";
+import { CancelAppointmentDialog } from "../[id]/_components/cancel-appointment-dialog";
 import { StatusBadge } from "./status-badge";
 
 interface AppointmentDetailDialogProps {

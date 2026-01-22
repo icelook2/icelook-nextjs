@@ -9,21 +9,21 @@
 
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
-import type { ClientAppointment } from "@/lib/queries/appointments";
-import type { ProfileService } from "@/lib/queries/beauty-page-profile";
-import { Button } from "@/lib/ui/button";
-import { Dialog } from "@/lib/ui/dialog";
-import {
-  BookingDialog,
-  type BeautyPageInfo,
-  type BookingDialogTranslations,
-} from "@/app/[nickname]/_components/booking/booking-dialog";
 import type {
   CreatorInfo,
   RescheduleData,
-} from "@/app/[nickname]/_components/booking/booking-context";
-import { getRebookingData } from "../_actions/rebooking.actions";
+} from "@/app/[nickname]/_components/booking/_lib/booking-types";
+import {
+  type BeautyPageInfo,
+  BookingDialog,
+  type BookingDialogTranslations,
+} from "@/app/[nickname]/_components/booking/booking-dialog";
+import type { ClientAppointment } from "@/lib/queries/appointments";
+import type { ProfileService } from "@/lib/queries/beauty-page-profile";
 import type { RebookingData } from "@/lib/queries/services";
+import { Button } from "@/lib/ui/button";
+import { Dialog } from "@/lib/ui/dialog";
+import { getRebookingData } from "../_actions/rebooking.actions";
 
 // ============================================================================
 // Types
@@ -98,7 +98,10 @@ export function QuickRescheduleDialog({
 
     // Skip if we already have data for this appointment
     // This prevents re-fetching when revalidatePath updates the appointment object
-    if (fetchedForAppointmentIdRef.current === appointment.id && rescheduleData) {
+    if (
+      fetchedForAppointmentIdRef.current === appointment.id &&
+      rescheduleData
+    ) {
       return;
     }
 
@@ -125,7 +128,12 @@ export function QuickRescheduleDialog({
 
       setRescheduleData(data);
     });
-  }, [appointment, didSucceed, rescheduleData, translations.serviceUnavailable]);
+  }, [
+    appointment,
+    didSucceed,
+    rescheduleData,
+    translations.serviceUnavailable,
+  ]);
 
   const isOpen = !!appointment;
 
@@ -165,6 +173,8 @@ export function QuickRescheduleDialog({
       price_cents: appointment.service_price_cents,
       duration_minutes: appointment.service_duration_minutes,
       display_order: 0,
+      available_from_time: rescheduleData.service.available_from_time ?? null,
+      available_to_time: rescheduleData.service.available_to_time ?? null,
     };
 
     const beautyPageInfo: BeautyPageInfo = {

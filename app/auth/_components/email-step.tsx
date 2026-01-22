@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/lib/ui/button";
@@ -20,10 +20,9 @@ export function EmailStep({ onSubmitted }: EmailStepProps) {
   const tValidation = useTranslations("validation");
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const formSchema = useMemo(() => {
-    const schemas = createTranslatedSchemas((key) => tValidation(key));
-    return z.object({ email: schemas.email });
-  }, [tValidation]);
+  // Schema (React Compiler handles optimization)
+  const schemas = createTranslatedSchemas((key) => tValidation(key));
+  const formSchema = z.object({ email: schemas.email });
 
   type FormData = z.infer<typeof formSchema>;
 

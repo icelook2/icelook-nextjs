@@ -2,11 +2,16 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { ChevronRight } from "lucide-react";
-import { useLocale } from "next-intl";
 import Link from "next/link";
+import { useLocale } from "next-intl";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
+import { DiscountBadge } from "@/lib/ui/discount-badge";
 import { Paper } from "@/lib/ui/paper";
+import {
+  calculateDiscountPercentage,
+  parseAppointmentMetadata,
+} from "@/lib/utils/appointment-metadata";
 import { cn } from "@/lib/utils/cn";
 import type { Appointment } from "../_lib/types";
 import { formatTime } from "./free-slot-variants";
@@ -67,6 +72,17 @@ export function AppointmentCard({
   const isPending = appointment.status === "pending";
   const isLoading = isConfirming || isDeclining;
 
+  // Parse metadata to check for bundle info
+  const metadata = parseAppointmentMetadata(appointment.client_notes);
+  const bundle = metadata?.bundle ?? null;
+  const discountPercentage =
+    bundle && metadata
+      ? calculateDiscountPercentage(
+          metadata.total_original_price_cents,
+          metadata.total_final_price_cents,
+        )
+      : 0;
+
   // Inner card content
   const innerCard = (
     <Paper
@@ -90,9 +106,12 @@ export function AppointmentCard({
           <p className="truncate font-medium text-foreground">
             {appointment.client_name}
           </p>
-          <p className="truncate text-sm text-muted">
-            {appointment.service_name}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="truncate text-sm text-muted">
+              {appointment.service_name}
+            </p>
+            {bundle && <DiscountBadge percentage={discountPercentage} />}
+          </div>
         </div>
 
         {/* Chevron */}
@@ -110,7 +129,7 @@ export function AppointmentCard({
         href={detailsHref}
         className={cn("block w-full text-left", className)}
       >
-        <Paper className="p-4 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+        <Paper className="cursor-pointer p-4 transition-colors hover:bg-black/5 dark:hover:bg-white/5">
           {/* Avatar + Message + Chevron */}
           <div className="flex gap-3">
             <div className="shrink-0">
@@ -122,6 +141,12 @@ export function AppointmentCard({
                 <span className="font-semibold">{appointment.client_name}</span>
                 <span className="text-muted"> wants to book </span>
                 <span className="font-medium">{appointment.service_name}</span>
+                {bundle && (
+                  <>
+                    {" "}
+                    <DiscountBadge percentage={discountPercentage} />
+                  </>
+                )}
                 <span className="text-muted"> at </span>
                 <span className="font-medium">{startTime}</span>
               </p>

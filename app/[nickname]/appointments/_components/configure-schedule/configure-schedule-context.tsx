@@ -6,127 +6,45 @@
  * Manages state for the multi-step schedule configuration dialog.
  * Allows selecting multiple dates and configuring working hours per weekday.
  *
- * Flow: select-days → configure-hours → confirmation
+ * Flow: select-days → configure-hours → configure-breaks → confirmation
  */
 
 import { format, getDay, parseISO } from "date-fns";
-import { createContext, type ReactNode, useContext, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import {
   type BulkScheduleResult,
   bulkUpdateSchedule,
 } from "../../_actions/working-day.actions";
+import {
+  deriveSelectedDatesByWeekday,
+  generateId,
+  jsWeekdayToOurs,
+  STEP_ORDER,
+} from "./_lib/configure-schedule-helpers";
+import type {
+  BreakTime,
+  ConfigureScheduleContextValue,
+  ConfigureScheduleProviderProps,
+  ConfigureScheduleStep,
+  WeekdayBreaks,
+  WeekdayHours,
+} from "./_lib/configure-schedule-types";
 
-// Simple ID generator (iOS compatible alternative to crypto.randomUUID)
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-}
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export type ConfigureScheduleStep =
-  | "select-days"
-  | "configure-hours"
-  | "configure-breaks"
-  | "confirmation";
-
-export interface WeekdayHours {
-  weekday: number; // 0=Mon, 1=Tue, ..., 6=Sun
-  weekdayName: string; // e.g., "Friday"
-  startTime: string; // e.g., "09:00"
-  endTime: string; // e.g., "18:00"
-}
-
-export interface SelectedDateInfo {
-  dateStr: string; // YYYY-MM-DD
-  date: Date;
-  weekday: number; // 0=Mon, ..., 6=Sun
-  weekdayName: string;
-}
-
-export interface BreakTime {
-  id: string;
-  startTime: string; // e.g., "13:00"
-  endTime: string; // e.g., "14:00"
-}
-
-export interface WeekdayBreaks {
-  weekday: number; // 0=Mon, ..., 6=Sun
-  weekdayName: string;
-  breaks: BreakTime[];
-}
-
-interface ConfigureScheduleContextValue {
-  // State
-  step: ConfigureScheduleStep;
-  selectedDates: Set<string>;
-  weekdayHours: Map<number, WeekdayHours>;
-  weekdayBreaks: Map<number, WeekdayBreaks>;
-  dateHours: Map<string, { startTime: string; endTime: string }>;
-  isSubmitting: boolean;
-  error: string | null;
-  result: BulkScheduleResult | null;
-
-  // Navigation
-  goToStep: (step: ConfigureScheduleStep) => void;
-  goBack: () => void;
-  canGoBack: boolean;
-  canProceed: boolean;
-
-  // Date selection
-  toggleDate: (dateStr: string, date: Date) => void;
-  toggleWeekdayColumn: (weekday: number, dates: Date[]) => void;
-  toggleWeekRow: (dates: Date[]) => void;
-
-  // Hours configuration
-  setWeekdayHours: (
-    weekday: number,
-    startTime: string,
-    endTime: string,
-  ) => void;
-  setDateHours: (dateStr: string, startTime: string, endTime: string) => void;
-
-  // Breaks configuration
-  addBreak: (weekday: number) => void;
-  removeBreak: (weekday: number, breakId: string) => void;
-  updateBreak: (
-    weekday: number,
-    breakId: string,
-    startTime: string,
-    endTime: string,
-  ) => void;
-
-  // Submission
-  submitSchedule: () => Promise<void>;
-
-  // Reset
-  reset: () => void;
-
-  // Derived data
-  existingWorkingDates: Set<string>;
-  selectedDatesByWeekday: Map<number, SelectedDateInfo[]>;
-  totalSelectedDays: number;
-}
-
-interface ConfigureScheduleProviderProps {
-  children: ReactNode;
-  beautyPageId: string;
-  nickname: string;
-  existingWorkingDates: Set<string>;
-  onSuccess?: () => void;
-}
+// Re-export types for consumers
+export type {
+  BreakTime,
+  ConfigureScheduleStep,
+  SelectedDateInfo,
+  WeekdayBreaks,
+  WeekdayHours,
+} from "./_lib/configure-schedule-types";
 
 // ============================================================================
-// Context
+// Context & Hook
 // ============================================================================
 
 const ConfigureScheduleContext =
   createContext<ConfigureScheduleContextValue | null>(null);
-
-// ============================================================================
-// Hook
-// ============================================================================
 
 export function useConfigureSchedule(): ConfigureScheduleContextValue {
   const context = useContext(ConfigureScheduleContext);
@@ -141,20 +59,6 @@ export function useConfigureSchedule(): ConfigureScheduleContextValue {
 // ============================================================================
 // Provider
 // ============================================================================
-
-const stepOrder: ConfigureScheduleStep[] = [
-  "select-days",
-  "configure-hours",
-  "configure-breaks",
-  "confirmation",
-];
-
-/**
- * Convert JS getDay() result (0=Sun, 1=Mon) to our weekday system (0=Mon, 6=Sun)
- */
-function jsWeekdayToOurs(jsWeekday: number): number {
-  return jsWeekday === 0 ? 6 : jsWeekday - 1;
-}
 
 export function ConfigureScheduleProvider({
   children,
@@ -179,17 +83,15 @@ export function ConfigureScheduleProvider({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BulkScheduleResult | null>(null);
 
-  // Derived: group selected dates by weekday
+  // Derived values
   const selectedDatesByWeekday = deriveSelectedDatesByWeekday(selectedDates);
   const totalSelectedDays = selectedDates.size;
 
   // Navigation
   const goToStep = (newStep: ConfigureScheduleStep) => {
-    // When moving to configure-hours, initialize default hours for new weekdays
     if (newStep === "configure-hours") {
       initializeWeekdayHours();
     }
-    // When moving to configure-breaks, initialize breaks structure for weekdays
     if (newStep === "configure-breaks") {
       initializeWeekdayBreaks();
     }
@@ -200,20 +102,18 @@ export function ConfigureScheduleProvider({
   const canGoBack = step !== "select-days";
 
   const goBack = () => {
-    const currentIndex = stepOrder.indexOf(step);
+    const currentIndex = STEP_ORDER.indexOf(step);
     if (currentIndex > 0) {
-      setStep(stepOrder[currentIndex - 1]);
+      setStep(STEP_ORDER[currentIndex - 1]);
       setError(null);
     }
   };
 
-  // Can proceed to next step?
   const canProceed = (() => {
     if (step === "select-days") {
       return selectedDates.size > 0;
     }
     if (step === "configure-hours") {
-      // All weekdays must have valid hours (end > start)
       for (const hours of weekdayHours.values()) {
         if (hours.startTime >= hours.endTime) {
           return false;
@@ -221,19 +121,13 @@ export function ConfigureScheduleProvider({
       }
       return weekdayHours.size > 0;
     }
-    // Breaks step is optional - can always proceed
-    if (step === "configure-breaks") {
-      return true;
-    }
     return true;
   })();
 
-  // Initialize hours for weekdays when entering configure-hours step
+  // Initialize hours for weekdays
   const initializeWeekdayHours = () => {
     setWeekdayHoursState((prev) => {
       const newHours = new Map(prev);
-
-      // Add default hours for new weekdays
       for (const [weekday, dates] of selectedDatesByWeekday) {
         if (!newHours.has(weekday) && dates.length > 0) {
           newHours.set(weekday, {
@@ -244,24 +138,19 @@ export function ConfigureScheduleProvider({
           });
         }
       }
-
-      // Remove hours for weekdays no longer in selection
       for (const weekday of newHours.keys()) {
         if (!selectedDatesByWeekday.has(weekday)) {
           newHours.delete(weekday);
         }
       }
-
       return newHours;
     });
   };
 
-  // Initialize breaks for weekdays when entering configure-breaks step
+  // Initialize breaks for weekdays
   const initializeWeekdayBreaks = () => {
     setWeekdayBreaksState((prev) => {
       const newBreaks = new Map(prev);
-
-      // Add empty breaks for new weekdays
       for (const [weekday, dates] of selectedDatesByWeekday) {
         if (!newBreaks.has(weekday) && dates.length > 0) {
           newBreaks.set(weekday, {
@@ -271,25 +160,20 @@ export function ConfigureScheduleProvider({
           });
         }
       }
-
-      // Remove breaks for weekdays no longer in selection
       for (const weekday of newBreaks.keys()) {
         if (!selectedDatesByWeekday.has(weekday)) {
           newBreaks.delete(weekday);
         }
       }
-
       return newBreaks;
     });
   };
 
   // Date selection
   const toggleDate = (dateStr: string, _date: Date) => {
-    // Cannot toggle existing working days
     if (existingWorkingDates.has(dateStr)) {
       return;
     }
-
     setSelectedDates((prev) => {
       const next = new Set(prev);
       if (next.has(dateStr)) {
@@ -306,27 +190,22 @@ export function ConfigureScheduleProvider({
       const next = new Set(prev);
       const dateStrs = dates
         .map((d) => format(d, "yyyy-MM-dd"))
-        .filter((str) => !existingWorkingDates.has(str)); // Exclude existing working days
+        .filter((str) => !existingWorkingDates.has(str));
 
       if (dateStrs.length === 0) {
         return prev;
       }
 
-      // Check if all dates in column are already selected
       const allSelected = dateStrs.every((str) => next.has(str));
-
       if (allSelected) {
-        // Deselect all
         for (const str of dateStrs) {
           next.delete(str);
         }
       } else {
-        // Select all
         for (const str of dateStrs) {
           next.add(str);
         }
       }
-
       return next;
     });
   };
@@ -336,27 +215,22 @@ export function ConfigureScheduleProvider({
       const next = new Set(prev);
       const dateStrs = dates
         .map((d) => format(d, "yyyy-MM-dd"))
-        .filter((str) => !existingWorkingDates.has(str)); // Exclude existing working days
+        .filter((str) => !existingWorkingDates.has(str));
 
       if (dateStrs.length === 0) {
         return prev;
       }
 
-      // Check if all dates in week row are already selected
       const allSelected = dateStrs.every((str) => next.has(str));
-
       if (allSelected) {
-        // Deselect all
         for (const str of dateStrs) {
           next.delete(str);
         }
       } else {
-        // Select all
         for (const str of dateStrs) {
           next.add(str);
         }
       }
-
       return next;
     });
   };
@@ -449,7 +323,6 @@ export function ConfigureScheduleProvider({
     setIsSubmitting(true);
     setError(null);
 
-    // Build create payload with breaks
     const toCreate: Array<{
       date: string;
       startTime: string;
@@ -461,11 +334,9 @@ export function ConfigureScheduleProvider({
       const date = parseISO(dateStr);
       const weekday = jsWeekdayToOurs(getDay(date));
 
-      // Get hours (date-specific or weekday)
       const dateSpecific = dateHours.get(dateStr);
       const hours = dateSpecific || weekdayHours.get(weekday);
 
-      // Get breaks for this weekday
       const breaksData = weekdayBreaks.get(weekday);
       const breaks =
         breaksData?.breaks.map((b) => ({
@@ -517,7 +388,6 @@ export function ConfigureScheduleProvider({
 
   // Context value
   const value: ConfigureScheduleContextValue = {
-    // State
     step,
     selectedDates,
     weekdayHours,
@@ -526,34 +396,20 @@ export function ConfigureScheduleProvider({
     isSubmitting,
     error,
     result,
-
-    // Navigation
     goToStep,
     goBack,
     canGoBack,
     canProceed,
-
-    // Date selection
     toggleDate,
     toggleWeekdayColumn,
     toggleWeekRow,
-
-    // Hours configuration
     setWeekdayHours,
     setDateHours,
-
-    // Breaks configuration
     addBreak,
     removeBreak,
     updateBreak,
-
-    // Submission
     submitSchedule,
-
-    // Reset
     reset,
-
-    // Derived
     existingWorkingDates,
     selectedDatesByWeekday,
     totalSelectedDays,
@@ -564,38 +420,4 @@ export function ConfigureScheduleProvider({
       {children}
     </ConfigureScheduleContext.Provider>
   );
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function deriveSelectedDatesByWeekday(
-  selectedDates: Set<string>,
-): Map<number, SelectedDateInfo[]> {
-  const grouped = new Map<number, SelectedDateInfo[]>();
-
-  for (const dateStr of selectedDates) {
-    const date = parseISO(dateStr);
-    const jsWeekday = getDay(date); // 0=Sun, 1=Mon, ...
-    const weekday = jsWeekdayToOurs(jsWeekday); // 0=Mon, ..., 6=Sun
-
-    if (!grouped.has(weekday)) {
-      grouped.set(weekday, []);
-    }
-
-    grouped.get(weekday)?.push({
-      dateStr,
-      date,
-      weekday,
-      weekdayName: format(date, "EEEE"), // Full day name
-    });
-  }
-
-  // Sort dates within each weekday
-  for (const dates of grouped.values()) {
-    dates.sort((a, b) => a.date.getTime() - b.date.getTime());
-  }
-
-  return grouped;
 }

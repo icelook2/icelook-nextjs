@@ -8,7 +8,6 @@
  */
 
 import { Clock, Loader2 } from "lucide-react";
-import { useMemo } from "react";
 import { cn } from "@/lib/utils/cn";
 import type { TimeSlot } from "../booking/_lib/booking-types";
 import { formatSlotTime } from "../booking/_lib/slot-generation";
@@ -47,33 +46,28 @@ export function TimeSlotGrid({
   isLoading = false,
   translations,
 }: TimeSlotGridProps) {
-  // Filter to only available slots and group by time of day
-  const slotGroups = useMemo(() => {
-    const availableSlots = slots.filter((s) => s.available);
+  // Filter to only available slots and group by time of day (React Compiler handles optimization)
+  const availableSlots = slots.filter((s) => s.available);
 
-    const morning: TimeSlot[] = [];
-    const afternoon: TimeSlot[] = [];
-    const evening: TimeSlot[] = [];
+  const morning: TimeSlot[] = [];
+  const afternoon: TimeSlot[] = [];
+  const evening: TimeSlot[] = [];
 
-    for (const slot of availableSlots) {
-      const hour = Number.parseInt(slot.time.split(":")[0], 10);
-      if (hour < 12) {
-        morning.push(slot);
-      } else if (hour < 17) {
-        afternoon.push(slot);
-      } else {
-        evening.push(slot);
-      }
+  for (const slot of availableSlots) {
+    const hour = Number.parseInt(slot.time.split(":")[0], 10);
+    if (hour < 12) {
+      morning.push(slot);
+    } else if (hour < 17) {
+      afternoon.push(slot);
+    } else {
+      evening.push(slot);
     }
+  }
 
-    return { morning, afternoon, evening };
-  }, [slots]);
+  const slotGroups = { morning, afternoon, evening };
 
   // Check if any slots are available
-  const hasAvailableSlots = useMemo(
-    () => slots.some((s) => s.available),
-    [slots],
-  );
+  const hasAvailableSlots = slots.some((s) => s.available);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Render

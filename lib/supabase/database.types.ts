@@ -116,7 +116,9 @@ export type Database = {
         Insert: {
           beauty_page_id: string;
           cancelled_at?: string | null;
-          cancelled_by?: Database["public"]["Enums"]["cancelled_by_role"] | null;
+          cancelled_by?:
+            | Database["public"]["Enums"]["cancelled_by_role"]
+            | null;
           client_cancellation_reason?:
             | Database["public"]["Enums"]["client_cancellation_reason"]
             | null;
@@ -149,7 +151,9 @@ export type Database = {
         Update: {
           beauty_page_id?: string;
           cancelled_at?: string | null;
-          cancelled_by?: Database["public"]["Enums"]["cancelled_by_role"] | null;
+          cancelled_by?:
+            | Database["public"]["Enums"]["cancelled_by_role"]
+            | null;
           client_cancellation_reason?:
             | Database["public"]["Enums"]["client_cancellation_reason"]
             | null;

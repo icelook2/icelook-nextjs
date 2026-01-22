@@ -3,7 +3,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
 import { Button } from "@/lib/ui/button";
 
 interface ServicesPaginationProps {
@@ -60,29 +59,25 @@ export function ServicesPagination({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      if (page < 1 || page > totalPages) {
-        return;
-      }
+  // Handler (React Compiler handles optimization)
+  function handlePageChange(page: number) {
+    if (page < 1 || page > totalPages) {
+      return;
+    }
 
-      const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams.toString());
 
-      if (page === 1) {
-        params.delete("page");
-      } else {
-        params.set("page", page.toString());
-      }
+    if (page === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", page.toString());
+    }
 
-      router.push(`?${params.toString()}`);
-    },
-    [router, searchParams, totalPages],
-  );
+    router.push(`?${params.toString()}`);
+  }
 
-  const pageNumbers = useMemo(
-    () => getPageNumbers(currentPage, totalPages),
-    [currentPage, totalPages],
-  );
+  // Derived value
+  const pageNumbers = getPageNumbers(currentPage, totalPages);
 
   return (
     <div className="flex items-center justify-between">

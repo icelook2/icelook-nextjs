@@ -1,8 +1,8 @@
 "use client";
 
 import { ChevronDown, Loader2 } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useTransition } from "react";
 import type { BeautyPageSearchResult } from "@/lib/queries/search";
 import { Button } from "@/lib/ui/button";

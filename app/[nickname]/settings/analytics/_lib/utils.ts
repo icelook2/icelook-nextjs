@@ -230,28 +230,6 @@ export function formatCurrency(
 }
 
 /**
- * Format percentage value
- */
-export function formatPercentage(value: number | null): string {
-  if (value === null) {
-    return "—";
-  }
-  return `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
-}
-
-/**
- * Format trend indicator (positive/negative/neutral)
- */
-export function getTrendDirection(
-  value: number | null,
-): "positive" | "negative" | "neutral" {
-  if (value === null || value === 0) {
-    return "neutral";
-  }
-  return value > 0 ? "positive" : "negative";
-}
-
-/**
  * Calculate percentage change between two values
  */
 export function calculateTrend(
@@ -262,26 +240,4 @@ export function calculateTrend(
     return current > 0 ? 100 : null;
   }
   return ((current - previous) / previous) * 100;
-}
-
-/**
- * Format duration from minutes to human readable
- */
-export function formatDuration(minutes: number): string {
-  if (minutes < 60) {
-    return `${minutes} min`;
-  }
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  if (mins === 0) {
-    return `${hours}h`;
-  }
-  return `${hours}h ${mins}m`;
-}
-
-/**
- * Convert date to YYYY-MM-DD string
- */
-export function toDateString(date: Date): string {
-  return date.toISOString().split("T")[0];
 }

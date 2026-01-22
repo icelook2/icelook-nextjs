@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import type { BeautyPageType } from "@/lib/queries";
@@ -36,19 +36,18 @@ export function CreateBeautyPageDialog({
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const formSchema = useMemo(() => {
-    const nameSchema = createTranslatedBeautyPageNameSchema((key) =>
-      tValidation(key),
-    );
-    const slugSchema = createTranslatedBeautyPageSlugSchema((key) =>
-      tValidation(key),
-    );
-    return z.object({
-      name: nameSchema,
-      slug: slugSchema,
-      typeId: z.string().uuid(tValidation("beauty_page_type_required")),
-    });
-  }, [tValidation]);
+  // Schema (React Compiler handles optimization)
+  const nameSchema = createTranslatedBeautyPageNameSchema((key) =>
+    tValidation(key),
+  );
+  const slugSchema = createTranslatedBeautyPageSlugSchema((key) =>
+    tValidation(key),
+  );
+  const formSchema = z.object({
+    name: nameSchema,
+    slug: slugSchema,
+    typeId: z.string().uuid(tValidation("beauty_page_type_required")),
+  });
 
   type FormData = z.infer<typeof formSchema>;
 

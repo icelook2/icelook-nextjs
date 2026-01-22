@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import type {
   AnalyticsData,
   AnalyticsPeriod,
@@ -13,7 +14,6 @@ import {
   calculateTrend,
   getDateRangeForPeriod,
   getPreviousPeriodRange,
-  toDateString,
 } from "@/app/[nickname]/settings/analytics/_lib/utils";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,10 +31,10 @@ export async function getBeautyPageAnalytics(
   const { startDate: prevStartDate, endDate: prevEndDate } =
     getPreviousPeriodRange(period, startDate, endDate);
 
-  const startDateStr = toDateString(startDate);
-  const endDateStr = toDateString(endDate);
-  const prevStartDateStr = toDateString(prevStartDate);
-  const prevEndDateStr = toDateString(prevEndDate);
+  const startDateStr = format(startDate, "yyyy-MM-dd");
+  const endDateStr = format(endDate, "yyyy-MM-dd");
+  const prevStartDateStr = format(prevStartDate, "yyyy-MM-dd");
+  const prevEndDateStr = format(prevEndDate, "yyyy-MM-dd");
 
   // Fetch all required data in parallel
   const [

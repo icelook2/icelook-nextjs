@@ -13,13 +13,12 @@
  * - Time slots are for the single creator
  */
 
+import { format } from "date-fns";
 import {
   createContext,
   type ReactNode,
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 import type {
@@ -38,57 +37,39 @@ import { generateAvailableSlots } from "../booking/_lib/slot-generation";
 // ============================================================================
 
 interface BookingLayoutContextValue {
-  // ─────────────────────────────────────────────────────────────────────────
   // Source Data
-  // ─────────────────────────────────────────────────────────────────────────
   allServices: ProfileService[];
-  /** The creator (single specialist) for this beauty page */
   creator: ProfileSpecialist | null;
   beautyPageId: string;
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Selections
-  // ─────────────────────────────────────────────────────────────────────────
   selectedServiceIds: Set<string>;
   selectedDate: Date | null;
   selectedTime: string | null;
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Derived State
-  // ─────────────────────────────────────────────────────────────────────────
-  /** Selected services array */
   selectedServices: ProfileService[];
-  /** Total price for selected services (cents) */
   totalPriceCents: number;
-  /** Total duration for selected services (minutes) */
   totalDurationMinutes: number;
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Calendar State
-  // ─────────────────────────────────────────────────────────────────────────
   workingDays: Set<string>;
   currentMonth: Date;
   timeSlots: TimeSlot[];
   isLoadingCalendar: boolean;
   isLoadingSlots: boolean;
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Ready State
-  // ─────────────────────────────────────────────────────────────────────────
   isReadyToBook: boolean;
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Actions
-  // ─────────────────────────────────────────────────────────────────────────
   toggleService: (service: ProfileService) => void;
   selectDate: (date: Date | null) => void;
   selectTime: (time: string | null) => void;
   setCurrentMonth: (month: Date) => void;
   clearAll: () => void;
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Helpers
-  // ─────────────────────────────────────────────────────────────────────────
   isServiceSelected: (serviceId: string) => boolean;
 }
 
@@ -101,24 +82,16 @@ const BookingLayoutContext = createContext<BookingLayoutContextValue | null>(
 );
 
 // ============================================================================
-// Provider Props
+// Provider
 // ============================================================================
 
 interface BookingLayoutProviderProps {
   children: ReactNode;
-  /** All services from the beauty page */
   allServices: ProfileService[];
-  /** The creator (single specialist array with one entry) */
   allSpecialists: ProfileSpecialist[];
-  /** Beauty page ID for availability lookups */
   beautyPageId: string;
-  /** Timezone of the beauty page */
   timezone: string;
 }
-
-// ============================================================================
-// Provider
-// ============================================================================
 
 export function BookingLayoutProvider({
   children,
@@ -127,75 +100,51 @@ export function BookingLayoutProvider({
   beautyPageId,
   timezone,
 }: BookingLayoutProviderProps) {
-  // The creator is the single specialist (or first in array)
   const creator = allSpecialists[0] ?? null;
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Selection State
-  // ─────────────────────────────────────────────────────────────────────────
   const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(
     new Set(),
   );
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Calendar State
-  // ─────────────────────────────────────────────────────────────────────────
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [workingDays, setWorkingDays] = useState<Set<string>>(new Set());
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [isLoadingCalendar, setIsLoadingCalendar] = useState(false);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Derived: Selected Services Array
-  // ─────────────────────────────────────────────────────────────────────────
-  const selectedServices = useMemo(() => {
-    return allServices.filter((s) => selectedServiceIds.has(s.id));
-  }, [allServices, selectedServiceIds]);
+  // Derived values (React Compiler handles optimization)
+  const selectedServices = allServices.filter((s) =>
+    selectedServiceIds.has(s.id),
+  );
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Derived: Total price and duration (from services directly)
-  // ─────────────────────────────────────────────────────────────────────────
-  const { totalPriceCents, totalDurationMinutes } = useMemo(() => {
-    let price = 0;
-    let duration = 0;
+  let totalPriceCents = 0;
+  let totalDurationMinutes = 0;
+  for (const service of selectedServices) {
+    totalPriceCents += service.price_cents;
+    totalDurationMinutes += service.duration_minutes;
+  }
 
-    for (const service of selectedServices) {
-      price += service.price_cents;
-      duration += service.duration_minutes;
-    }
+  const isReadyToBook =
+    selectedServiceIds.size > 0 &&
+    selectedDate !== null &&
+    selectedTime !== null;
 
-    return { totalPriceCents: price, totalDurationMinutes: duration };
-  }, [selectedServices]);
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Derived: Ready to book
-  // ─────────────────────────────────────────────────────────────────────────
-  const isReadyToBook = useMemo(() => {
-    return (
-      selectedServiceIds.size > 0 &&
-      selectedDate !== null &&
-      selectedTime !== null
-    );
-  }, [selectedServiceIds.size, selectedDate, selectedTime]);
-
-  // ─────────────────────────────────────────────────────────────────────────
   // Effect: Fetch working days when month changes
-  // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-    const startDate = formatDateToYYYYMMDD(firstDay);
-    const endDate = formatDateToYYYYMMDD(lastDay);
+    const startDate = format(firstDay, "yyyy-MM-dd");
+    const endDate = format(lastDay, "yyyy-MM-dd");
 
     const fetchWorkingDays = async () => {
       setIsLoadingCalendar(true);
 
-      // Use beauty page ID for fetching working days
       const result = await getWorkingDaysForRange(
         beautyPageId,
         startDate,
@@ -212,30 +161,28 @@ export function BookingLayoutProvider({
     fetchWorkingDays();
   }, [currentMonth, beautyPageId]);
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Effect: Auto-select today if available and no date selected
-  // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (selectedDate) return;
+    if (selectedDate) {
+      return;
+    }
 
     const today = new Date();
-    const todayStr = formatDateToYYYYMMDD(today);
+    const todayStr = format(today, "yyyy-MM-dd");
 
     if (workingDays.has(todayStr)) {
       setSelectedDate(today);
     }
   }, [workingDays, selectedDate]);
 
-  // ─────────────────────────────────────────────────────────────────────────
   // Effect: Fetch time slots when date changes
-  // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!selectedDate) {
       setTimeSlots([]);
       return;
     }
 
-    const dateStr = formatDateToYYYYMMDD(selectedDate);
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
 
     const fetchSlots = async () => {
       setIsLoadingSlots(true);
@@ -278,10 +225,8 @@ export function BookingLayoutProvider({
     fetchSlots();
   }, [selectedDate, beautyPageId, totalDurationMinutes, timezone]);
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Actions
-  // ─────────────────────────────────────────────────────────────────────────
-  const toggleService = useCallback((service: ProfileService) => {
+  // Actions (React Compiler handles optimization - no useCallback needed)
+  function toggleService(service: ProfileService) {
     setSelectedServiceIds((prev) => {
       const next = new Set(prev);
       if (next.has(service.id)) {
@@ -291,99 +236,55 @@ export function BookingLayoutProvider({
       }
       return next;
     });
-    // Clear time when services change (slot availability may change with duration)
     setSelectedTime(null);
-  }, []);
+  }
 
-  const selectDate = useCallback((date: Date | null) => {
+  function selectDate(date: Date | null) {
     setSelectedDate(date);
     setSelectedTime(null);
     setTimeSlots([]);
-  }, []);
+  }
 
-  const selectTime = useCallback((time: string | null) => {
+  function selectTime(time: string | null) {
     setSelectedTime(time);
-  }, []);
+  }
 
-  const clearAll = useCallback(() => {
+  function clearAll() {
     setSelectedServiceIds(new Set());
     setSelectedDate(null);
     setSelectedTime(null);
     setWorkingDays(new Set());
     setTimeSlots([]);
-  }, []);
+  }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Helper Functions
-  // ─────────────────────────────────────────────────────────────────────────
-  const isServiceSelected = useCallback(
-    (serviceId: string) => selectedServiceIds.has(serviceId),
-    [selectedServiceIds],
-  );
+  function isServiceSelected(serviceId: string) {
+    return selectedServiceIds.has(serviceId);
+  }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Context Value
-  // ─────────────────────────────────────────────────────────────────────────
-  const value: BookingLayoutContextValue = useMemo(
-    () => ({
-      // Source data
-      allServices,
-      creator,
-      beautyPageId,
-
-      // Selections
-      selectedServiceIds,
-      selectedDate,
-      selectedTime,
-
-      // Derived
-      selectedServices,
-      totalPriceCents,
-      totalDurationMinutes,
-
-      // Calendar
-      workingDays,
-      currentMonth,
-      timeSlots,
-      isLoadingCalendar,
-      isLoadingSlots,
-
-      // Ready state
-      isReadyToBook,
-
-      // Actions
-      toggleService,
-      selectDate,
-      selectTime,
-      setCurrentMonth,
-      clearAll,
-
-      // Helpers
-      isServiceSelected,
-    }),
-    [
-      allServices,
-      creator,
-      beautyPageId,
-      selectedServiceIds,
-      selectedDate,
-      selectedTime,
-      selectedServices,
-      totalPriceCents,
-      totalDurationMinutes,
-      workingDays,
-      currentMonth,
-      timeSlots,
-      isLoadingCalendar,
-      isLoadingSlots,
-      isReadyToBook,
-      toggleService,
-      selectDate,
-      selectTime,
-      clearAll,
-      isServiceSelected,
-    ],
-  );
+  // Context value (React Compiler handles optimization - no useMemo needed)
+  const value: BookingLayoutContextValue = {
+    allServices,
+    creator,
+    beautyPageId,
+    selectedServiceIds,
+    selectedDate,
+    selectedTime,
+    selectedServices,
+    totalPriceCents,
+    totalDurationMinutes,
+    workingDays,
+    currentMonth,
+    timeSlots,
+    isLoadingCalendar,
+    isLoadingSlots,
+    isReadyToBook,
+    toggleService,
+    selectDate,
+    selectTime,
+    setCurrentMonth,
+    clearAll,
+    isServiceSelected,
+  };
 
   return (
     <BookingLayoutContext.Provider value={value}>
@@ -404,15 +305,4 @@ export function useBookingLayout(): BookingLayoutContextValue {
     );
   }
   return context;
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function formatDateToYYYYMMDD(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }

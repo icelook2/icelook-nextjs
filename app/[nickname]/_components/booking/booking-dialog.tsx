@@ -10,17 +10,17 @@
  */
 
 import { Loader2 } from "lucide-react";
-import { useMemo } from "react";
 import type { ProfileService } from "@/lib/queries/beauty-page-profile";
+import type { PublicBundle } from "@/lib/types/bundles";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
-import type { BookingStep, CurrentUserProfile } from "./_lib/booking-types";
-import {
-  BookingProvider,
-  type CreatorInfo,
-  type RescheduleData,
-  useBooking,
-} from "./booking-context";
+import type {
+  BookingStep,
+  CreatorInfo,
+  CurrentUserProfile,
+  RescheduleData,
+} from "./_lib/booking-types";
+import { BookingProvider, useBooking } from "./booking-context";
 import { StepConfirmation } from "./step-confirmation";
 import { StepDateSelect } from "./step-date-select";
 import { StepSuccess } from "./step-success";
@@ -45,6 +45,8 @@ export interface BookingDialogProps {
   currency: string;
   locale: string;
   selectedServices: ProfileService[];
+  /** Selected bundle (if booking a bundle instead of individual services) */
+  selectedBundle?: PublicBundle | null;
   totalPriceCents: number;
   totalDurationMinutes: number;
   currentUserId?: string;
@@ -167,6 +169,7 @@ export function BookingDialog({
   currency,
   locale,
   selectedServices,
+  selectedBundle,
   totalPriceCents,
   totalDurationMinutes,
   currentUserId,
@@ -189,6 +192,7 @@ export function BookingDialog({
         <BookingProvider
           beautyPageId={beautyPageId}
           selectedServices={selectedServices}
+          selectedBundle={selectedBundle}
           totalPriceCents={totalPriceCents}
           totalDurationMinutes={totalDurationMinutes}
           timezone={timezone}
@@ -249,16 +253,13 @@ function BookingDialogContent({
     : translations.dialogTitle;
 
   // Format date for subtitle (shown on time and confirm steps)
-  const formattedDate = useMemo(() => {
-    if (!date) {
-      return "";
-    }
-    return date.toLocaleDateString(undefined, {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    });
-  }, [date]);
+  const formattedDate = date
+    ? date.toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
 
   // Show subtitle on time and confirm steps
   const showSubtitle = step === "time" || step === "confirm";

@@ -15,7 +15,7 @@
  * Mobile: Tab-based navigation between columns
  */
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type {
   ProfileService,
   ProfileServiceGroup,
@@ -121,16 +121,13 @@ export function BookingLayout({
   currentUserId,
   currentUserProfile,
 }: BookingLayoutProps) {
-  // Flatten all services for the context
-  const allServices = useMemo(() => {
-    const services: ProfileService[] = [];
-    for (const group of serviceGroups) {
-      for (const service of group.services) {
-        services.push(service);
-      }
+  // Flatten all services for the context (React Compiler handles optimization)
+  const allServices: ProfileService[] = [];
+  for (const group of serviceGroups) {
+    for (const service of group.services) {
+      allServices.push(service);
     }
-    return services;
-  }, [serviceGroups]);
+  }
 
   // Tab labels with fallbacks to column titles
   const tabLabels = {

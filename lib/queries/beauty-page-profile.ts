@@ -74,6 +74,8 @@ export type ProfileService = {
   display_order: number;
   price_cents: number;
   duration_minutes: number;
+  available_from_time: string | null;
+  available_to_time: string | null;
 };
 
 /** Service group with its services */
@@ -189,7 +191,9 @@ export async function getBeautyPageProfile(
         name,
         display_order,
         price_cents,
-        duration_minutes
+        duration_minutes,
+        available_from_time,
+        available_to_time
       )
     `)
     .eq("beauty_page_id", beautyPageId)
@@ -265,6 +269,8 @@ export async function getBeautyPageProfile(
           display_order: number;
           price_cents: number;
           duration_minutes: number;
+          available_from_time: string | null;
+          available_to_time: string | null;
         }>) ?? []
       ).map((service) => ({
         id: service.id,
@@ -272,6 +278,8 @@ export async function getBeautyPageProfile(
         display_order: service.display_order,
         price_cents: service.price_cents,
         duration_minutes: service.duration_minutes,
+        available_from_time: service.available_from_time,
+        available_to_time: service.available_to_time,
       })),
     }),
   );

@@ -55,6 +55,12 @@ function timesOverlap(
 // Slot Generation
 // ============================================================================
 
+/** Service time window restriction */
+export interface ServiceTimeWindow {
+  availableFromTime: string | null;
+  availableToTime: string | null;
+}
+
 export interface GenerateSlotsOptions {
   /** Working day data for the selected date */
   workingDay: WorkingDayData | null;
@@ -70,6 +76,50 @@ export interface GenerateSlotsOptions {
   date: Date;
   /** Timezone (IANA format) */
   timezone: string;
+  /** Service time windows for filtering (intersection of all services) */
+  serviceTimeWindows?: ServiceTimeWindow[];
+}
+
+/**
+ * Normalize time string to HH:MM format (handles HH:MM:SS from database)
+ */
+function normalizeTime(time: string): string {
+  const parts = time.split(":");
+  return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
+}
+
+/**
+ * Calculate the effective time window by intersecting all service windows with working hours.
+ * Returns the intersection of all time windows, or null if no valid intersection exists.
+ */
+function calculateEffectiveTimeWindow(
+  workStartMinutes: number,
+  workEndMinutes: number,
+  serviceTimeWindows: ServiceTimeWindow[],
+): { start: number; end: number } | null {
+  let effectiveStart = workStartMinutes;
+  let effectiveEnd = workEndMinutes;
+
+  for (const window of serviceTimeWindows) {
+    // If service has no restriction, it uses full working hours
+    if (!window.availableFromTime || !window.availableToTime) {
+      continue;
+    }
+
+    const serviceStart = timeToMinutes(normalizeTime(window.availableFromTime));
+    const serviceEnd = timeToMinutes(normalizeTime(window.availableToTime));
+
+    // Intersect: take the later start and earlier end
+    effectiveStart = Math.max(effectiveStart, serviceStart);
+    effectiveEnd = Math.min(effectiveEnd, serviceEnd);
+
+    // If intersection is empty, no valid slots
+    if (effectiveStart >= effectiveEnd) {
+      return null;
+    }
+  }
+
+  return { start: effectiveStart, end: effectiveEnd };
 }
 
 /**
@@ -89,6 +139,7 @@ export function generateAvailableSlots(
     minNoticeHours = 0,
     date,
     timezone,
+    serviceTimeWindows = [],
   } = options;
 
   // No working day = no slots
@@ -118,11 +169,23 @@ export function generateAvailableSlots(
   const workStartMinutes = timeToMinutes(workingDay.startTime);
   const workEndMinutes = timeToMinutes(workingDay.endTime);
 
-  // Generate slots from start to (end - service duration)
-  const lastSlotStart = workEndMinutes - serviceDurationMinutes;
+  // Calculate effective time window by intersecting service time windows with working hours
+  const effectiveWindow = calculateEffectiveTimeWindow(
+    workStartMinutes,
+    workEndMinutes,
+    serviceTimeWindows,
+  );
+
+  // If no valid intersection, no slots available
+  if (!effectiveWindow) {
+    return [];
+  }
+
+  // Generate slots from effective start to (effective end - service duration)
+  const lastSlotStart = effectiveWindow.end - serviceDurationMinutes;
 
   for (
-    let slotStart = workStartMinutes;
+    let slotStart = effectiveWindow.start;
     slotStart <= lastSlotStart;
     slotStart += slotIntervalMinutes
   ) {

@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/lib/ui/button";
@@ -17,10 +17,9 @@ export function OnboardingForm() {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const formSchema = useMemo(() => {
-    const nameSchema = createTranslatedNameSchema((key) => tValidation(key));
-    return z.object({ name: nameSchema });
-  }, [tValidation]);
+  // Schema (React Compiler handles optimization)
+  const nameSchema = createTranslatedNameSchema((key) => tValidation(key));
+  const formSchema = z.object({ name: nameSchema });
 
   type FormData = z.infer<typeof formSchema>;
 

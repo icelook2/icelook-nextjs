@@ -25,14 +25,14 @@ import { cn } from "@/lib/utils/cn";
 import type { DayOffAppointment } from "../../_actions/working-day.actions";
 import {
   DayOffAppointmentsProvider,
-  useDayOffAppointments,
   type DayOffStep,
+  useDayOffAppointments,
   type WorkingDayOption,
 } from "./day-off-appointments-context";
 import { StepAppointmentsList } from "./step-appointments-list";
+import { StepCancelConfirm } from "./step-cancel-confirm";
 import { StepRescheduleDate } from "./step-reschedule-date";
 import { StepRescheduleTime } from "./step-reschedule-time";
-import { StepCancelConfirm } from "./step-cancel-confirm";
 
 const localeMap = { en: enUS, uk } as const;
 

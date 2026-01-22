@@ -473,3 +473,64 @@ export async function deleteService(input: {
 
   return { success: true };
 }
+
+/**
+ * Update service time window.
+ * Pass null for both times to clear the restriction.
+ */
+export async function updateServiceTimeWindow(input: {
+  id: string;
+  availableFromTime: string | null;
+  availableToTime: string | null;
+  nickname: string;
+}): Promise<ActionResult> {
+  const t = await getTranslations("service_groups");
+
+  // Validate time window if provided
+  if (input.availableFromTime && input.availableToTime) {
+    const fromMinutes = timeToMinutes(input.availableFromTime);
+    const toMinutes = timeToMinutes(input.availableToTime);
+
+    if (fromMinutes >= toMinutes) {
+      return { success: false, error: t("errors.invalid_time_window") };
+    }
+  } else if (input.availableFromTime || input.availableToTime) {
+    // Both must be provided or both must be null
+    return { success: false, error: t("errors.invalid_time_window") };
+  }
+
+  const ownership = await verifyServiceOwnership(input.id);
+  if (!ownership.isOwner) {
+    return { success: false, error: ownership.error };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("services")
+    .update({
+      available_from_time: input.availableFromTime,
+      available_to_time: input.availableToTime,
+    })
+    .eq("id", input.id);
+
+  if (error) {
+    console.error("Error updating service time window:", error);
+    return { success: false, error: t("errors.update_failed") };
+  }
+
+  revalidatePath(`/${input.nickname}/settings/services`);
+  revalidatePath(`/${input.nickname}`); // Revalidate public page for booking
+
+  return { success: true };
+}
+
+/**
+ * Parse time string "HH:MM" to minutes since midnight
+ */
+function timeToMinutes(time: string): number {
+  const parts = time.split(":");
+  const hours = Number.parseInt(parts[0], 10);
+  const minutes = Number.parseInt(parts[1], 10);
+  return hours * 60 + minutes;
+}

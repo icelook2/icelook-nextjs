@@ -260,7 +260,10 @@ export async function createQuickBooking(
       );
 
     if (servicesInsertError) {
-      console.error("Error inserting appointment services:", servicesInsertError);
+      console.error(
+        "Error inserting appointment services:",
+        servicesInsertError,
+      );
       // Note: Appointment is already created, so we don't fail the booking
       // The appointment still has the aggregated service data
     }

@@ -5,6 +5,8 @@ allowed-tools: ["WebFetch"]
 
 # Base UI Skill
 
+**PROACTIVELY check Base UI** before implementing ANY interactive component. Never implement from scratch if Base UI has the component.
+
 When working with `@base-ui/react` components, use this skill to fetch accurate documentation.
 
 Base UI is a composable, styling-agnostic component library for React.

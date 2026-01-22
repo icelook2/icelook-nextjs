@@ -9,19 +9,21 @@
 
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
-import type { ClientAppointment } from "@/lib/queries/appointments";
-import type { ProfileService } from "@/lib/queries/beauty-page-profile";
-import { Button } from "@/lib/ui/button";
-import { Dialog } from "@/lib/ui/dialog";
+import type {
+  CreatorInfo,
+  CurrentUserProfile,
+} from "@/app/[nickname]/_components/booking/_lib/booking-types";
 import {
-  BookingDialog,
   type BeautyPageInfo,
+  BookingDialog,
   type BookingDialogTranslations,
 } from "@/app/[nickname]/_components/booking/booking-dialog";
-import type { CreatorInfo } from "@/app/[nickname]/_components/booking/booking-context";
-import type { CurrentUserProfile } from "@/app/[nickname]/_components/booking/_lib/booking-types";
-import { getRebookingData } from "../_actions/rebooking.actions";
+import type { ClientAppointment } from "@/lib/queries/appointments";
+import type { ProfileService } from "@/lib/queries/beauty-page-profile";
 import type { RebookingData } from "@/lib/queries/services";
+import { Button } from "@/lib/ui/button";
+import { Dialog } from "@/lib/ui/dialog";
+import { getRebookingData } from "../_actions/rebooking.actions";
 
 // ============================================================================
 // Types
@@ -68,7 +70,9 @@ export function QuickBookingDialog({
   currentUserProfile,
   translations,
 }: QuickBookingDialogProps) {
-  const [rebookingData, setRebookingData] = useState<RebookingData | null>(null);
+  const [rebookingData, setRebookingData] = useState<RebookingData | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -117,6 +121,8 @@ export function QuickBookingDialog({
       price_cents: rebookingData.service.price_cents,
       duration_minutes: rebookingData.service.duration_minutes,
       display_order: rebookingData.service.display_order,
+      available_from_time: rebookingData.service.available_from_time ?? null,
+      available_to_time: rebookingData.service.available_to_time ?? null,
     };
 
     const beautyPageInfo: BeautyPageInfo = {
@@ -144,7 +150,9 @@ export function QuickBookingDialog({
       currency: rebookingData.beautyPage.currency,
       locale: rebookingData.beautyPage.locale,
       // Only pass original price if it's different (for showing change on confirm step)
-      originalPriceCents: priceChanged ? appointment.service_price_cents : undefined,
+      originalPriceCents: priceChanged
+        ? appointment.service_price_cents
+        : undefined,
     };
   };
 

@@ -8,8 +8,8 @@
  * Extracted from step-date-select.tsx for use in horizontal layout.
  */
 
+import { format } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils/cn";
 
 // ============================================================================
@@ -65,84 +65,75 @@ export function CalendarView({
   isLoading = false,
   translations,
 }: CalendarViewProps) {
-  // ─────────────────────────────────────────────────────────────────────────
-  // Navigation
-  // ─────────────────────────────────────────────────────────────────────────
-  const goToPreviousMonth = useCallback(() => {
+  // Navigation (React Compiler handles optimization)
+  function goToPreviousMonth() {
     onMonthChange(
       new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
     );
-  }, [currentMonth, onMonthChange]);
+  }
 
-  const goToNextMonth = useCallback(() => {
+  function goToNextMonth() {
     onMonthChange(
       new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
     );
-  }, [currentMonth, onMonthChange]);
+  }
 
   // Check if previous month is allowed (not before today's month)
-  const canGoPrevious = useMemo(() => {
-    const now = new Date();
-    return (
-      currentMonth.getFullYear() > now.getFullYear() ||
-      (currentMonth.getFullYear() === now.getFullYear() &&
-        currentMonth.getMonth() > now.getMonth())
-    );
-  }, [currentMonth]);
+  const now = new Date();
+  const canGoPrevious =
+    currentMonth.getFullYear() > now.getFullYear() ||
+    (currentMonth.getFullYear() === now.getFullYear() &&
+      currentMonth.getMonth() > now.getMonth());
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Generate Calendar Days
-  // ─────────────────────────────────────────────────────────────────────────
-  const calendarDays = useMemo(() => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+  // Generate Calendar Days (React Compiler handles optimization)
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
 
-    // Get day of week for first day (0 = Sunday, adjust for Monday start)
-    let startDayOfWeek = firstDay.getDay() - 1;
-    if (startDayOfWeek === -1) startDayOfWeek = 6;
+  // Get day of week for first day (0 = Sunday, adjust for Monday start)
+  let startDayOfWeek = firstDay.getDay() - 1;
+  if (startDayOfWeek === -1) {
+    startDayOfWeek = 6;
+  }
 
-    const days: CalendarDay[] = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const calendarDays: CalendarDay[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    // Add empty slots for days before first of month
-    for (let i = 0; i < startDayOfWeek; i++) {
-      days.push({ type: "empty" });
-    }
+  // Add empty slots for days before first of month
+  for (let i = 0; i < startDayOfWeek; i++) {
+    calendarDays.push({ type: "empty" });
+  }
 
-    // Add days of month
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-      const dateObj = new Date(year, month, day);
-      const dateStr = formatDateToYYYYMMDD(dateObj);
-      const isPast = dateObj < today;
-      const isWorking = workingDays.has(dateStr);
-      const isToday =
-        dateObj.getFullYear() === today.getFullYear() &&
-        dateObj.getMonth() === today.getMonth() &&
-        dateObj.getDate() === today.getDate();
-      const isSelected =
-        selectedDate &&
-        dateObj.getFullYear() === selectedDate.getFullYear() &&
-        dateObj.getMonth() === selectedDate.getMonth() &&
-        dateObj.getDate() === selectedDate.getDate();
+  // Add days of month
+  for (let day = 1; day <= lastDay.getDate(); day++) {
+    const dateObj = new Date(year, month, day);
+    const dateStr = format(dateObj, "yyyy-MM-dd");
+    const isPast = dateObj < today;
+    const isWorking = workingDays.has(dateStr);
+    const isToday =
+      dateObj.getFullYear() === today.getFullYear() &&
+      dateObj.getMonth() === today.getMonth() &&
+      dateObj.getDate() === today.getDate();
+    const isSelected =
+      selectedDate &&
+      dateObj.getFullYear() === selectedDate.getFullYear() &&
+      dateObj.getMonth() === selectedDate.getMonth() &&
+      dateObj.getDate() === selectedDate.getDate();
 
-      days.push({
-        type: "day",
-        date: dateObj,
-        dateStr,
-        day,
-        isPast,
-        isWorking,
-        isToday,
-        isSelected: !!isSelected,
-        isSelectable: !isPast && isWorking,
-      });
-    }
-
-    return days;
-  }, [currentMonth, workingDays, selectedDate]);
+    calendarDays.push({
+      type: "day",
+      date: dateObj,
+      dateStr,
+      day,
+      isPast,
+      isWorking,
+      isToday,
+      isSelected: !!isSelected,
+      isSelectable: !isPast && isWorking,
+    });
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
   // Render
@@ -248,15 +239,4 @@ export function CalendarView({
       )}
     </div>
   );
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function formatDateToYYYYMMDD(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }

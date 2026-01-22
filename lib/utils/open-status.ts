@@ -316,3 +316,42 @@ export function formatWorkingStatusMessage(
 // Legacy export for backwards compatibility during migration
 // TODO: Remove after all usages are updated
 export { calculateOpenStatusFromWorkingDays as calculateOpenStatus };
+
+/**
+ * The display-ready working status for a beauty page.
+ */
+export interface WorkingStatus {
+  isOpen: boolean;
+  statusMessage: string;
+}
+
+/**
+ * Get the working status for a beauty page ready for display.
+ *
+ * Combines status calculation and message formatting into a single call.
+ * Returns undefined if there are no working days configured.
+ *
+ * @param workingDays - Array of scheduled working days
+ * @param timezone - IANA timezone string (e.g., "Europe/Kyiv")
+ * @param t - Translation function for working_status keys
+ * @param dayNames - Array of day names indexed by day of week (0=Sun, 6=Sat)
+ * @returns WorkingStatus object or undefined if no working days
+ */
+export function getWorkingStatus(
+  workingDays: WorkingDayForStatus[],
+  timezone: string,
+  t: (key: string, params?: Record<string, string>) => string,
+  dayNames: string[],
+): WorkingStatus | undefined {
+  if (workingDays.length === 0) {
+    return undefined;
+  }
+
+  const status = calculateOpenStatusFromWorkingDays(workingDays, timezone);
+  const statusMessage = formatWorkingStatusMessage(status, t, dayNames);
+
+  return {
+    isOpen: status.isOpen,
+    statusMessage,
+  };
+}

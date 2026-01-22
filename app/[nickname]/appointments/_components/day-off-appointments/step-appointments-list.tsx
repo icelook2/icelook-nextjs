@@ -15,8 +15,8 @@ import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
 import { cn } from "@/lib/utils/cn";
 import {
-  useDayOffAppointments,
   type AppointmentWithPending,
+  useDayOffAppointments,
 } from "./day-off-appointments-context";
 
 const localeMap = { en: enUS, uk } as const;

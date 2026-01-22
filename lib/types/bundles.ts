@@ -142,5 +142,7 @@ export function bundleServicesToProfileServices(
     display_order: service.display_order,
     price_cents: Math.round(service.price_cents * discountMultiplier),
     duration_minutes: service.duration_minutes,
+    available_from_time: null,
+    available_to_time: null,
   }));
 }

@@ -9,8 +9,8 @@ import type { ServiceGroupWithServices } from "@/lib/queries/services";
 import type { VisitPreferences } from "@/lib/types/visit-preferences";
 import { isEmptyPreferences } from "@/lib/types/visit-preferences";
 import {
-  AppointmentActionsCard,
   type ActionConfirmationTranslations,
+  AppointmentActionsCard,
   type QuickRescheduleTranslations,
 } from "./appointment-actions-card";
 import { AppointmentDateTimeCard } from "./appointment-date-time-card";

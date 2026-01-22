@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { fetchBeautyPageReviewsAction } from "@/app/actions/reviews";
 import type { BeautyPageReview } from "@/lib/queries/reviews";
 import { Dialog } from "@/lib/ui/dialog";
 import { StarRating } from "@/lib/ui/star-rating";
@@ -107,13 +108,8 @@ export function ReviewsDialog({
     async function fetchReviews() {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          `/api/reviews?beautyPageId=${beautyPageId}`,
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setReviews(data.reviews);
-        }
+        const data = await fetchBeautyPageReviewsAction(beautyPageId);
+        setReviews(data);
       } catch (error) {
         console.error("Failed to fetch reviews:", error);
       } finally {

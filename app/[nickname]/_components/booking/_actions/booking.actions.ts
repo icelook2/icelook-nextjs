@@ -9,8 +9,19 @@
  * - No specialist selection - creator is the service provider
  * - Prices come directly from services table
  * - Working days are linked to beauty page, not specialist
+ *
+ * Promotion integration:
+ * - Checks for applicable promotions (sale, slot, time) for each service
+ * - Applies the best discount (highest percentage)
+ * - Stores original and discounted prices
+ * - Marks slot promotions as "booked" after successful booking
  */
 
+import {
+  getBestPromotionForBooking,
+  markSlotPromotionAsBooked,
+  type PublicPromotion,
+} from "@/lib/queries/promotions";
 import { createClient } from "@/lib/supabase/server";
 import type { BookingResult, CreateBookingInput } from "../_lib/booking-types";
 
@@ -23,6 +34,17 @@ interface ServiceDetails {
   name: string;
   price_cents: number;
   duration_minutes: number;
+  available_from_time: string | null;
+  available_to_time: string | null;
+}
+
+interface ServiceWithPromotion extends ServiceDetails {
+  /** Original price before any discount */
+  originalPriceCents: number;
+  /** Final price after discount (same as original if no promotion) */
+  finalPriceCents: number;
+  /** Applied promotion, if any */
+  promotion: PublicPromotion | null;
 }
 
 // ============================================================================
@@ -34,6 +56,10 @@ interface ServiceDetails {
  *
  * This is a public mutation - guests can book without authentication.
  * Authenticated users can optionally provide their clientId for tracking.
+ *
+ * Supports two booking modes:
+ * 1. Individual services: Each service is checked for promotions, prices summed
+ * 2. Bundle booking: Uses bundle's discounted price directly
  */
 export async function createBooking(
   input: CreateBookingInput,
@@ -49,7 +75,14 @@ export async function createBooking(
       clientInfo,
       clientId,
       visitPreferences,
+      bundleId,
+      bundlePriceCents,
+      bundleDurationMinutes,
+      bundleName,
     } = input;
+
+    // Determine if this is a bundle booking
+    const isBundleBooking = !!bundleId;
 
     // Validate we have at least one service
     if (serviceIds.length === 0) {
@@ -81,14 +114,16 @@ export async function createBooking(
       };
     }
 
-    // Get services with their prices and durations
+    // Get services with their prices, durations, and time windows
     const { data: services, error: servicesError } = await supabase
       .from("services")
       .select(`
         id,
         name,
         price_cents,
-        duration_minutes
+        duration_minutes,
+        available_from_time,
+        available_to_time
       `)
       .in("id", serviceIds);
 
@@ -115,18 +150,84 @@ export async function createBooking(
       name: s.name,
       price_cents: s.price_cents,
       duration_minutes: s.duration_minutes,
+      available_from_time: s.available_from_time,
+      available_to_time: s.available_to_time,
     }));
 
-    // Calculate totals
-    const totalPriceCents = serviceDetails.reduce(
-      (sum, s) => sum + s.price_cents,
-      0,
-    );
-    const totalDurationMinutes = serviceDetails.reduce(
-      (sum, s) => sum + s.duration_minutes,
-      0,
-    );
-    const combinedServiceName = serviceDetails.map((s) => s.name).join(", ");
+    // For bundle bookings, skip individual promotion lookup
+    // The bundle's discounted price is used directly
+    let servicesWithPromotions: ServiceWithPromotion[];
+    let totalOriginalPriceCents: number;
+    let totalFinalPriceCents: number;
+    let totalDurationMinutes: number;
+    let combinedServiceName: string;
+    let slotPromotionsToBook: PublicPromotion[] = [];
+
+    if (isBundleBooking && bundlePriceCents !== undefined) {
+      // Bundle booking: use bundle's discounted price
+      servicesWithPromotions = serviceDetails.map((service) => ({
+        ...service,
+        originalPriceCents: service.price_cents,
+        finalPriceCents: service.price_cents, // Individual prices don't matter for bundle
+        promotion: null,
+      }));
+
+      totalOriginalPriceCents = servicesWithPromotions.reduce(
+        (sum, s) => sum + s.originalPriceCents,
+        0,
+      );
+      totalFinalPriceCents = bundlePriceCents; // Use bundle's discounted price
+      totalDurationMinutes =
+        bundleDurationMinutes ??
+        servicesWithPromotions.reduce((sum, s) => sum + s.duration_minutes, 0);
+      combinedServiceName =
+        bundleName ?? servicesWithPromotions.map((s) => s.name).join(", ");
+    } else {
+      // Individual services: check for promotions
+      servicesWithPromotions = await Promise.all(
+        serviceDetails.map(async (service) => {
+          const promotion = await getBestPromotionForBooking(
+            beautyPageId,
+            service.id,
+            date,
+            startTime,
+          );
+
+          // Calculate final price with promotion
+          const originalPriceCents = service.price_cents;
+          const finalPriceCents = promotion
+            ? promotion.discountedPriceCents
+            : originalPriceCents;
+
+          return {
+            ...service,
+            originalPriceCents,
+            finalPriceCents,
+            promotion,
+          };
+        }),
+      );
+
+      // Calculate totals (using final prices with discounts applied)
+      totalOriginalPriceCents = servicesWithPromotions.reduce(
+        (sum, s) => sum + s.originalPriceCents,
+        0,
+      );
+      totalFinalPriceCents = servicesWithPromotions.reduce(
+        (sum, s) => sum + s.finalPriceCents,
+        0,
+      );
+      totalDurationMinutes = servicesWithPromotions.reduce(
+        (sum, s) => sum + s.duration_minutes,
+        0,
+      );
+      combinedServiceName = servicesWithPromotions.map((s) => s.name).join(", ");
+
+      // Collect slot promotions to mark as booked after successful booking
+      slotPromotionsToBook = servicesWithPromotions
+        .filter((s) => s.promotion?.type === "slot")
+        .map((s) => s.promotion!);
+    }
 
     // Check if the slot is still available (prevent race conditions)
     const slotAvailable = await isSlotAvailable(
@@ -180,6 +281,26 @@ export async function createBooking(
       };
     }
 
+    // Validate that the booking time respects all services' time windows
+    for (const service of servicesWithPromotions) {
+      if (service.available_from_time && service.available_to_time) {
+        const serviceStart = timeToMinutes(
+          normalizeTime(service.available_from_time),
+        );
+        const serviceEnd = timeToMinutes(
+          normalizeTime(service.available_to_time),
+        );
+
+        if (slotStartMinutes < serviceStart || slotEndMinutes > serviceEnd) {
+          return {
+            success: false,
+            error: "not_working",
+            message: `Service "${service.name}" is only available between ${normalizeTime(service.available_from_time)} and ${normalizeTime(service.available_to_time)}`,
+          };
+        }
+      }
+    }
+
     // Check for break conflicts
     const { data: breaks } = await supabase
       .from("working_day_breaks")
@@ -206,14 +327,34 @@ export async function createBooking(
     }
 
     // Build notes with service IDs metadata for future reference
+    // Include promotion or bundle details if discounts were applied
     const serviceMetadata = {
       service_ids: serviceIds,
-      services: serviceDetails.map((s) => ({
+      services: servicesWithPromotions.map((s) => ({
         id: s.id,
         name: s.name,
-        price_cents: s.price_cents,
+        original_price_cents: s.originalPriceCents,
+        final_price_cents: s.finalPriceCents,
         duration_minutes: s.duration_minutes,
+        promotion: s.promotion
+          ? {
+              id: s.promotion.id,
+              type: s.promotion.type,
+              discount_percentage: s.promotion.discountPercentage,
+            }
+          : null,
       })),
+      total_original_price_cents: totalOriginalPriceCents,
+      total_final_price_cents: totalFinalPriceCents,
+      has_promotions: servicesWithPromotions.some((s) => s.promotion !== null),
+      // Bundle information (when booking as a bundle)
+      bundle: isBundleBooking
+        ? {
+            id: bundleId,
+            name: bundleName,
+            discounted_price_cents: bundlePriceCents,
+          }
+        : null,
     };
 
     const clientNotes = clientInfo.notes
@@ -228,7 +369,7 @@ export async function createBooking(
       ? "confirmed"
       : "pending";
 
-    // Create the appointment
+    // Create the appointment (with discounted price if promotions applied)
     const { data: appointment, error: createError } = await supabase
       .from("appointments")
       .insert({
@@ -237,7 +378,7 @@ export async function createBooking(
         client_id: clientId ?? null,
         creator_display_name: creatorDisplayName,
         service_name: combinedServiceName,
-        service_price_cents: totalPriceCents,
+        service_price_cents: totalFinalPriceCents,
         service_currency: beautyPage.currency ?? "UAH",
         service_duration_minutes: totalDurationMinutes,
         client_name: clientInfo.name,
@@ -264,22 +405,40 @@ export async function createBooking(
     }
 
     // Insert individual services into appointment_services junction table
+    // Store both original and final prices for records
     const { error: servicesInsertError } = await supabase
       .from("appointment_services")
       .insert(
-        serviceDetails.map((s) => ({
+        servicesWithPromotions.map((s) => ({
           appointment_id: appointment.id,
           service_id: s.id,
           service_name: s.name,
           duration_minutes: s.duration_minutes,
-          price_cents: s.price_cents,
+          price_cents: s.finalPriceCents,
         })),
       );
 
     if (servicesInsertError) {
-      console.error("Error inserting appointment services:", servicesInsertError);
+      console.error(
+        "Error inserting appointment services:",
+        servicesInsertError,
+      );
       // Note: Appointment is already created, so we don't fail the booking
       // The appointment still has the aggregated service data
+    }
+
+    // Mark slot promotions as "booked" (they can only be used once)
+    if (slotPromotionsToBook.length > 0) {
+      await Promise.all(
+        slotPromotionsToBook.map((promo) =>
+          markSlotPromotionAsBooked(
+            beautyPageId,
+            promo.service.id,
+            promo.slotDate!,
+            promo.slotStartTime!,
+          ),
+        ),
+      );
     }
 
     return {

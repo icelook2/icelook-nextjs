@@ -5,6 +5,8 @@ import {
   getServiceById,
   getServiceGroupById,
 } from "@/lib/queries";
+import { getBundlesForService } from "@/lib/queries/bundles";
+import { getPromotionsForService } from "@/lib/queries/promotions";
 import { PageHeader } from "@/lib/ui/page-header";
 import { ServiceDetails } from "./_components";
 
@@ -30,9 +32,11 @@ export default async function ServiceDetailsPage({
     redirect(`/${nickname}`);
   }
 
-  const [serviceGroup, service] = await Promise.all([
+  const [serviceGroup, service, promotions, bundles] = await Promise.all([
     getServiceGroupById(groupId),
     getServiceById(serviceId),
+    getPromotionsForService(serviceId),
+    getBundlesForService(serviceId),
   ]);
 
   if (!serviceGroup || serviceGroup.beauty_page_id !== beautyPage.id) {
@@ -57,6 +61,8 @@ export default async function ServiceDetailsPage({
           service={service}
           serviceGroup={serviceGroup}
           nickname={nickname}
+          promotions={promotions}
+          bundles={bundles}
         />
       </div>
     </>

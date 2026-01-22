@@ -5,8 +5,8 @@
  * that help with cross-selling during the booking flow.
  */
 
-import { createClient } from "@/lib/supabase/server";
 import type { ProfileService } from "@/lib/queries/beauty-page-profile";
+import { createClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Types

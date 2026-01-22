@@ -12,27 +12,22 @@ interface SidebarProps {
 export function Sidebar({ className, profile }: SidebarProps) {
   return (
     <aside
+      style={{ height: "100dvh" }}
       className={cn(
-        "fixed left-0 top-0 flex h-screen flex-col items-center py-4 pl-2",
+        "fixed left-0 top-0 flex flex-col items-center justify-between py-4 pl-2",
         className,
       )}
     >
       {/* Logo at top */}
-      <div className="flex items-center justify-center">
-        <Logo />
-      </div>
+      <Logo />
 
-      {/* Navigation - centered vertically */}
-      <nav className="flex flex-1 flex-col items-center justify-center">
+      {/* Navigation - in the middle */}
+      <nav className="flex flex-col items-center">
         <SidebarNav />
       </nav>
 
       {/* Profile menu at bottom */}
-      {profile && (
-        <div className="mt-auto">
-          <ProfileMenu profile={profile} />
-        </div>
-      )}
+      {profile ? <ProfileMenu profile={profile} /> : <div />}
     </aside>
   );
 }

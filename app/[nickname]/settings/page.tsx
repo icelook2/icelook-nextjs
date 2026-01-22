@@ -67,10 +67,10 @@ export default async function BeautyPageSettings({
       disabled: false,
     },
     {
-      href: `/${nickname}/settings/special-offers`,
+      href: `/${nickname}/settings/promotions`,
       icon: Tag,
-      title: t("nav.special_offers"),
-      description: t("nav.special_offers_description"),
+      title: t("nav.promotions"),
+      description: t("nav.promotions_description"),
       iconClassName:
         "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
       disabled: false,

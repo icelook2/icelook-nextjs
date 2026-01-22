@@ -10,11 +10,11 @@
 import { format } from "date-fns";
 import { CalendarDays, Clock, User } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { SimpleDatePicker } from "../simple-date-picker";
 import {
   useDayOffAppointments,
   type WorkingDayOption,
 } from "./day-off-appointments-context";
-import { SimpleDatePicker } from "../simple-date-picker";
 
 interface StepRescheduleDateProps {
   workingDays: WorkingDayOption[];

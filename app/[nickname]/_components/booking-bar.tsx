@@ -87,7 +87,7 @@ function MobileStickyBar({
   return createPortal(
     <div
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-      className="fixed bottom-0 left-0 right-0 border-t border-border bg-surface sm:hidden"
+      className="fixed bottom-0 left-0 right-0 border-t border-border bg-surface md:hidden"
     >
       <div className="flex h-16 items-center gap-3 px-4">
         <button
@@ -158,7 +158,7 @@ function DesktopSideDrawer({
   const serviceText = formatServiceCount(serviceCount, translations);
 
   const content = (
-    <div className="fixed bottom-4 right-4 hidden w-64 sm:block">
+    <div className="pointer-events-auto fixed bottom-4 right-4 hidden w-64 md:block">
       <div className="rounded-2xl border border-border bg-surface p-4 shadow-xl">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
@@ -201,18 +201,21 @@ export function BookingBar({
 }: BookingBarProps) {
   const {
     selectedServices,
+    selectedBundle,
     totalPriceCents,
     totalDurationMinutes,
     clearSelection,
   } = useServiceSelection();
 
-  const hasSelection = selectedServices.length > 0;
+  const hasSelection = selectedServices.length > 0 || selectedBundle !== null;
 
   if (!hasSelection) {
     return null;
   }
 
-  const serviceCount = selectedServices.length;
+  const serviceCount = selectedBundle
+    ? selectedBundle.services.length
+    : selectedServices.length;
 
   return (
     <>

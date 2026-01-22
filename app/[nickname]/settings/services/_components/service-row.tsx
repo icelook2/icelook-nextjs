@@ -13,6 +13,14 @@ interface ServiceRowProps {
 }
 
 export function ServiceRow({ service, nickname, isLast }: ServiceRowProps) {
+  const hasTimeWindow =
+    !!service.available_from_time && !!service.available_to_time;
+
+  // Format time window for display (HH:MM:SS -> HH:MM)
+  const timeWindowDisplay = hasTimeWindow
+    ? `${service.available_from_time?.slice(0, 5)}-${service.available_to_time?.slice(0, 5)}`
+    : null;
+
   return (
     <SettingsRow
       noBorder={isLast}
@@ -27,6 +35,7 @@ export function ServiceRow({ service, nickname, isLast }: ServiceRowProps) {
           <p className="text-sm text-muted">
             {formatPrice(service.price_cents)} ₴ •{" "}
             {formatDuration(service.duration_minutes)}
+            {timeWindowDisplay && ` • ${timeWindowDisplay}`}
           </p>
         </div>
       </div>

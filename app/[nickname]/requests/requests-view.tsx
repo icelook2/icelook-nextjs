@@ -9,7 +9,7 @@ import {
 } from "date-fns";
 import { ArrowDownUp, Calendar, Check, Clock, Inbox, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/lib/ui/button";
 import { Paper } from "@/lib/ui/paper";
 import {
@@ -37,28 +37,21 @@ export function RequestsView({
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [decliningId, setDecliningId] = useState<string | null>(null);
 
-  const sortedAppointments = useMemo(() => {
-    const sorted = [...appointments];
-
+  // Derived value (React Compiler handles optimization)
+  const sortedAppointments = [...appointments].sort((a, b) => {
     if (sortMode === "recent") {
       // Sort by created_at descending (newest first)
-      sorted.sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
-    } else {
-      // Sort by date + start_time ascending (soonest first)
-      sorted.sort((a, b) => {
-        const dateCompare = a.date.localeCompare(b.date);
-        if (dateCompare !== 0) {
-          return dateCompare;
-        }
-        return a.start_time.localeCompare(b.start_time);
-      });
     }
-
-    return sorted;
-  }, [appointments, sortMode]);
+    // Sort by date + start_time ascending (soonest first)
+    const dateCompare = a.date.localeCompare(b.date);
+    if (dateCompare !== 0) {
+      return dateCompare;
+    }
+    return a.start_time.localeCompare(b.start_time);
+  });
 
   const handleConfirm = async (appointmentId: string) => {
     setConfirmingId(appointmentId);

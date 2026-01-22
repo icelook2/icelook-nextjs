@@ -5,14 +5,20 @@
  *
  * Wraps page content with ServiceSelectionProvider and BookingBar.
  * Hides the main navigation and shows booking bar when services are selected.
+ *
+ * Also provides a context for opening the booking dialog from anywhere
+ * in the page (e.g., inline booking summaries in layout variants).
  */
 
-import { type ReactNode, useEffect, useState } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { useBottomNavVisibilityOptional } from "@/components/layout/bottom-nav-visibility-context";
 import type { ProfileServiceGroup } from "@/lib/queries/beauty-page-profile";
+import type { PublicBundle } from "@/lib/types/bundles";
 import type { DurationLabels } from "@/lib/utils/price-range";
-import type { CurrentUserProfile } from "./booking/_lib/booking-types";
-import type { CreatorInfo } from "./booking/booking-context";
+import type {
+  CreatorInfo,
+  CurrentUserProfile,
+} from "./booking/_lib/booking-types";
 import {
   type BeautyPageInfo,
   BookingDialog,
@@ -23,6 +29,29 @@ import {
   ServiceSelectionProvider,
   useServiceSelection,
 } from "./service-selection-context";
+
+// ============================================================================
+// Booking Action Context
+// ============================================================================
+
+interface BookingActionContextValue {
+  /** Open the booking dialog */
+  openBookingDialog: () => void;
+}
+
+const BookingActionContext = createContext<BookingActionContextValue | null>(null);
+
+/**
+ * Hook to access booking actions (e.g., open dialog).
+ * Must be used within BookingBarWrapper.
+ */
+export function useBookingAction() {
+  const context = useContext(BookingActionContext);
+  if (!context) {
+    throw new Error("useBookingAction must be used within BookingBarWrapper");
+  }
+  return context;
+}
 
 // ============================================================================
 // Types
@@ -108,13 +137,14 @@ interface BookingBarContentProps {
   };
 }
 
-/** Snapshot of selected services when dialog opens */
-interface DialogServicesSnapshot {
+/** Snapshot of selection when dialog opens */
+interface DialogSelectionSnapshot {
   services: typeof useServiceSelection extends () => {
     selectedServices: infer T;
   }
     ? T
     : never;
+  bundle: PublicBundle | null;
   totalPriceCents: number;
   totalDurationMinutes: number;
 }
@@ -135,9 +165,10 @@ function BookingBarContent({
 }: BookingBarContentProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogSnapshot, setDialogSnapshot] =
-    useState<DialogServicesSnapshot | null>(null);
+    useState<DialogSelectionSnapshot | null>(null);
   const {
     selectedServices,
+    selectedBundle,
     totalPriceCents,
     totalDurationMinutes,
     clearSelection,
@@ -145,7 +176,7 @@ function BookingBarContent({
 
   // Hide/show bottom nav based on selection
   const bottomNavVisibility = useBottomNavVisibilityOptional();
-  const hasSelection = selectedServices.length > 0;
+  const hasSelection = selectedServices.length > 0 || selectedBundle !== null;
 
   // Hide bottom nav when services are selected, show booking bar instead
   useEffect(() => {
@@ -171,6 +202,7 @@ function BookingBarContent({
     // Snapshot the current selection when opening the dialog
     setDialogSnapshot({
       services: selectedServices,
+      bundle: selectedBundle,
       totalPriceCents,
       totalDurationMinutes,
     });
@@ -190,8 +222,12 @@ function BookingBarContent({
     clearSelection();
   };
 
+  const bookingActionValue: BookingActionContextValue = {
+    openBookingDialog: handleBookClick,
+  };
+
   return (
-    <>
+    <BookingActionContext.Provider value={bookingActionValue}>
       {/* Booking bar replaces bottom nav when services are selected */}
       {hasSelection && (
         <BookingBar
@@ -206,7 +242,7 @@ function BookingBarContent({
       {/* Page content */}
       {children}
 
-      {/* Booking dialog - uses snapshot of services taken when opened */}
+      {/* Booking dialog - uses snapshot of selection taken when opened */}
       {dialogSnapshot && (
         <BookingDialog
           open={isDialogOpen}
@@ -217,6 +253,7 @@ function BookingBarContent({
           currency={currency}
           locale={locale}
           selectedServices={dialogSnapshot.services}
+          selectedBundle={dialogSnapshot.bundle}
           totalPriceCents={dialogSnapshot.totalPriceCents}
           totalDurationMinutes={dialogSnapshot.totalDurationMinutes}
           currentUserId={currentUserId}
@@ -228,6 +265,6 @@ function BookingBarContent({
           onBookingSuccess={handleBookingSuccess}
         />
       )}
-    </>
+    </BookingActionContext.Provider>
   );
 }

@@ -9,8 +9,8 @@ import {
   ChevronRight,
   Clock,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { ScheduleMenu } from "./schedule-menu";

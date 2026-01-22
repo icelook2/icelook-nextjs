@@ -2,7 +2,7 @@
 
 import { CheckCircle2 } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Paper } from "@/lib/ui/paper";
 import { AppointmentCard } from "../../_components/appointment-card";
 import { toDateString } from "../../_lib/date-utils";
@@ -31,16 +31,11 @@ export function CompletedView({ appointments }: CompletedViewProps) {
 
   const todayStr = toDateString(new Date());
 
-  // Get today's appointments
-  const todayAppointments = useMemo(
-    () => getAppointmentsForDate(appointments, todayStr),
-    [appointments, todayStr],
-  );
-
-  // Get completed appointments
-  const completedAppointments = useMemo(
-    () => getCompletedAppointments(todayAppointments, currentTime),
-    [todayAppointments, currentTime],
+  // Derived values (React Compiler handles optimization)
+  const todayAppointments = getAppointmentsForDate(appointments, todayStr);
+  const completedAppointments = getCompletedAppointments(
+    todayAppointments,
+    currentTime,
   );
 
   if (completedAppointments.length === 0) {

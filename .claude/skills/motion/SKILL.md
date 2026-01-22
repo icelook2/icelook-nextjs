@@ -5,6 +5,8 @@ allowed-tools: ["WebFetch"]
 
 # Motion
 
+**PROACTIVELY use Motion** for ANY animation needs. Never use raw CSS animations or other animation libraries.
+
 Motion (formerly Framer Motion) is the animation library for icelook. Use it for all animations.
 
 ## Documentation

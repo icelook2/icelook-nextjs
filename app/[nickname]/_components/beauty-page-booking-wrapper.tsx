@@ -13,8 +13,10 @@
 import { type ReactNode, useState } from "react";
 import type { ProfileServiceGroup } from "@/lib/queries/beauty-page-profile";
 import type { DurationLabels } from "@/lib/utils/price-range";
-import type { CurrentUserProfile } from "./booking/_lib/booking-types";
-import type { CreatorInfo } from "./booking/booking-context";
+import type {
+  CreatorInfo,
+  CurrentUserProfile,
+} from "./booking/_lib/booking-types";
 import {
   type BeautyPageInfo,
   BookingDialog,

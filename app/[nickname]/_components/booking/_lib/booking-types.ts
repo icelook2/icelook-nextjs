@@ -156,6 +156,26 @@ export interface CreateBookingInput {
   clientId?: string;
   /** Visit preferences for this appointment */
   visitPreferences?: VisitPreferences;
+  /**
+   * Bundle ID when booking a bundle instead of individual services.
+   * When set, the bundle's discounted price is used instead of individual promotions.
+   */
+  bundleId?: string;
+  /**
+   * Bundle price in cents (discounted total).
+   * Required when bundleId is provided.
+   */
+  bundlePriceCents?: number;
+  /**
+   * Bundle total duration in minutes.
+   * Required when bundleId is provided.
+   */
+  bundleDurationMinutes?: number;
+  /**
+   * Bundle name for display.
+   * Required when bundleId is provided.
+   */
+  bundleName?: string;
 }
 
 /** Successful booking result */
@@ -191,4 +211,36 @@ export interface BookingLayoutProps {
   selectedServices: ProfileService[];
   /** Current user ID if authenticated */
   currentUserId?: string;
+}
+
+// ============================================================================
+// Booking Context Types
+// ============================================================================
+
+/** Creator info for display in booking flow */
+export interface CreatorInfo {
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+/** Data for rescheduling an existing appointment */
+export interface RescheduleData {
+  /** The appointment ID being rescheduled */
+  appointmentId: string;
+  /** Beauty page nickname for revalidation */
+  nickname: string;
+  /** Client name for display */
+  clientName: string;
+  /** Original date (for display) */
+  originalDate: string;
+  /** Original start time (for display) */
+  originalStartTime: string;
+}
+
+/** Cached time slots for a specific date */
+export interface TimeSlotsCache {
+  [dateStr: string]: {
+    slots: TimeSlot[];
+    status: "loading" | "success" | "error";
+  };
 }

@@ -1,6 +1,13 @@
 "use client";
 
-import { Clock, Coins, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import {
+  Clock,
+  Coins,
+  MoreVertical,
+  Pencil,
+  Timer,
+  Trash2,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { Service } from "@/lib/queries";
@@ -9,6 +16,7 @@ import { ChangeDurationDialog } from "./change-duration-dialog";
 import { ChangePriceDialog } from "./change-price-dialog";
 import { DeleteServiceDialog } from "./delete-service-dialog";
 import { RenameServiceDialog } from "./rename-service-dialog";
+import { SetTimeWindowDialog } from "./set-time-window-dialog";
 
 interface ServiceMenuProps {
   service: Service;
@@ -20,6 +28,7 @@ export function ServiceMenu({ service, nickname }: ServiceMenuProps) {
   const [renameOpen, setRenameOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
   const [durationOpen, setDurationOpen] = useState(false);
+  const [timeWindowOpen, setTimeWindowOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   return (
@@ -38,6 +47,9 @@ export function ServiceMenu({ service, nickname }: ServiceMenuProps) {
             </Menu.Item>
             <Menu.Item icon={Clock} onClick={() => setDurationOpen(true)}>
               {t("menu_change_duration")}
+            </Menu.Item>
+            <Menu.Item icon={Timer} onClick={() => setTimeWindowOpen(true)}>
+              {t("menu_set_time_window")}
             </Menu.Item>
             <Menu.Separator />
             <Menu.Item
@@ -77,6 +89,13 @@ export function ServiceMenu({ service, nickname }: ServiceMenuProps) {
         nickname={nickname}
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
+      />
+
+      <SetTimeWindowDialog
+        service={service}
+        nickname={nickname}
+        open={timeWindowOpen}
+        onOpenChange={setTimeWindowOpen}
       />
     </>
   );

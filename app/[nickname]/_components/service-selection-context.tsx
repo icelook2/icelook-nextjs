@@ -3,20 +3,21 @@
 /**
  * Service Selection Context (Solo Creator Model)
  *
- * Manages the selection of services on a beauty page profile.
- * Simplified from the multi-specialist model - no need for
- * specialist intersection since there's only one creator.
+ * Manages the selection of services AND bundles on a beauty page profile.
+ *
+ * Users can combine:
+ * - Multiple individual services
+ * - One bundle (optionally with additional services)
+ *
+ * When a bundle is selected:
+ * - Bundle price and duration are added to the total
+ * - User can also add individual services on top
+ * - Only one bundle can be selected at a time
  */
 
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, type ReactNode, useContext, useState } from "react";
 import type { ProfileService } from "@/lib/queries/beauty-page-profile";
+import type { PublicBundle } from "@/lib/types/bundles";
 
 // ============================================================================
 // Types
@@ -25,18 +26,26 @@ import type { ProfileService } from "@/lib/queries/beauty-page-profile";
 interface ServiceSelectionContextValue {
   // State
   selectedServices: ProfileService[];
+  selectedBundle: PublicBundle | null;
 
   // Derived values
   selectedServiceIds: Set<string>;
-  /** Total price for selected services */
   totalPriceCents: number;
-  /** Total duration for selected services */
   totalDurationMinutes: number;
+  /** Count of selected items (services + bundle as 1 item) */
+  itemCount: number;
+  /** Whether anything is selected (services or bundle) */
+  hasSelection: boolean;
 
-  // Actions
+  // Service actions
   toggleService: (service: ProfileService) => void;
   clearSelection: () => void;
   isServiceSelected: (serviceId: string) => boolean;
+
+  // Bundle actions
+  selectBundle: (bundle: PublicBundle) => void;
+  clearBundle: () => void;
+  isBundleSelected: (bundleId: string) => boolean;
 }
 
 // ============================================================================
@@ -60,29 +69,35 @@ export function ServiceSelectionProvider({
   const [selectedServices, setSelectedServices] = useState<ProfileService[]>(
     [],
   );
+  const [selectedBundle, setSelectedBundle] = useState<PublicBundle | null>(
+    null,
+  );
 
-  // Compute derived state
-  const derivedState = useMemo(() => {
-    const selectedServiceIds = new Set(selectedServices.map((s) => s.id));
+  // Compute derived state (React Compiler handles optimization)
+  const selectedServiceIds = new Set(selectedServices.map((s) => s.id));
 
-    // Calculate totals from selected services
-    const totalPriceCents = selectedServices.reduce(
-      (sum, s) => sum + s.price_cents,
-      0,
-    );
-    const totalDurationMinutes = selectedServices.reduce(
-      (sum, s) => sum + s.duration_minutes,
-      0,
-    );
+  // Calculate totals - combine bundle + individual services
+  let totalPriceCents = 0;
+  let totalDurationMinutes = 0;
 
-    return {
-      selectedServiceIds,
-      totalPriceCents,
-      totalDurationMinutes,
-    };
-  }, [selectedServices]);
+  // Add bundle totals if selected
+  if (selectedBundle) {
+    totalPriceCents += selectedBundle.discounted_total_cents;
+    totalDurationMinutes += selectedBundle.total_duration_minutes;
+  }
 
-  const toggleService = useCallback((service: ProfileService) => {
+  // Add individual services totals
+  for (const service of selectedServices) {
+    totalPriceCents += service.price_cents;
+    totalDurationMinutes += service.duration_minutes;
+  }
+
+  // Item count: services + bundle (bundle counts as 1 item)
+  const itemCount = selectedServices.length + (selectedBundle ? 1 : 0);
+  const hasSelection = itemCount > 0;
+
+  // Service actions
+  function toggleService(service: ProfileService) {
     setSelectedServices((prev) => {
       const isSelected = prev.some((s) => s.id === service.id);
       if (isSelected) {
@@ -90,33 +105,50 @@ export function ServiceSelectionProvider({
       }
       return [...prev, service];
     });
-  }, []);
+  }
 
-  const clearSelection = useCallback(() => {
+  function clearSelection() {
     setSelectedServices([]);
-  }, []);
+    setSelectedBundle(null);
+  }
 
-  const isServiceSelected = useCallback(
-    (serviceId: string) => derivedState.selectedServiceIds.has(serviceId),
-    [derivedState.selectedServiceIds],
-  );
+  function isServiceSelected(serviceId: string) {
+    return selectedServiceIds.has(serviceId);
+  }
 
-  const value: ServiceSelectionContextValue = useMemo(
-    () => ({
-      selectedServices,
-      ...derivedState,
-      toggleService,
-      clearSelection,
-      isServiceSelected,
-    }),
-    [
-      selectedServices,
-      derivedState,
-      toggleService,
-      clearSelection,
-      isServiceSelected,
-    ],
-  );
+  // Bundle actions
+  function selectBundle(bundle: PublicBundle) {
+    // Toggle bundle selection (only one bundle at a time)
+    if (selectedBundle?.id === bundle.id) {
+      setSelectedBundle(null);
+    } else {
+      setSelectedBundle(bundle);
+    }
+  }
+
+  function clearBundle() {
+    setSelectedBundle(null);
+  }
+
+  function isBundleSelected(bundleId: string) {
+    return selectedBundle?.id === bundleId;
+  }
+
+  const value: ServiceSelectionContextValue = {
+    selectedServices,
+    selectedBundle,
+    selectedServiceIds,
+    totalPriceCents,
+    totalDurationMinutes,
+    itemCount,
+    hasSelection,
+    toggleService,
+    clearSelection,
+    isServiceSelected,
+    selectBundle,
+    clearBundle,
+    isBundleSelected,
+  };
 
   return (
     <ServiceSelectionContext.Provider value={value}>

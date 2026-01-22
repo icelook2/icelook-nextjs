@@ -6,7 +6,12 @@ import { useTransition } from "react";
 import { removeServiceFromAppointment } from "@/app/[nickname]/appointments/_actions";
 import type { Appointment } from "@/lib/queries/appointments";
 import type { ServiceGroupWithServices } from "@/lib/queries/services";
+import { DiscountBadge } from "@/lib/ui/discount-badge";
 import { Paper } from "@/lib/ui/paper";
+import {
+  calculateDiscountPercentage,
+  parseAppointmentMetadata,
+} from "@/lib/utils/appointment-metadata";
 import { formatDuration } from "@/lib/utils/price-range";
 import { AddServiceDialog } from "./add-service-dialog";
 
@@ -45,12 +50,33 @@ export function ServicesCard({
 
   const canRemoveService = canModify && services.length > 1;
 
+  // Parse metadata to check for bundle info
+  const metadata = parseAppointmentMetadata(appointment.client_notes);
+  const bundle = metadata?.bundle ?? null;
+  const discountPercentage =
+    bundle && metadata
+      ? calculateDiscountPercentage(
+          metadata.total_original_price_cents,
+          metadata.total_final_price_cents,
+        )
+      : 0;
+
   return (
     <section className="space-y-3">
       {/* Section header */}
       <h2 className="text-base font-semibold">{t("title")}</h2>
 
       <Paper>
+        {/* Bundle header if applicable */}
+        {bundle && (
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-foreground">{bundle.name}</span>
+              <DiscountBadge percentage={discountPercentage} />
+            </div>
+          </div>
+        )}
+
         {/* Service rows */}
         {services.map((service, index) => (
           <div
@@ -66,8 +92,9 @@ export function ServicesCard({
                 {service.service_name}
               </p>
               <p className="mt-0.5 text-sm text-muted">
-                {formatDuration(service.duration_minutes)} ·{" "}
-                {formatPrice(service.price_cents)}
+                {formatDuration(service.duration_minutes)}
+                {/* Only show individual prices if NOT a bundle */}
+                {!bundle && <> · {formatPrice(service.price_cents)}</>}
               </p>
             </div>
 

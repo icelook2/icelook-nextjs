@@ -12,7 +12,6 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback } from "react";
 import type {
   AppointmentsSortField,
   ClientAppointmentHistory,
@@ -72,26 +71,24 @@ export function AppointmentsTable({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handleSort = useCallback(
-    (field: AppointmentsSortField) => {
-      const params = new URLSearchParams(searchParams.toString());
+  // Handler (React Compiler handles optimization)
+  function handleSort(field: AppointmentsSortField) {
+    const params = new URLSearchParams(searchParams.toString());
 
-      if (sort === field) {
-        // Toggle order if same field
-        params.set("order", order === "desc" ? "asc" : "desc");
-      } else {
-        // New field, default to desc
-        params.set("sort", field);
-        params.set("order", "desc");
-      }
+    if (sort === field) {
+      // Toggle order if same field
+      params.set("order", order === "desc" ? "asc" : "desc");
+    } else {
+      // New field, default to desc
+      params.set("sort", field);
+      params.set("order", "desc");
+    }
 
-      // Reset to page 1 when sorting changes
-      params.delete("page");
+    // Reset to page 1 when sorting changes
+    params.delete("page");
 
-      router.push(`?${params.toString()}`);
-    },
-    [router, searchParams, sort, order],
-  );
+    router.push(`?${params.toString()}`);
+  }
 
   const SortIcon = ({ field }: { field: AppointmentsSortField }) => {
     if (sort !== field) {

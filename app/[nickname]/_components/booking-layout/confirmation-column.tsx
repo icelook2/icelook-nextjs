@@ -6,27 +6,11 @@
  * 3rd column showing dynamic booking summary.
  * Updates in real-time as user makes selections.
  * Handles booking directly without opening a dialog.
- *
- * Key changes from multi-specialist model:
- * - No specialist selection or display
- * - Price/duration come directly from selected services
- * - Booking submitted to beauty page (creator handles it)
- *
- * For authenticated users: books directly on button click.
- * For guests: shows inline form, then books on submit.
  */
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Calendar,
-  Check,
-  CheckCircle,
-  Clock,
-  Loader2,
-  Scissors,
-} from "lucide-react";
-import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { format } from "date-fns";
+import { Calendar, Clock, Loader2, Scissors } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/lib/ui/button";
 import {
   type DurationLabels,
@@ -34,10 +18,9 @@ import {
   formatPrice,
 } from "@/lib/utils/price-range";
 import { createBooking } from "../booking/_actions/booking.actions";
-import {
-  createGuestInfoSchema,
-  type GuestInfoFormData,
-  type GuestInfoValidationMessages,
+import type {
+  GuestInfoFormData,
+  GuestInfoValidationMessages,
 } from "../booking/_lib/booking-schemas";
 import type {
   BookingResult,
@@ -45,6 +28,9 @@ import type {
 } from "../booking/_lib/booking-types";
 import { calculateEndTime } from "../booking/_lib/slot-generation";
 import { useBookingLayout } from "./booking-layout-context";
+import { BookingSuccessCard } from "./booking-success-card";
+import { GuestBookingForm } from "./guest-booking-form";
+import { SummaryRow } from "./summary-row";
 
 // ============================================================================
 // Types
@@ -98,7 +84,6 @@ export function ConfirmationColumn({
   locale = "uk-UA",
   durationLabels,
   beautyPageId,
-  timezone,
   currentUserId,
   currentUserProfile,
 }: ConfirmationColumnProps) {
@@ -113,48 +98,20 @@ export function ConfirmationColumn({
     clearAll,
   } = useBookingLayout();
 
-  // Booking state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(
     null,
   );
 
-  // Form state for guest users
   const isAuthenticated = !!currentUserProfile?.name;
-
-  const guestSchema = useMemo(
-    () => createGuestInfoSchema(validationTranslations),
-    [validationTranslations],
-  );
-
-  const form = useForm<GuestInfoFormData>({
-    resolver: zodResolver(guestSchema),
-    mode: "onChange",
-    defaultValues: {
-      name: "",
-      phone: "",
-      email: "",
-      notes: "",
-    },
-  });
-
-  // Format duration
   const formattedDuration = formatDuration(
     totalDurationMinutes,
     durationLabels,
   );
-
-  // Check completion status of each step
   const hasServices = selectedServices.length > 0;
   const hasDateTime = !!selectedDate && !!selectedTime;
 
-  // Form is valid for booking
-  const canBook = isAuthenticated
-    ? isReadyToBook
-    : isReadyToBook && form.formState.isValid;
-
-  // Handle booking submission
   async function handleSubmit(formData?: GuestInfoFormData) {
     if (!isReadyToBook || !selectedDate || !selectedTime) {
       return;
@@ -164,13 +121,9 @@ export function ConfirmationColumn({
     setError(null);
 
     try {
-      // Calculate end time
       const endTime = calculateEndTime(selectedTime, totalDurationMinutes);
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
 
-      // Format date as YYYY-MM-DD
-      const dateStr = formatDateToYYYYMMDD(selectedDate);
-
-      // Prepare client info
       const clientInfo = isAuthenticated
         ? {
             name: currentUserProfile?.name ?? "",
@@ -198,77 +151,44 @@ export function ConfirmationColumn({
       } else {
         setError(result.message);
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  // Handle authenticated user booking
-  function handleAuthenticatedBooking() {
-    handleSubmit();
-  }
-
-  // Handle guest form submission
-  function onGuestSubmit(data: GuestInfoFormData) {
-    handleSubmit(data);
-  }
-
-  // Handle booking another appointment
   function handleBookAnother() {
     setBookingResult(null);
     setError(null);
     clearAll();
-    form.reset();
   }
 
-  // Show success state
+  // Success state
   if (bookingResult?.success) {
     return (
-      <div>
-        <div className="pb-3">
-          <h3 className="text-base font-semibold">{translations.title}</h3>
-        </div>
-
-        <div className="flex flex-col items-center rounded-2xl border border-border bg-surface p-6 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-            <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
-          </div>
-
-          <h4 className="mb-2 text-lg font-semibold">
-            {successTranslations.title}
-          </h4>
-
-          <p className="mb-6 text-sm text-muted">
-            {bookingResult.status === "confirmed"
-              ? successTranslations.confirmedMessage
-              : successTranslations.pendingMessage}
-          </p>
-
-          <Button
-            variant="secondary"
-            onClick={handleBookAnother}
-            className="w-full"
-          >
-            Book another
-          </Button>
-        </div>
-      </div>
+      <BookingSuccessCard
+        title={translations.title}
+        status={bookingResult.status}
+        translations={{
+          successTitle: successTranslations.title,
+          confirmedMessage: successTranslations.confirmedMessage,
+          pendingMessage: successTranslations.pendingMessage,
+          bookAnother: "Book another",
+        }}
+        onBookAnother={handleBookAnother}
+      />
     );
   }
 
   return (
     <div>
-      {/* Header */}
       <div className="pb-3">
         <h3 className="text-base font-semibold">{translations.title}</h3>
       </div>
 
-      {/* Content */}
       <div className="flex flex-col rounded-2xl border border-border bg-surface p-4">
         <div className="space-y-4">
-          {/* Services */}
           <SummaryRow
             icon={<Scissors className="h-4 w-4" />}
             label={translations.services}
@@ -286,7 +206,6 @@ export function ConfirmationColumn({
             )}
           </SummaryRow>
 
-          {/* Date & Time */}
           <SummaryRow
             icon={<Calendar className="h-4 w-4" />}
             label={translations.dateTime}
@@ -311,10 +230,8 @@ export function ConfirmationColumn({
           </SummaryRow>
         </div>
 
-        {/* Divider */}
         <div className="my-4 border-t border-border" />
 
-        {/* Total */}
         <div className="mb-4 flex items-center justify-between">
           <span className="text-sm text-muted">{translations.total}</span>
           <div className="text-right">
@@ -329,56 +246,24 @@ export function ConfirmationColumn({
           </div>
         </div>
 
-        {/* Guest form - only show when ready to book and not authenticated */}
-        {!isAuthenticated && isReadyToBook && (
-          <form
-            id="booking-form"
-            onSubmit={form.handleSubmit(onGuestSubmit)}
-            className="mb-4 space-y-3"
-          >
-            {/* Name */}
-            <div>
-              <input
-                {...form.register("name")}
-                type="text"
-                placeholder={formTranslations.namePlaceholder}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted focus:border-accent focus:outline-none"
-              />
-              {form.formState.errors.name && (
-                <p className="mt-1 text-xs text-red-500">
-                  {form.formState.errors.name.message}
-                </p>
-              )}
-            </div>
-
-            {/* Phone */}
-            <div>
-              <input
-                {...form.register("phone")}
-                type="tel"
-                placeholder={formTranslations.phonePlaceholder}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm placeholder:text-muted focus:border-accent focus:outline-none"
-              />
-              {form.formState.errors.phone && (
-                <p className="mt-1 text-xs text-red-500">
-                  {form.formState.errors.phone.message}
-                </p>
-              )}
-            </div>
-          </form>
-        )}
-
-        {/* Error message */}
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
             {error}
           </div>
         )}
 
-        {/* Book button */}
-        {isAuthenticated ? (
+        {!isAuthenticated && isReadyToBook ? (
+          <GuestBookingForm
+            formTranslations={formTranslations}
+            validationTranslations={validationTranslations}
+            bookButtonText={translations.bookButton}
+            isSubmitting={isSubmitting}
+            disabled={!isReadyToBook}
+            onSubmit={handleSubmit}
+          />
+        ) : (
           <Button
-            onClick={handleAuthenticatedBooking}
+            onClick={() => handleSubmit()}
             disabled={!isReadyToBook || isSubmitting}
             className="w-full"
             size="lg"
@@ -392,79 +277,8 @@ export function ConfirmationColumn({
               translations.bookButton
             )}
           </Button>
-        ) : (
-          <Button
-            type="submit"
-            form="booking-form"
-            disabled={!canBook || isSubmitting}
-            className="w-full"
-            size="lg"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Booking...
-              </>
-            ) : (
-              translations.bookButton
-            )}
-          </Button>
         )}
       </div>
     </div>
   );
-}
-
-// ============================================================================
-// Summary Row Component
-// ============================================================================
-
-interface SummaryRowProps {
-  icon: React.ReactNode;
-  label: string;
-  completed: boolean;
-  placeholder: string;
-  children?: React.ReactNode;
-}
-
-function SummaryRow({
-  icon,
-  label,
-  completed,
-  placeholder,
-  children,
-}: SummaryRowProps) {
-  return (
-    <div className="flex gap-3">
-      {/* Status icon */}
-      <div
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-          completed ? "bg-accent/10 text-accent" : "bg-surface-hover text-muted"
-        }`}
-      >
-        {completed ? <Check className="h-3.5 w-3.5" /> : icon}
-      </div>
-
-      {/* Content */}
-      <div className="min-w-0 flex-1">
-        <div className="text-xs font-medium text-muted">{label}</div>
-        {completed ? (
-          children
-        ) : (
-          <div className="text-sm text-muted/60">{placeholder}</div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function formatDateToYYYYMMDD(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }

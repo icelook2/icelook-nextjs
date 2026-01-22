@@ -1,13 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useMemo,
-} from "react";
+import { createContext, type ReactNode, useContext } from "react";
 import type { AnalyticsData, AnalyticsPeriod } from "../_lib/types";
 
 type AnalyticsContextValue = {
@@ -33,24 +27,20 @@ export function AnalyticsProvider({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const setPeriod = useCallback(
-    (period: AnalyticsPeriod) => {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("period", period);
-      router.push(`/${nickname}/settings/analytics?${params.toString()}`);
-    },
-    [router, searchParams, nickname],
-  );
+  // Handler (React Compiler handles optimization)
+  function setPeriod(period: AnalyticsPeriod) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("period", period);
+    router.push(`/${nickname}/settings/analytics?${params.toString()}`);
+  }
 
-  const value = useMemo(
-    () => ({
-      period: analytics.period.type,
-      setPeriod,
-      analytics,
-      nickname,
-    }),
-    [analytics, setPeriod, nickname],
-  );
+  // Context value (React Compiler handles optimization)
+  const value: AnalyticsContextValue = {
+    period: analytics.period.type,
+    setPeriod,
+    analytics,
+    nickname,
+  };
 
   return (
     <AnalyticsContext.Provider value={value}>

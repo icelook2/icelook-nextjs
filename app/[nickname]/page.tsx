@@ -3,17 +3,12 @@ import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageProfile } from "@/lib/queries/beauty-page-profile";
 import { getActiveBundles } from "@/lib/queries/bundles";
-import { getActiveSpecialOffers } from "@/lib/queries/special-offers";
-import {
-  calculateOpenStatusFromWorkingDays,
-  formatWorkingStatusMessage,
-} from "@/lib/utils/open-status";
+import { getActivePromotions } from "@/lib/queries/promotions";
+import { getWorkingStatus } from "@/lib/utils/open-status";
 import { BookingBarWrapper } from "./_components/booking-bar-wrapper";
-import { BundlesSection } from "./_components/bundles-section";
 import { ContactSection } from "./_components/contact-section";
 import { HeroWithReviews } from "./_components/hero-with-reviews";
 import { ServicesSection } from "./_components/services-section";
-import { SpecialOffersSection } from "./_components/special-offers-section";
 
 interface BeautyPageProps {
   params: Promise<{ nickname: string }>;
@@ -31,9 +26,9 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
     notFound();
   }
 
-  // Fetch special offers and bundles for this beauty page
-  const [specialOffers, bundles] = await Promise.all([
-    getActiveSpecialOffers(profile.info.id),
+  // Fetch promotions and bundles for this beauty page
+  const [promotions, bundles] = await Promise.all([
+    getActivePromotions(profile.info.id),
     getActiveBundles(profile.info.id),
   ]);
 
@@ -66,25 +61,13 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
   };
 
   // Working status (only if working days are scheduled)
-  const workingStatus =
-    profile.workingDays.length > 0
-      ? (() => {
-          const status = calculateOpenStatusFromWorkingDays(
-            profile.workingDays,
-            profile.timezone,
-          );
-          const dayNames = t.raw("day_names") as string[];
-          const statusMessage = formatWorkingStatusMessage(
-            status,
-            (key, params) => t(`working_status.${key}`, params),
-            dayNames,
-          );
-          return {
-            isOpen: status.isOpen,
-            statusMessage,
-          };
-        })()
-      : undefined;
+  const dayNames = t.raw("day_names") as string[];
+  const workingStatus = getWorkingStatus(
+    profile.workingDays,
+    profile.timezone,
+    (key, params) => t(`working_status.${key}`, params),
+    dayNames,
+  );
 
   // Current user profile for booking
   const currentUserProfile = currentUser
@@ -256,43 +239,18 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
           }}
         />
 
-        {/* Special Offers */}
-        {specialOffers.length > 0 && (
-          <SpecialOffersSection
-            offers={specialOffers}
-            currency="UAH"
-            locale="uk-UA"
-            translations={{
-              title: t("special_offers"),
-              today: t("today"),
-              tomorrow: t("tomorrow"),
-              bookNow: t("book_now"),
-            }}
-          />
-        )}
-
-        {/* Service Bundles */}
-        {bundles.length > 0 && (
-          <BundlesSection
-            bundles={bundles}
-            currency="UAH"
-            locale="uk-UA"
-            translations={{
-              title: t("bundles"),
-              selectPackage: t("select_package"),
-              services: t("services"),
-            }}
-          />
-        )}
-
-        {/* Services with selection */}
         <ServicesSection
           serviceGroups={profile.serviceGroups}
+          bundles={bundles}
+          promotions={promotions}
           title={t("services")}
           emptyMessage={t("no_services_description")}
           currency="UAH"
           locale="uk-UA"
           durationLabels={durationLabels}
+          translations={{
+            dealsTitle: t("special_offers"),
+          }}
         />
 
         <ContactSection

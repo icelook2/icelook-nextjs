@@ -4,7 +4,7 @@ description: Icelook coding conventions and style guidelines
 
 # Coding Conventions
 
-Apply these conventions when writing or reviewing code in the icelook project.
+**PROACTIVELY apply these conventions** when writing or reviewing ANY code in the icelook project. Do not wait to be asked - enforce these rules automatically.
 
 ## Components
 
@@ -301,6 +301,89 @@ function LoginForm() {
 
 This applies to all validation - forms, API inputs, environment variables, etc. Zod is the single source of truth for data validation.
 
+### Use react-hook-form's Built-in Features
+
+**Always use react-hook-form's built-in state tracking** - never manually track form state that the library already provides.
+
+```tsx
+// BAD - manually tracking dirty state
+const [name, setName] = useState(initial.name);
+const [email, setEmail] = useState(initial.email);
+const isDirty = name !== initial.name || email !== initial.email; // Don't do this!
+
+// BAD - using JSON.stringify for comparison (fragile and slow)
+const isDirty = JSON.stringify(values) !== JSON.stringify(initialValues);
+
+// GOOD - use react-hook-form's formState
+const { formState: { isDirty, dirtyFields } } = useForm({
+  defaultValues: initialValues,
+});
+// isDirty is automatically tracked by the library!
+```
+
+Available `formState` properties you should use instead of manual tracking:
+- `isDirty` - form has been modified from default values
+- `dirtyFields` - object of which fields have been modified
+- `isValid` - form passes validation
+- `isSubmitting` - form is being submitted
+- `isSubmitted` - form has been submitted at least once
+- `errors` - validation errors
+
+## Common Utilities - Prefer Libraries
+
+**PROACTIVELY use established libraries** for common operations instead of writing custom implementations.
+
+### Deep Comparison
+
+```tsx
+// BAD - JSON.stringify comparison (fragile, ignores key order, slow)
+const isEqual = JSON.stringify(a) === JSON.stringify(b);
+
+// BAD - custom deep comparison function
+function deepEqual(a, b) { /* 50 lines of recursion */ }
+
+// GOOD - use lodash-es (tree-shakeable lodash)
+import { isEqual } from "lodash-es";
+const areEqual = isEqual(a, b);
+```
+
+### Array Operations
+
+```tsx
+// BAD - manual unique
+const unique = array.filter((item, index) => array.indexOf(item) === index);
+
+// GOOD - use lodash-es
+import { uniq, uniqBy, groupBy, keyBy } from "lodash-es";
+const unique = uniq(array);
+const uniqueById = uniqBy(array, 'id');
+```
+
+### Date Operations
+
+See `.claude/skills/date-handling/SKILL.md` - always use date-fns for date formatting, parsing, and manipulation.
+
+### Established Libraries in This Project
+
+| Need | Library | Example |
+|------|---------|---------|
+| Date handling | `date-fns`, `date-fns-tz` | `format(date, 'yyyy-MM-dd')` |
+| Deep comparison | `lodash-es` | `isEqual(a, b)` |
+| Array utilities | `lodash-es` | `groupBy`, `keyBy`, `uniq` |
+| Form state | `react-hook-form` | `formState.isDirty` |
+| Schema validation | `zod` | `schema.parse(data)` |
+| Class names | `cn` (our utility) | `cn('base', condition && 'extra')` |
+
+### Rule
+
+Before implementing any utility function, check:
+1. Does react-hook-form already provide this? (for form state)
+2. Does date-fns provide this? (for dates)
+3. Does lodash-es provide this? (for data manipulation)
+4. Does Zod provide this? (for validation)
+
+If yes, use the library. Custom implementations create maintenance burden and are usually less robust.
+
 ## TypeScript
 
 - **Never use `any`** - use `unknown`, generics, or proper types instead (enforced by Biome)
@@ -359,4 +442,128 @@ function getEnvVar(name: string): string {
 }
 
 const apiKey = getEnvVar("IL_API_KEY");
+```
+
+## State Management
+
+**PROACTIVELY minimize useState usage** - prefer derived state, form libraries, and context where appropriate.
+
+### Form State
+
+**Always use react-hook-form** for form state management - never manage form fields with individual useState calls.
+
+```tsx
+// BAD - managing form state manually
+function Form() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [errors, setErrors] = useState({});
+
+  const handleSubmit = () => {
+    if (!name) setErrors({ name: "Required" });
+    // ...manual validation
+  };
+}
+
+// GOOD - using react-hook-form
+function Form() {
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(schema),
+  });
+
+  return <form onSubmit={handleSubmit(onSubmit)}>...</form>;
+}
+```
+
+### Server Action State
+
+Use `useTransition` for server action pending states, and minimal `useState` for server errors:
+
+```tsx
+// Recommended pattern
+const [isPending, startTransition] = useTransition();
+const [serverError, setServerError] = useState<string | null>(null);
+
+async function handleSubmit(data: FormData) {
+  startTransition(async () => {
+    const result = await serverAction(data);
+    if (!result.success) {
+      setServerError(result.error);
+    }
+  });
+}
+```
+
+### Avoid Derived State in useState
+
+```tsx
+// BAD - derived state stored in useState
+const [items, setItems] = useState(initialItems);
+const [filteredItems, setFilteredItems] = useState(items);
+
+useEffect(() => {
+  setFilteredItems(items.filter(i => i.active));
+}, [items]);
+
+// GOOD - derive directly during render
+const [items, setItems] = useState(initialItems);
+const filteredItems = items.filter(i => i.active);
+```
+
+## Next.js Patterns
+
+**PROACTIVELY use Next.js best practices** for data fetching and component architecture.
+
+### Server Components First
+
+Default to Server Components. Only add "use client" when you need:
+- Event handlers (onClick, onChange)
+- Hooks (useState, useEffect, useContext)
+- Browser APIs
+
+```tsx
+// Server Component (default) - fetches data
+async function UserProfile({ userId }: { userId: string }) {
+  const user = await getUser(userId);  // Direct DB query
+  return <ProfileView user={user} />;
+}
+
+// Client Component - handles interaction
+"use client"
+function ProfileActions({ userId }: { userId: string }) {
+  const handleFollow = () => { /* ... */ };
+  return <Button onClick={handleFollow}>Follow</Button>;
+}
+```
+
+### Server Actions for Mutations
+
+Use server actions for all data mutations:
+
+```tsx
+// In actions.ts
+"use server"
+
+export async function updateProfile(data: ProfileData) {
+  const parsed = schema.safeParse(data);
+  if (!parsed.success) {
+    return { success: false, error: "Invalid data" };
+  }
+
+  await db.update("profiles", parsed.data);
+  revalidatePath("/profile");
+  return { success: true };
+}
+```
+
+### Data Fetching in Pages
+
+Fetch data in page.tsx (Server Component) and pass to client components:
+
+```tsx
+// page.tsx (Server Component)
+export default async function Page({ params }: Props) {
+  const data = await fetchData(params.id);
+  return <ClientComponent initialData={data} />;
+}
 ```

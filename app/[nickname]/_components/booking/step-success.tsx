@@ -9,9 +9,9 @@
 
 import { Calendar, CheckCircle, Clock } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
+import { DiscountBadge } from "@/lib/ui/discount-badge";
 import { formatDuration, formatPrice } from "@/lib/utils/price-range";
 import { calculateEndTime, formatSlotTime } from "./_lib/slot-generation";
 import { useBooking } from "./booking-context";
@@ -49,8 +49,10 @@ export function StepSuccess({
     date,
     time,
     selectedServices,
+    selectedBundle,
     totalPriceCents,
     totalDurationMinutes,
+    originalPriceCents,
     result,
     currency,
     locale,
@@ -58,61 +60,53 @@ export function StepSuccess({
     isRescheduleMode,
   } = useBooking();
 
-  // Format display values
-  const formattedDate = useMemo(() => {
-    if (!date) {
-      return "";
-    }
-    return date.toLocaleDateString(undefined, {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  }, [date]);
+  // Derived values (React Compiler handles optimization)
+  const formattedDate = date
+    ? date.toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "";
 
-  const formattedTime = useMemo(() => {
-    if (!time) {
-      return "";
-    }
-    const endTime = calculateEndTime(time, totalDurationMinutes);
-    return `${formatSlotTime(time, false)} – ${formatSlotTime(endTime, false)}`;
-  }, [time, totalDurationMinutes]);
+  const formattedTime = time
+    ? `${formatSlotTime(time, false)} – ${formatSlotTime(calculateEndTime(time, totalDurationMinutes), false)}`
+    : "";
 
-  const formattedPrice = useMemo(() => {
-    return formatPrice(totalPriceCents, currency, locale);
-  }, [totalPriceCents, currency, locale]);
-
-  const formattedDuration = useMemo(() => {
-    return formatDuration(totalDurationMinutes, durationLabels);
-  }, [totalDurationMinutes, durationLabels]);
-
-  const serviceNames = useMemo(
-    () => selectedServices.map((s) => s.name).join(", "),
-    [selectedServices],
+  const formattedPrice = formatPrice(totalPriceCents, currency, locale);
+  const formattedOriginalPrice = originalPriceCents
+    ? formatPrice(originalPriceCents, currency, locale)
+    : null;
+  const formattedDuration = formatDuration(
+    totalDurationMinutes,
+    durationLabels,
   );
+  const serviceNames = selectedServices.map((s) => s.name).join(", ");
 
-  // Get title and status message (different for reschedule vs new booking)
-  const displayTitle = useMemo(() => {
-    if (isRescheduleMode && translations.rescheduledTitle) {
-      return translations.rescheduledTitle;
-    }
-    return translations.title;
-  }, [isRescheduleMode, translations]);
+  // Calculate bundle discount percentage
+  const bundleDiscountPercentage =
+    selectedBundle && originalPriceCents && totalPriceCents && originalPriceCents > totalPriceCents
+      ? Math.round(((originalPriceCents - totalPriceCents) / originalPriceCents) * 100)
+      : 0;
 
-  const statusMessage = useMemo(() => {
-    if (!result || !result.success) {
-      return "";
-    }
-    // For reschedule, show rescheduled message
+  // Title and status message (different for reschedule vs new booking)
+  const displayTitle =
+    isRescheduleMode && translations.rescheduledTitle
+      ? translations.rescheduledTitle
+      : translations.title;
+
+  let statusMessage = "";
+  if (result?.success) {
     if (isRescheduleMode && translations.rescheduledMessage) {
-      return translations.rescheduledMessage;
+      statusMessage = translations.rescheduledMessage;
+    } else {
+      statusMessage =
+        result.status === "confirmed"
+          ? translations.confirmedMessage
+          : translations.pendingMessage;
     }
-    // For regular booking, show confirmed or pending message
-    return result.status === "confirmed"
-      ? translations.confirmedMessage
-      : translations.pendingMessage;
-  }, [result, translations, isRescheduleMode]);
+  }
 
   if (!date || !time || !result || !result.success) {
     return null;
@@ -166,11 +160,26 @@ export function StepSuccess({
             <div className="flex items-start gap-3">
               <Clock className="mt-0.5 h-4 w-4 text-muted" />
               <div>
-                <div className="font-medium text-foreground">
+                {/* Bundle header if applicable */}
+                {selectedBundle && (
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-foreground">{selectedBundle.name}</span>
+                    <DiscountBadge percentage={bundleDiscountPercentage} />
+                  </div>
+                )}
+                <div className={selectedBundle ? "text-sm text-muted" : "font-medium text-foreground"}>
                   {serviceNames}
                 </div>
-                <div className="text-muted">
-                  {formattedDuration} · {formattedPrice}
+                <div className="text-muted flex items-center gap-2">
+                  <span>{formattedDuration}</span>
+                  <span>·</span>
+                  {/* Show original price crossed out for bundles */}
+                  {selectedBundle && formattedOriginalPrice && (
+                    <span className="line-through">{formattedOriginalPrice}</span>
+                  )}
+                  <span className={selectedBundle ? "font-medium text-foreground" : ""}>
+                    {formattedPrice}
+                  </span>
                 </div>
               </div>
             </div>
@@ -188,7 +197,10 @@ export function StepSuccess({
         ) : (
           // For new bookings, show both View Appointment and Close
           <>
-            <Link href={`/appointments/${result.appointmentId}`} className="w-full">
+            <Link
+              href={`/appointments/${result.appointmentId}`}
+              className="w-full"
+            >
               <Button className="w-full">{translations.viewAppointment}</Button>
             </Link>
             <Button variant="ghost" onClick={onClose} className="w-full">

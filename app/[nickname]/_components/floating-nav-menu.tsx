@@ -11,8 +11,8 @@
 
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { useActiveBeautyPage } from "@/components/layout/active-beauty-page-context";
 import { CreatorAvatarNav } from "@/components/layout/creator-avatar-nav";
 import {

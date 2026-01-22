@@ -247,6 +247,67 @@ export async function getBundleById(
 }
 
 /**
+ * Fetches all bundles that contain a specific service.
+ * Used in service details page to show which bundles include this service.
+ *
+ * @param serviceId - The service ID
+ * @returns Array of bundles containing this service
+ */
+export async function getBundlesForService(
+  serviceId: string,
+): Promise<ServiceBundleWithServices[]> {
+  const supabase = await createClient();
+
+  // First get all bundle IDs that contain this service
+  const { data: bundleItems, error: itemsError } = await supabase
+    .from("service_bundle_items")
+    .select("bundle_id")
+    .eq("service_id", serviceId);
+
+  if (itemsError || !bundleItems || bundleItems.length === 0) {
+    return [];
+  }
+
+  const bundleIds = bundleItems.map((item) => item.bundle_id);
+
+  // Then fetch the full bundles
+  const { data, error } = await supabase
+    .from("service_bundles")
+    .select(
+      `
+      id,
+      beauty_page_id,
+      name,
+      description,
+      discount_percentage,
+      is_active,
+      display_order,
+      created_at,
+      updated_at,
+      service_bundle_items (
+        service_id,
+        display_order,
+        services (
+          id,
+          name,
+          price_cents,
+          duration_minutes
+        )
+      )
+    `,
+    )
+    .in("id", bundleIds)
+    .order("display_order", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching bundles for service:", error);
+    return [];
+  }
+
+  return (data as unknown as RawBundle[]).map(transformBundle);
+}
+
+/**
  * Checks if a bundle with the given name already exists for a beauty page.
  * Used to prevent duplicate bundle names.
  *

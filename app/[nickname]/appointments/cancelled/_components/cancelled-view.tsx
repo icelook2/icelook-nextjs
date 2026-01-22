@@ -2,7 +2,6 @@
 
 import { Ban } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useMemo } from "react";
 import { Paper } from "@/lib/ui/paper";
 import { AppointmentCard } from "../../_components/appointment-card";
 import { toDateString } from "../../_lib/date-utils";
@@ -18,16 +17,10 @@ export function CancelledView({ appointments }: CancelledViewProps) {
 
   const todayStr = toDateString(new Date());
 
-  // Get today's appointments
-  const todayAppointments = useMemo(
-    () => getAppointmentsForDate(appointments, todayStr),
-    [appointments, todayStr],
-  );
-
-  // Get cancelled appointments
-  const cancelledAppointments = useMemo(
-    () => todayAppointments.filter((apt) => apt.status === "cancelled"),
-    [todayAppointments],
+  // Derived values (React Compiler handles optimization)
+  const todayAppointments = getAppointmentsForDate(appointments, todayStr);
+  const cancelledAppointments = todayAppointments.filter(
+    (apt) => apt.status === "cancelled",
   );
 
   if (cancelledAppointments.length === 0) {

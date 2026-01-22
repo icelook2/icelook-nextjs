@@ -203,6 +203,14 @@ export async function getNextAppointment(
 /** Default page size for past appointments */
 export const PAST_APPOINTMENTS_PAGE_SIZE = 10;
 
+/** Review data for an appointment */
+export type AppointmentReviewData = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+};
+
 export type ClientAppointment = Pick<
   Tables<"appointments">,
   | "id"
@@ -234,6 +242,10 @@ export type ClientAppointment = Pick<
   appointment_services: AppointmentService[];
   /** Whether the appointment can be rebooked (service still exists) */
   canRebook: boolean;
+  /** Whether the appointment has been reviewed by the client */
+  hasReview: boolean;
+  /** The review data if exists (only for completed appointments) */
+  review: AppointmentReviewData | null;
 };
 
 /**
@@ -277,6 +289,12 @@ export async function getClientAppointments(
         logo_url,
         avatar_url,
         address
+      ),
+      reviews (
+        id,
+        rating,
+        comment,
+        created_at
       )
     `,
     )
@@ -295,6 +313,16 @@ export async function getClientAppointments(
     const beautyPage = Array.isArray(beautyPageData)
       ? beautyPageData[0]
       : beautyPageData;
+
+    // Get review data - reviews is an array (one-to-many from DB perspective)
+    // but constrained to one review per appointment
+    const reviewsData = row.reviews as Array<{
+      id: string;
+      rating: number;
+      comment: string | null;
+      created_at: string;
+    }> | null;
+    const review = reviewsData?.[0] ?? null;
 
     return {
       id: row.id,
@@ -321,6 +349,8 @@ export async function getClientAppointments(
       appointment_services: row.appointment_services ?? [],
       // Default to true in list views - actual check happens on detail page
       canRebook: true,
+      hasReview: review !== null,
+      review,
     };
   });
 
@@ -413,6 +443,12 @@ export async function getClientPastAppointments(
         logo_url,
         avatar_url,
         address
+      ),
+      reviews (
+        id,
+        rating,
+        comment,
+        created_at
       )
     `,
     )
@@ -443,6 +479,15 @@ export async function getClientPastAppointments(
       ? beautyPageData[0]
       : beautyPageData;
 
+    // Get review data
+    const reviewsData = row.reviews as Array<{
+      id: string;
+      rating: number;
+      comment: string | null;
+      created_at: string;
+    }> | null;
+    const review = reviewsData?.[0] ?? null;
+
     return {
       id: row.id,
       date: row.date,
@@ -467,6 +512,8 @@ export async function getClientPastAppointments(
       appointment_services: row.appointment_services ?? [],
       // Default to true in list views - actual check happens on detail page
       canRebook: true,
+      hasReview: review !== null,
+      review,
     };
   });
 
@@ -523,6 +570,12 @@ export async function getClientAppointmentById(
             id
           )
         )
+      ),
+      reviews (
+        id,
+        rating,
+        comment,
+        created_at
       )
     `,
     )
@@ -561,6 +614,15 @@ export async function getClientAppointmentById(
   // canRebook is true only if the full chain exists
   const canRebook = Boolean(service && serviceGroup && serviceBeautyPage);
 
+  // Get review data
+  const reviewsData = data.reviews as Array<{
+    id: string;
+    rating: number;
+    comment: string | null;
+    created_at: string;
+  }> | null;
+  const review = reviewsData?.[0] ?? null;
+
   return {
     id: data.id,
     date: data.date,
@@ -583,6 +645,8 @@ export async function getClientAppointmentById(
     beauty_page_address: beautyPage?.address ?? null,
     appointment_services: data.appointment_services ?? [],
     canRebook,
+    hasReview: review !== null,
+    review,
   };
 }
 
@@ -656,6 +720,12 @@ export async function getClientAppointmentsByDate(
         logo_url,
         avatar_url,
         address
+      ),
+      reviews (
+        id,
+        rating,
+        comment,
+        created_at
       )
     `,
     )
@@ -674,6 +744,15 @@ export async function getClientAppointmentsByDate(
     const beautyPage = Array.isArray(beautyPageData)
       ? beautyPageData[0]
       : beautyPageData;
+
+    // Get review data
+    const reviewsData = row.reviews as Array<{
+      id: string;
+      rating: number;
+      comment: string | null;
+      created_at: string;
+    }> | null;
+    const review = reviewsData?.[0] ?? null;
 
     return {
       id: row.id,
@@ -697,6 +776,8 @@ export async function getClientAppointmentsByDate(
       beauty_page_avatar_url: beautyPage?.logo_url ?? null,
       beauty_page_address: beautyPage?.address ?? null,
       appointment_services: row.appointment_services ?? [],
+      hasReview: review !== null,
+      review,
       // Default to true in list views - actual check happens on detail page
       canRebook: true,
     };

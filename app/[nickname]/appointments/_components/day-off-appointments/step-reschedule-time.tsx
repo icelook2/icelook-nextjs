@@ -14,9 +14,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/lib/ui/button";
 import { Select } from "@/lib/ui/select";
 import {
-  useDayOffAppointments,
   calculateEndTime,
   generateTimeOptions,
+  useDayOffAppointments,
   type WorkingDayOption,
 } from "./day-off-appointments-context";
 

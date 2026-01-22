@@ -6,7 +6,10 @@
  * Server actions for fetching data needed for the reschedule flow.
  */
 
-import { getServiceForRebooking, type RebookingData } from "@/lib/queries/services";
+import {
+  getServiceForRebooking,
+  type RebookingData,
+} from "@/lib/queries/services";
 
 // ============================================================================
 // Types

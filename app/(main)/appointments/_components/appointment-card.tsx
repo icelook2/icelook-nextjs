@@ -1,15 +1,21 @@
 "use client";
 
-import { Calendar, ChevronRight, Clock } from "lucide-react";
+import { Calendar, ChevronRight, Clock, Star } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import type { ClientAppointment } from "@/lib/queries/appointments";
+import { DiscountBadge } from "@/lib/ui/discount-badge";
+import { StarRating } from "@/lib/ui/star-rating";
+import {
+  calculateDiscountPercentage,
+  parseAppointmentMetadata,
+} from "@/lib/utils/appointment-metadata";
 import { formatPrice } from "@/lib/utils/price-range";
 
 interface AppointmentCardProps {
   appointment: ClientAppointment;
-  /** Called when "Book Again" is clicked. Pass handler to enable the button. */
-  onBookAgain?: (appointment: ClientAppointment) => void;
+  /** Called when "Leave a review" is clicked. */
+  onLeaveReview?: (appointment: ClientAppointment) => void;
 }
 
 /**
@@ -52,7 +58,7 @@ function getSmartDate(
 
 export function AppointmentCard({
   appointment,
-  onBookAgain,
+  onLeaveReview,
 }: AppointmentCardProps) {
   const locale = useLocale();
   const t = useTranslations("appointments");
@@ -96,54 +102,112 @@ export function AppointmentCard({
   // Smart date for display
   const smartDate = getSmartDate(dateTime, locale, t);
 
+  // Parse metadata to check for bundle info
+  const metadata = parseAppointmentMetadata(appointment.client_notes);
+  const bundle = metadata?.bundle ?? null;
+  const discountPercentage =
+    bundle && metadata
+      ? calculateDiscountPercentage(
+          metadata.total_original_price_cents,
+          metadata.total_final_price_cents,
+        )
+      : 0;
+  const formattedOriginalPrice =
+    bundle && metadata
+      ? formatPrice(
+          metadata.total_original_price_cents,
+          appointment.service_currency,
+          locale,
+        )
+      : null;
+
   if (isPast) {
     // Past appointments: Service first (what did I have done?)
     return (
-      <Link
-        href={`/appointments/${appointment.id}`}
-        className="block rounded-2xl bg-surface border border-border p-4 flex flex-col gap-4"
-      >
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-bold text-lg text-foreground">
-            {appointment.service_name}
-          </p>
-          <ChevronRight className="h-5 w-5 text-muted shrink-0" />
-        </div>
-
-        {/* Beauty Page Info */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-white font-semibold shrink-0">
-            {initial}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground truncate">
-              {appointment.beauty_page_name}
-            </p>
-            <p className="text-sm text-muted truncate">
-              @{appointment.beauty_page_slug}
-            </p>
-          </div>
-        </div>
-
-        {/* Date & Time + Status */}
-        <div>
-          <div className="flex items-center gap-2 text-sm text-muted">
-            <Calendar className="h-4 w-4" />
-            <span>{smartDate}</span>
-            <span>·</span>
-            <Clock className="h-4 w-4" />
-            <span>{formattedTime}</span>
-          </div>
-          <p className={`text-sm mt-1 ${statusColor}`}>{statusMessage}</p>
-        </div>
-
-        {/* Total Price */}
-        <span
-          className={`text-xl font-bold text-foreground ${shouldCrossPrice ? "line-through" : ""}`}
+      <div className="rounded-2xl bg-surface border border-border p-4 flex flex-col gap-4">
+        <Link
+          href={`/appointments/${appointment.id}`}
+          className="flex flex-col gap-4"
         >
-          {formattedPrice}
-        </span>
-      </Link>
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <p className="font-bold text-lg text-foreground">
+                {appointment.service_name}
+              </p>
+              {bundle && <DiscountBadge percentage={discountPercentage} />}
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted shrink-0" />
+          </div>
+
+          {/* Beauty Page Info */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-white font-semibold shrink-0">
+              {initial}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-foreground truncate">
+                {appointment.beauty_page_name}
+              </p>
+              <p className="text-sm text-muted truncate">
+                @{appointment.beauty_page_slug}
+              </p>
+            </div>
+          </div>
+
+          {/* Date & Time + Status */}
+          <div>
+            <div className="flex items-center gap-2 text-sm text-muted">
+              <Calendar className="h-4 w-4" />
+              <span>{smartDate}</span>
+              <span>·</span>
+              <Clock className="h-4 w-4" />
+              <span>{formattedTime}</span>
+            </div>
+            <p className={`text-sm mt-1 ${statusColor}`}>{statusMessage}</p>
+          </div>
+
+          {/* Total Price */}
+          <div className="flex items-center gap-2">
+            {formattedOriginalPrice && !shouldCrossPrice && (
+              <span className="text-sm text-muted line-through">
+                {formattedOriginalPrice}
+              </span>
+            )}
+            <span
+              className={`text-xl font-bold text-foreground ${shouldCrossPrice ? "line-through" : ""}`}
+            >
+              {formattedPrice}
+            </span>
+          </div>
+        </Link>
+
+        {/* Review section for completed appointments */}
+        {appointment.status === "completed" && (
+          <div className="border-t border-border pt-4">
+            {appointment.hasReview && appointment.review ? (
+              // Show existing review rating
+              <div className="flex items-center gap-2">
+                <StarRating rating={appointment.review.rating} size="sm" />
+                <span className="text-sm text-muted">{t("your_review")}</span>
+              </div>
+            ) : (
+              // Show leave review CTA
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onLeaveReview?.(appointment);
+                }}
+                className="flex items-center gap-2 text-sm font-medium text-accent hover:text-accent/80 transition-colors"
+              >
+                <Star className="h-4 w-4" />
+                {t("leave_review")}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -166,7 +230,10 @@ export function AppointmentCard({
         <ChevronRight className="h-5 w-5 text-muted shrink-0" />
       </div>
 
-      <p className="text-foreground">{appointment.service_name}</p>
+      <div className="flex items-center gap-2">
+        <p className="text-foreground">{appointment.service_name}</p>
+        {bundle && <DiscountBadge percentage={discountPercentage} />}
+      </div>
 
       {/* Beauty Page Info */}
       <div className="flex items-center gap-3">
@@ -184,11 +251,18 @@ export function AppointmentCard({
       </div>
 
       {/* Total Price */}
-      <span
-        className={`text-xl font-bold text-foreground ${shouldCrossPrice ? "line-through" : ""}`}
-      >
-        {formattedPrice}
-      </span>
+      <div className="flex items-center gap-2">
+        {formattedOriginalPrice && !shouldCrossPrice && (
+          <span className="text-sm text-muted line-through">
+            {formattedOriginalPrice}
+          </span>
+        )}
+        <span
+          className={`text-xl font-bold text-foreground ${shouldCrossPrice ? "line-through" : ""}`}
+        >
+          {formattedPrice}
+        </span>
+      </div>
     </Link>
   );
 }

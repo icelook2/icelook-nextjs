@@ -12,21 +12,21 @@
 
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
+import type {
+  CreatorInfo,
+  RescheduleData,
+} from "@/app/[nickname]/_components/booking/_lib/booking-types";
+import {
+  type BeautyPageInfo,
+  BookingDialog,
+  type BookingDialogTranslations,
+} from "@/app/[nickname]/_components/booking/booking-dialog";
 import type { Appointment } from "@/lib/queries/appointments";
 import type { ProfileService } from "@/lib/queries/beauty-page-profile";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
-import {
-  BookingDialog,
-  type BeautyPageInfo,
-  type BookingDialogTranslations,
-} from "@/app/[nickname]/_components/booking/booking-dialog";
-import type {
-  CreatorInfo,
-  RescheduleData,
-} from "@/app/[nickname]/_components/booking/booking-context";
-import { getRescheduleData } from "../../_actions/reschedule.actions";
 import type { RescheduleServiceData } from "../../_actions/reschedule.actions";
+import { getRescheduleData } from "../../_actions/reschedule.actions";
 
 // ============================================================================
 // Types
@@ -131,7 +131,12 @@ export function QuickRescheduleDialog({
 
       setRescheduleServiceData(data);
     });
-  }, [appointment, didSucceed, rescheduleServiceData, translations.serviceUnavailable]);
+  }, [
+    appointment,
+    didSucceed,
+    rescheduleServiceData,
+    translations.serviceUnavailable,
+  ]);
 
   const isOpen = !!appointment;
 
@@ -171,6 +176,10 @@ export function QuickRescheduleDialog({
       price_cents: appointment.service_price_cents,
       duration_minutes: appointment.service_duration_minutes,
       display_order: 0,
+      available_from_time:
+        rescheduleServiceData.service.available_from_time ?? null,
+      available_to_time:
+        rescheduleServiceData.service.available_to_time ?? null,
     };
 
     const beautyPageInfo: BeautyPageInfo = {

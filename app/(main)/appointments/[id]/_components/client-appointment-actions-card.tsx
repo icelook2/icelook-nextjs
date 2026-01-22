@@ -1,7 +1,7 @@
 "use client";
 
-import { useFormatter, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useFormatter, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import type { ClientAppointment } from "@/lib/queries/appointments";
 import type { Enums } from "@/lib/supabase/database.types";
