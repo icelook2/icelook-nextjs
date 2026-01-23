@@ -293,7 +293,7 @@ export function BookingProvider({
         workingDay,
         appointments,
         serviceDurationMinutes: totalDurationMinutes,
-        slotIntervalMinutes: 30,
+        slotIntervalMinutes: workingDay?.slotIntervalMinutes ?? 30,
         minNoticeHours: bookingSettings?.minBookingNoticeHours ?? 0,
         date: prefetchDate,
         timezone,

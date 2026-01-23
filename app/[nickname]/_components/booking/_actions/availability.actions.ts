@@ -54,6 +54,7 @@ export async function getAvailabilityData(
         date,
         start_time,
         end_time,
+        slot_interval_minutes,
         working_day_breaks (
           id,
           start_time,
@@ -75,6 +76,7 @@ export async function getAvailabilityData(
       date: wd.date,
       startTime: normalizeTime(wd.start_time),
       endTime: normalizeTime(wd.end_time),
+      slotIntervalMinutes: wd.slot_interval_minutes ?? 30,
       breaks: (
         (wd.working_day_breaks as Array<{
           start_time: string;
@@ -122,7 +124,7 @@ export async function getAvailabilityData(
     const { data: beautyPage } = await supabase
       .from("beauty_pages")
       .select(
-        "auto_confirm_bookings, min_booking_notice_hours, max_days_ahead, cancellation_notice_hours",
+        "auto_confirm_bookings, min_booking_notice_hours, max_days_ahead, cancellation_notice_hours, slot_interval_minutes",
       )
       .eq("id", beautyPageId)
       .single();
@@ -133,6 +135,7 @@ export async function getAvailabilityData(
           minBookingNoticeHours: beautyPage.min_booking_notice_hours ?? 0,
           maxDaysAhead: beautyPage.max_days_ahead ?? 90,
           cancellationNoticeHours: beautyPage.cancellation_notice_hours ?? 24,
+          slotIntervalMinutes: beautyPage.slot_interval_minutes ?? 30,
         }
       : null;
 

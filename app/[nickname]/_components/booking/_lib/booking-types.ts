@@ -107,6 +107,8 @@ export interface BookingSettings {
   maxDaysAhead: number;
   /** Minimum hours before appointment for cancellation */
   cancellationNoticeHours: number;
+  /** Default slot interval for new working days (in minutes) */
+  slotIntervalMinutes: number;
 }
 
 /** Working day data for availability calculation */
@@ -118,6 +120,8 @@ export interface WorkingDayData {
     startTime: string;
     endTime: string;
   }>;
+  /** Slot interval for this specific day (in minutes) */
+  slotIntervalMinutes: number;
 }
 
 /** Appointment data for conflict detection */

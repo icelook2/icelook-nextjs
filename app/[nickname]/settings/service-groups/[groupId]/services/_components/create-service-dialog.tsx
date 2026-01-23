@@ -12,6 +12,7 @@ import { Field } from "@/lib/ui/field";
 import { Input } from "@/lib/ui/input";
 import { NumberField } from "@/lib/ui/number-field";
 import { Select } from "@/lib/ui/select";
+import { Textarea } from "@/lib/ui/textarea";
 import { createService } from "../_actions";
 import { DEFAULT_DURATION, DURATION_OPTIONS } from "./constants";
 
@@ -26,6 +27,7 @@ interface CreateServiceDialogProps {
 
 const formSchema = z.object({
   name: z.string().min(1).max(100).trim(),
+  description: z.string().max(500).optional(),
   price: z.number().min(1).max(1_000_000), // price in UAH (1 - 1,000,000)
   durationMinutes: z.number().min(5),
 });
@@ -52,6 +54,7 @@ export function CreateServiceDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      description: "",
       price: DEFAULT_PRICE,
       durationMinutes: DEFAULT_DURATION,
     },
@@ -75,6 +78,7 @@ export function CreateServiceDialog({
       const result = await createService({
         serviceGroupId,
         name: data.name,
+        description: data.description,
         priceCents,
         durationMinutes: data.durationMinutes,
         nickname,
@@ -115,6 +119,18 @@ export function CreateServiceDialog({
                 {...register("name")}
               />
               <Field.Error>{errors.name?.message}</Field.Error>
+            </Field.Root>
+
+            <Field.Root>
+              <Field.Label>{t("service_description_label")}</Field.Label>
+              <Textarea
+                placeholder={t("service_description_placeholder")}
+                rows={3}
+                state={errors.description ? "error" : "default"}
+                {...register("description")}
+              />
+              <Field.Description>{t("service_description_hint")}</Field.Description>
+              <Field.Error>{errors.description?.message}</Field.Error>
             </Field.Root>
 
             <Field.Root>

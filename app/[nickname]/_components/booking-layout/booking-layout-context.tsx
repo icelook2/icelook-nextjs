@@ -212,7 +212,7 @@ export function BookingLayoutProvider({
         workingDay,
         appointments,
         serviceDurationMinutes: totalDurationMinutes || 60,
-        slotIntervalMinutes: 30,
+        slotIntervalMinutes: workingDay?.slotIntervalMinutes ?? 30,
         minNoticeHours: bookingSettings?.minBookingNoticeHours ?? 0,
         date: selectedDate,
         timezone,

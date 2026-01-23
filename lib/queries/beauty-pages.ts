@@ -8,6 +8,7 @@ export type BeautyPage = {
   is_active: boolean;
   description?: string | null;
   timezone: string;
+  slot_interval_minutes: number;
   created_at: string;
   updated_at: string;
   // Contact info

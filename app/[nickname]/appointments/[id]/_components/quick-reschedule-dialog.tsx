@@ -173,6 +173,7 @@ export function QuickRescheduleDialog({
     const service: ProfileService = {
       id: rescheduleServiceData.service.id,
       name: appointment.service_name,
+      description: null,
       price_cents: appointment.service_price_cents,
       duration_minutes: appointment.service_duration_minutes,
       display_order: 0,

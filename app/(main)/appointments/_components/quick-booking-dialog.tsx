@@ -118,6 +118,7 @@ export function QuickBookingDialog({
     const service: ProfileService = {
       id: rebookingData.service.id,
       name: rebookingData.service.name,
+      description: null,
       price_cents: rebookingData.service.price_cents,
       duration_minutes: rebookingData.service.duration_minutes,
       display_order: rebookingData.service.display_order,

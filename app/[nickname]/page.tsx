@@ -4,10 +4,13 @@ import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageProfile } from "@/lib/queries/beauty-page-profile";
 import { getActiveBundles } from "@/lib/queries/bundles";
 import { getActivePromotions } from "@/lib/queries/promotions";
-import { getWorkingStatus } from "@/lib/utils/open-status";
+import { PageHeader } from "@/lib/ui/page-header";
+import { Paper } from "@/lib/ui/paper";
 import { BookingBarWrapper } from "./_components/booking-bar-wrapper";
 import { ContactSection } from "./_components/contact-section";
-import { HeroWithReviews } from "./_components/hero-with-reviews";
+import { HeroSection } from "./_components/hero-section";
+import { ProfileTabs } from "./_components/profile-tabs";
+import { ReviewsContent } from "./_components/reviews-content";
 import { ServicesSection } from "./_components/services-section";
 
 interface BeautyPageProps {
@@ -37,6 +40,13 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
   // Check if current user is the owner of this beauty page
   const isOwner = currentUser?.id === profile.info.owner_id;
 
+  // Calculate counts for tabs
+  const servicesCount = profile.serviceGroups.reduce(
+    (total, group) => total + group.services.length,
+    0,
+  );
+  const reviewsCount = profile.ratingStats.totalReviews;
+
   // Duration labels for services
   const durationLabels = {
     min: t("duration_min"),
@@ -59,15 +69,6 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
     displayName: profile.info.creator_display_name ?? profile.info.name,
     avatarUrl: profile.info.creator_avatar_url ?? profile.info.logo_url,
   };
-
-  // Working status (only if working days are scheduled)
-  const dayNames = t.raw("day_names") as string[];
-  const workingStatus = getWorkingStatus(
-    profile.workingDays,
-    profile.timezone,
-    (key, params) => t(`working_status.${key}`, params),
-    dayNames,
-  );
 
   // Current user profile for booking
   const currentUserProfile = currentUser
@@ -216,49 +217,78 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
       durationLabels={durationLabels}
       translations={bookingTranslations}
     >
-      <div className="mx-auto max-w-2xl space-y-6 px-4 pb-24">
-        <HeroWithReviews
-          info={profile.info}
-          ratingStats={profile.ratingStats}
-          workingStatus={workingStatus}
-          isOwner={isOwner}
-          translations={{
-            verified: {
-              title: t("verified.title"),
-              description: t("verified.description"),
-            },
-            reviews: t("reviews"),
-            reviewsDialog: {
-              title: t("reviews_title", { name: profile.info.name }),
-              basedOnReviews: t("reviews_based_on", {
-                count: profile.ratingStats.totalReviews,
-              }),
-              noReviewsYet: t("no_reviews_yet"),
-              anonymous: t("anonymous"),
-            },
-          }}
+      <div className="mx-auto max-w-2xl space-y-4 px-4 pb-24">
+        <PageHeader
+          title={profile.info.name}
+          subtitle={`@${profile.info.slug}`}
+          backHref="/"
         />
 
-        <ServicesSection
-          serviceGroups={profile.serviceGroups}
-          bundles={bundles}
-          promotions={promotions}
-          title={t("services")}
-          emptyMessage={t("no_services_description")}
-          currency="UAH"
-          locale="uk-UA"
-          durationLabels={durationLabels}
-          translations={{
-            dealsTitle: t("special_offers"),
-          }}
-        />
+        <Paper className="p-4">
+          <HeroSection
+            info={profile.info}
+            ratingStats={profile.ratingStats}
+            isOwner={isOwner}
+            translations={{
+              verified: {
+                title: t("verified.title"),
+                description: t("verified.description"),
+              },
+              reviews: t("reviews"),
+            }}
+          />
+        </Paper>
 
-        <ContactSection
-          contact={profile.info}
+        <ProfileTabs
+          servicesCount={servicesCount}
+          reviewsCount={reviewsCount}
+          servicesContent={
+            <ServicesSection
+              serviceGroups={profile.serviceGroups}
+              bundles={bundles}
+              promotions={promotions}
+              title=""
+              emptyMessage={t("no_services_description")}
+              currency="UAH"
+              locale="uk-UA"
+              durationLabels={durationLabels}
+              translations={{
+                dealsTitle: t("special_offers"),
+                allFilter: t("all_filter"),
+                // Use t.raw() for template strings that will be interpolated manually in the component
+                daysRemaining: t.raw("bundle_days_remaining"),
+                quantityRemaining: t.raw("bundle_quantity_remaining"),
+                includedInBundle: t("included_in_bundle"),
+              }}
+            />
+          }
+          reviewsContent={
+            <ReviewsContent
+              beautyPageId={profile.info.id}
+              ratingStats={profile.ratingStats}
+              translations={{
+                basedOnReviews: t("reviews_based_on", {
+                  count: profile.ratingStats.totalReviews,
+                }),
+                noReviewsYet: t("no_reviews_yet"),
+                anonymous: t("anonymous"),
+              }}
+            />
+          }
+          contactsContent={
+            <ContactSection
+              contact={profile.info}
+              translations={{
+                title: "",
+                viewOnMap: t("view_on_map"),
+                visitInstagram: t("visit_instagram"),
+              }}
+            />
+          }
           translations={{
-            title: t("contact"),
-            viewOnMap: t("view_on_map"),
-            visitInstagram: t("visit_instagram"),
+            services: t("tabs.services"),
+            reviews: t("tabs.reviews"),
+            contacts: t("tabs.contacts"),
           }}
         />
       </div>

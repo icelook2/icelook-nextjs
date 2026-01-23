@@ -54,6 +54,7 @@ async function verifyServiceOwnership(
 export async function updateService(input: {
   id: string;
   name: string;
+  description?: string | null;
   nickname: string;
   groupId: string;
 }): Promise<ActionResult> {
@@ -75,9 +76,19 @@ export async function updateService(input: {
 
   const supabase = await createClient();
 
+  // Build update object - only include description if it was explicitly provided
+  const updateData: { name: string; description?: string | null } = {
+    name: nameValidation.data,
+  };
+
+  // Handle description: undefined means don't change, null means clear, string means set
+  if (input.description !== undefined) {
+    updateData.description = input.description?.trim() || null;
+  }
+
   const { error } = await supabase
     .from("services")
-    .update({ name: nameValidation.data })
+    .update(updateData)
     .eq("id", input.id);
 
   if (error) {
@@ -87,6 +98,9 @@ export async function updateService(input: {
 
   revalidatePath(
     `/${input.nickname}/settings/service-groups/${input.groupId}/services`,
+  );
+  revalidatePath(
+    `/${input.nickname}/settings/service-groups/${input.groupId}/services/${input.id}`,
   );
 
   return { success: true };
@@ -241,4 +255,103 @@ export async function removeAssignment(input: {
   );
 
   return { success: true };
+}
+
+/**
+ * Toggle service visibility (hide/show).
+ * Hidden services are not shown on the beauty page but existing appointments are preserved.
+ * When hiding a service that's part of active bundles, those bundles are also deactivated.
+ */
+export async function toggleServiceVisibility(input: {
+  id: string;
+  isHidden: boolean;
+  nickname: string;
+  groupId: string;
+  /** Bundle IDs to deactivate when hiding (provided by UI after user confirmation) */
+  bundleIdsToDeactivate?: string[];
+}): Promise<ActionResult> {
+  const t = await getTranslations("service_groups");
+
+  const ownership = await verifyServiceOwnership(input.id);
+  if (!ownership.isOwner) {
+    return { success: false, error: ownership.error };
+  }
+
+  const supabase = await createClient();
+
+  // Update service visibility
+  const { error } = await supabase
+    .from("services")
+    .update({ is_hidden: input.isHidden })
+    .eq("id", input.id);
+
+  if (error) {
+    console.error("Error toggling service visibility:", error);
+    return { success: false, error: t("errors.update_failed") };
+  }
+
+  // If hiding and there are bundles to deactivate, deactivate them
+  if (
+    input.isHidden &&
+    input.bundleIdsToDeactivate &&
+    input.bundleIdsToDeactivate.length > 0
+  ) {
+    const { error: bundleError } = await supabase
+      .from("service_bundles")
+      .update({ is_active: false })
+      .in("id", input.bundleIdsToDeactivate);
+
+    if (bundleError) {
+      console.error("Error deactivating bundles:", bundleError);
+      // Service is already hidden, so we don't fail the whole operation
+      // but we should log this for debugging
+    }
+
+    // Revalidate bundles settings page
+    revalidatePath(`/${input.nickname}/settings/bundles`);
+  }
+
+  revalidatePath(
+    `/${input.nickname}/settings/service-groups/${input.groupId}/services/${input.id}`,
+  );
+  revalidatePath(`/${input.nickname}`);
+
+  return { success: true };
+}
+
+/**
+ * Get active bundles that contain a specific service.
+ * Used when hiding a service to warn about affected bundles.
+ */
+export async function getActiveBundlesForServiceAction(
+  serviceId: string,
+): Promise<{ id: string; name: string }[]> {
+  const supabase = await createClient();
+
+  // Get bundle IDs that contain this service
+  const { data: bundleItems, error: itemsError } = await supabase
+    .from("service_bundle_items")
+    .select("bundle_id")
+    .eq("service_id", serviceId);
+
+  if (itemsError || !bundleItems || bundleItems.length === 0) {
+    return [];
+  }
+
+  const bundleIds = bundleItems.map((item) => item.bundle_id);
+
+  // Fetch only active bundles
+  const { data, error } = await supabase
+    .from("service_bundles")
+    .select("id, name")
+    .in("id", bundleIds)
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching active bundles for service:", error);
+    return [];
+  }
+
+  return data;
 }

@@ -8,15 +8,9 @@ import type {
 import { HeroSection } from "./hero-section";
 import { ReviewsDialog } from "./reviews-dialog";
 
-interface WorkingStatus {
-  isOpen: boolean;
-  statusMessage: string;
-}
-
 interface HeroWithReviewsProps {
   info: BeautyPageInfo;
   ratingStats: BeautyPageRatingStats;
-  workingStatus?: WorkingStatus;
   /** Whether current user is the owner of this beauty page */
   isOwner?: boolean;
   translations: {
@@ -37,7 +31,6 @@ interface HeroWithReviewsProps {
 export function HeroWithReviews({
   info,
   ratingStats,
-  workingStatus,
   isOwner,
   translations,
 }: HeroWithReviewsProps) {
@@ -48,7 +41,6 @@ export function HeroWithReviews({
       <HeroSection
         info={info}
         ratingStats={ratingStats}
-        workingStatus={workingStatus}
         isOwner={isOwner}
         translations={{
           verified: translations.verified,

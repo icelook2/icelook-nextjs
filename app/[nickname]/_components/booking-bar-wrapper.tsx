@@ -10,7 +10,13 @@
  * in the page (e.g., inline booking summaries in layout variants).
  */
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useBottomNavVisibilityOptional } from "@/components/layout/bottom-nav-visibility-context";
 import type { ProfileServiceGroup } from "@/lib/queries/beauty-page-profile";
 import type { PublicBundle } from "@/lib/types/bundles";
@@ -39,7 +45,9 @@ interface BookingActionContextValue {
   openBookingDialog: () => void;
 }
 
-const BookingActionContext = createContext<BookingActionContextValue | null>(null);
+const BookingActionContext = createContext<BookingActionContextValue | null>(
+  null,
+);
 
 /**
  * Hook to access booking actions (e.g., open dialog).

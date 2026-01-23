@@ -7,12 +7,13 @@
  *
  * Users can combine:
  * - Multiple individual services
- * - One bundle (optionally with additional services)
+ * - One bundle (optionally with additional services NOT in the bundle)
  *
- * When a bundle is selected:
- * - Bundle price and duration are added to the total
- * - User can also add individual services on top
- * - Only one bundle can be selected at a time
+ * OVERLAP PREVENTION:
+ * - When a bundle is selected, individual services in that bundle are blocked
+ * - If an individual service is already selected and user selects a bundle
+ *   containing it, the individual service is auto-deselected
+ * - This prevents double-charging for the same service
  */
 
 import { createContext, type ReactNode, useContext, useState } from "react";
@@ -30,6 +31,8 @@ interface ServiceSelectionContextValue {
 
   // Derived values
   selectedServiceIds: Set<string>;
+  /** Service IDs that are blocked (part of selected bundle) */
+  blockedServiceIds: Set<string>;
   totalPriceCents: number;
   totalDurationMinutes: number;
   /** Count of selected items (services + bundle as 1 item) */
@@ -41,6 +44,8 @@ interface ServiceSelectionContextValue {
   toggleService: (service: ProfileService) => void;
   clearSelection: () => void;
   isServiceSelected: (serviceId: string) => boolean;
+  /** Check if a service is blocked (part of selected bundle) */
+  isServiceBlocked: (serviceId: string) => boolean;
 
   // Bundle actions
   selectBundle: (bundle: PublicBundle) => void;
@@ -76,6 +81,9 @@ export function ServiceSelectionProvider({
   // Compute derived state (React Compiler handles optimization)
   const selectedServiceIds = new Set(selectedServices.map((s) => s.id));
 
+  // Services blocked because they're in the selected bundle
+  const blockedServiceIds = selectedBundle?.serviceIds ?? new Set<string>();
+
   // Calculate totals - combine bundle + individual services
   let totalPriceCents = 0;
   let totalDurationMinutes = 0;
@@ -98,6 +106,11 @@ export function ServiceSelectionProvider({
 
   // Service actions
   function toggleService(service: ProfileService) {
+    // Prevent selecting services that are in the current bundle
+    if (blockedServiceIds.has(service.id)) {
+      return; // Service is blocked, do nothing
+    }
+
     setSelectedServices((prev) => {
       const isSelected = prev.some((s) => s.id === service.id);
       if (isSelected) {
@@ -116,12 +129,21 @@ export function ServiceSelectionProvider({
     return selectedServiceIds.has(serviceId);
   }
 
+  function isServiceBlocked(serviceId: string) {
+    return blockedServiceIds.has(serviceId);
+  }
+
   // Bundle actions
   function selectBundle(bundle: PublicBundle) {
     // Toggle bundle selection (only one bundle at a time)
     if (selectedBundle?.id === bundle.id) {
       setSelectedBundle(null);
     } else {
+      // When selecting a new bundle, auto-deselect any individual services
+      // that are part of this bundle to prevent double-charging
+      setSelectedServices((prev) =>
+        prev.filter((s) => !bundle.serviceIds.has(s.id)),
+      );
       setSelectedBundle(bundle);
     }
   }
@@ -138,6 +160,7 @@ export function ServiceSelectionProvider({
     selectedServices,
     selectedBundle,
     selectedServiceIds,
+    blockedServiceIds,
     totalPriceCents,
     totalDurationMinutes,
     itemCount,
@@ -145,6 +168,7 @@ export function ServiceSelectionProvider({
     toggleService,
     clearSelection,
     isServiceSelected,
+    isServiceBlocked,
     selectBundle,
     clearBundle,
     isBundleSelected,

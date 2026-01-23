@@ -86,8 +86,13 @@ export function StepSuccess({
 
   // Calculate bundle discount percentage
   const bundleDiscountPercentage =
-    selectedBundle && originalPriceCents && totalPriceCents && originalPriceCents > totalPriceCents
-      ? Math.round(((originalPriceCents - totalPriceCents) / originalPriceCents) * 100)
+    selectedBundle &&
+    originalPriceCents &&
+    totalPriceCents &&
+    originalPriceCents > totalPriceCents
+      ? Math.round(
+          ((originalPriceCents - totalPriceCents) / originalPriceCents) * 100,
+        )
       : 0;
 
   // Title and status message (different for reschedule vs new booking)
@@ -163,11 +168,19 @@ export function StepSuccess({
                 {/* Bundle header if applicable */}
                 {selectedBundle && (
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-foreground">{selectedBundle.name}</span>
+                    <span className="font-medium text-foreground">
+                      {selectedBundle.name}
+                    </span>
                     <DiscountBadge percentage={bundleDiscountPercentage} />
                   </div>
                 )}
-                <div className={selectedBundle ? "text-sm text-muted" : "font-medium text-foreground"}>
+                <div
+                  className={
+                    selectedBundle
+                      ? "text-sm text-muted"
+                      : "font-medium text-foreground"
+                  }
+                >
                   {serviceNames}
                 </div>
                 <div className="text-muted flex items-center gap-2">
@@ -175,9 +188,15 @@ export function StepSuccess({
                   <span>·</span>
                   {/* Show original price crossed out for bundles */}
                   {selectedBundle && formattedOriginalPrice && (
-                    <span className="line-through">{formattedOriginalPrice}</span>
+                    <span className="line-through">
+                      {formattedOriginalPrice}
+                    </span>
                   )}
-                  <span className={selectedBundle ? "font-medium text-foreground" : ""}>
+                  <span
+                    className={
+                      selectedBundle ? "font-medium text-foreground" : ""
+                    }
+                  >
                     {formattedPrice}
                   </span>
                 </div>

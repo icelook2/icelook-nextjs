@@ -149,6 +149,7 @@ export async function deleteServiceGroup(input: {
 export async function createService(input: {
   serviceGroupId: string;
   name: string;
+  description?: string;
   priceCents: number;
   durationMinutes: number;
   nickname: string;
@@ -210,6 +211,7 @@ export async function createService(input: {
     .insert({
       service_group_id: input.serviceGroupId,
       name: nameValidation.data,
+      description: input.description?.trim() || null,
       price_cents: input.priceCents,
       duration_minutes: input.durationMinutes,
       display_order: displayOrder,

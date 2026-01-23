@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { getMessages } from "next-intl/server";
+import { CookieConsentProvider } from "@/components/cookie-consent-provider";
 import { LocaleProvider } from "@/components/locale-provider";
 import { NavigationProvider } from "@/components/navigation-provider";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -49,7 +50,9 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <LocaleProvider locale={locale} messages={messages} timeZone="UTC">
-              <NavigationProvider>{children}</NavigationProvider>
+              <CookieConsentProvider>
+                <NavigationProvider>{children}</NavigationProvider>
+              </CookieConsentProvider>
             </LocaleProvider>
           </ThemeProvider>
         </div>

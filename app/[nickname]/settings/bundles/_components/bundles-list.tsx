@@ -11,6 +11,7 @@ import { flattenServices } from "../_lib/bundles-constants";
 import { BundleCard } from "./bundle-card";
 import { CreateBundleDialog } from "./create-bundle-dialog";
 import { DeleteBundleDialog } from "./delete-bundle-dialog";
+import { HiddenServicesDialog } from "./hidden-services-dialog";
 
 interface BundlesListProps {
   beautyPageId: string;
@@ -33,6 +34,9 @@ interface BundlesListProps {
     selectServices: string;
     selectServicesHint: string;
     discount: string;
+    discountType: string;
+    discountPercentage: string;
+    discountFixed: string;
     preview: string;
     originalPrice: string;
     bundlePrice: string;
@@ -44,6 +48,26 @@ interface BundlesListProps {
     deactivate: string;
     save: string;
     create: string;
+    hiddenServicesTitle: string;
+    hiddenServicesDescription: string;
+    hiddenServicesLabel: string;
+    hiddenServicesHint: string;
+    close: string;
+    // New optional limits translations
+    optionalLimits: string;
+    timeLimitLabel: string;
+    timeLimitHint: string;
+    validFrom: string;
+    validUntil: string;
+    quantityLimitLabel: string;
+    quantityLimitHint: string;
+    maxQuantity: string;
+    unlimited: string;
+    // Availability badges
+    daysRemaining: string;
+    quantityRemaining: string;
+    expired: string;
+    soldOut: string;
   };
   currency: string;
   locale: string;
@@ -60,8 +84,14 @@ export function BundlesList({
 }: BundlesListProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [hiddenServicesDialogOpen, setHiddenServicesDialogOpen] =
+    useState(false);
   const [bundleToDelete, setBundleToDelete] =
     useState<ServiceBundleWithServices | null>(null);
+  const [hiddenServicesData, setHiddenServicesData] = useState<{
+    bundleName: string;
+    services: string[];
+  } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const services = flattenServices(serviceGroups);
@@ -78,14 +108,30 @@ export function BundlesList({
     }
   }
 
+  function handleHiddenServicesDialogClose(open: boolean) {
+    setHiddenServicesDialogOpen(open);
+    if (!open) {
+      setHiddenServicesData(null);
+    }
+  }
+
   function handleToggleActive(bundle: ServiceBundleWithServices) {
     startTransition(async () => {
-      await toggleBundleActive({
+      const result = await toggleBundleActive({
         bundleId: bundle.id,
         beautyPageId,
         nickname,
         isActive: !bundle.is_active,
       });
+
+      // Handle hidden services error
+      if (!result.success && result.error === "HIDDEN_SERVICES" && result.data?.hiddenServices) {
+        setHiddenServicesData({
+          bundleName: bundle.name,
+          services: result.data.hiddenServices,
+        });
+        setHiddenServicesDialogOpen(true);
+      }
     });
   }
 
@@ -144,6 +190,10 @@ export function BundlesList({
                   activate: t.activate,
                   deactivate: t.deactivate,
                   inactive: t.inactive,
+                  daysRemaining: t.daysRemaining,
+                  quantityRemaining: t.quantityRemaining,
+                  expired: t.expired,
+                  soldOut: t.soldOut,
                 }}
                 locale={locale}
                 currency={currency}
@@ -164,6 +214,10 @@ export function BundlesList({
                   activate: t.activate,
                   deactivate: t.deactivate,
                   inactive: t.inactive,
+                  daysRemaining: t.daysRemaining,
+                  quantityRemaining: t.quantityRemaining,
+                  expired: t.expired,
+                  soldOut: t.soldOut,
                 }}
                 locale={locale}
                 currency={currency}
@@ -188,6 +242,9 @@ export function BundlesList({
           selectServices: t.selectServices,
           selectServicesHint: t.selectServicesHint,
           discount: t.discount,
+          discountType: t.discountType,
+          discountPercentage: t.discountPercentage,
+          discountFixed: t.discountFixed,
           preview: t.preview,
           originalPrice: t.originalPrice,
           bundlePrice: t.bundlePrice,
@@ -195,6 +252,15 @@ export function BundlesList({
           services: t.services,
           cancel: t.cancel,
           create: t.create,
+          optionalLimits: t.optionalLimits,
+          timeLimitLabel: t.timeLimitLabel,
+          timeLimitHint: t.timeLimitHint,
+          validFrom: t.validFrom,
+          validUntil: t.validUntil,
+          quantityLimitLabel: t.quantityLimitLabel,
+          quantityLimitHint: t.quantityLimitHint,
+          maxQuantity: t.maxQuantity,
+          unlimited: t.unlimited,
         }}
         locale={locale}
         currency={currency}
@@ -216,6 +282,22 @@ export function BundlesList({
         locale={locale}
         currency={currency}
       />
+
+      {hiddenServicesData && (
+        <HiddenServicesDialog
+          open={hiddenServicesDialogOpen}
+          onOpenChange={handleHiddenServicesDialogClose}
+          bundleName={hiddenServicesData.bundleName}
+          hiddenServices={hiddenServicesData.services}
+          translations={{
+            title: t.hiddenServicesTitle,
+            description: t.hiddenServicesDescription,
+            hiddenServicesLabel: t.hiddenServicesLabel,
+            hint: t.hiddenServicesHint,
+            close: t.close,
+          }}
+        />
+      )}
     </>
   );
 }

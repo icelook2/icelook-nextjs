@@ -54,8 +54,13 @@ export async function createBundle(
     nickname,
     name,
     description,
+    discountType,
+    discountValue,
     discountPercentage,
     serviceIds,
+    validFrom,
+    validUntil,
+    maxQuantity,
   } = parsed.data;
 
   // Verify user has access to this beauty page
@@ -84,16 +89,26 @@ export async function createBundle(
 
   const supabase = await createClient();
 
-  // Create the bundle
+  // Create the bundle with new discount system and optional limits
   const { data: bundle, error: bundleError } = await supabase
     .from("service_bundles")
     .insert({
       beauty_page_id: beautyPageId,
       name,
       description: description ?? null,
-      discount_percentage: discountPercentage,
+      // New discount system
+      discount_type: discountType ?? "percentage",
+      discount_value: discountValue,
+      // Legacy field (for backwards compatibility)
+      discount_percentage: discountPercentage ?? discountValue,
       display_order: displayOrder,
       is_active: true,
+      // Optional time limits
+      valid_from: validFrom ?? null,
+      valid_until: validUntil ?? null,
+      // Optional quantity limit
+      max_quantity: maxQuantity ?? null,
+      booked_count: 0,
     })
     .select("id")
     .single();
@@ -151,9 +166,14 @@ export async function updateBundle(
     nickname,
     name,
     description,
+    discountType,
+    discountValue,
     discountPercentage,
     serviceIds,
     isActive,
+    validFrom,
+    validUntil,
+    maxQuantity,
   } = parsed.data;
 
   // Verify user has access to this beauty page
@@ -199,11 +219,32 @@ export async function updateBundle(
   if (description !== undefined) {
     updateData.description = description;
   }
-  if (discountPercentage !== undefined) {
+  // New discount system
+  if (discountType !== undefined) {
+    updateData.discount_type = discountType;
+  }
+  if (discountValue !== undefined) {
+    updateData.discount_value = discountValue;
+    // Also update legacy field for backwards compatibility
+    updateData.discount_percentage = discountValue;
+  }
+  if (discountPercentage !== undefined && discountValue === undefined) {
+    // Legacy field update (when discountValue not provided)
     updateData.discount_percentage = discountPercentage;
   }
   if (isActive !== undefined) {
     updateData.is_active = isActive;
+  }
+  // Time limits (allow null to remove limit)
+  if (validFrom !== undefined) {
+    updateData.valid_from = validFrom;
+  }
+  if (validUntil !== undefined) {
+    updateData.valid_until = validUntil;
+  }
+  // Quantity limit (allow null to remove limit)
+  if (maxQuantity !== undefined) {
+    updateData.max_quantity = maxQuantity;
   }
 
   // Update bundle
@@ -308,7 +349,7 @@ export async function deleteBundle(
  */
 export async function toggleBundleActive(
   input: ToggleBundleActiveSchema,
-): Promise<ActionResult> {
+): Promise<ActionResult<{ hiddenServices?: string[] }>> {
   const profile = await getProfile();
 
   if (!profile) {
@@ -338,6 +379,42 @@ export async function toggleBundleActive(
   }
 
   const supabase = await createClient();
+
+  // When activating, check if any services in the bundle are hidden
+  if (isActive) {
+    const { data: bundleItems } = await supabase
+      .from("service_bundle_items")
+      .select("services (id, name, is_hidden)")
+      .eq("bundle_id", bundleId);
+
+    if (bundleItems) {
+      const hiddenServices = bundleItems
+        .filter((item) => {
+          const service = item.services as unknown as {
+            id: string;
+            name: string;
+            is_hidden: boolean;
+          } | null;
+          return service?.is_hidden === true;
+        })
+        .map((item) => {
+          const service = item.services as unknown as {
+            id: string;
+            name: string;
+            is_hidden: boolean;
+          };
+          return service.name;
+        });
+
+      if (hiddenServices.length > 0) {
+        return {
+          success: false,
+          error: "HIDDEN_SERVICES",
+          data: { hiddenServices },
+        };
+      }
+    }
+  }
 
   const { error } = await supabase
     .from("service_bundles")

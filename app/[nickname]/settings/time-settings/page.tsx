@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageByNickname } from "@/lib/queries";
 import { PageHeader } from "@/lib/ui/page-header";
-import { TimezoneForm } from "../_components";
+import { SlotIntervalForm, TimezoneForm } from "../_components";
 
 interface TimeSettingsPageProps {
   params: Promise<{ nickname: string }>;
@@ -48,6 +48,12 @@ export default async function TimeSettingsPage({
           beautyPageId={beautyPage.id}
           nickname={nickname}
           currentTimezone={beautyPage.timezone}
+        />
+
+        <SlotIntervalForm
+          beautyPageId={beautyPage.id}
+          nickname={nickname}
+          currentSlotInterval={beautyPage.slot_interval_minutes ?? 30}
         />
       </div>
     </>

@@ -20,6 +20,8 @@ export type Service = {
   display_order: number;
   available_from_time: string | null;
   available_to_time: string | null;
+  /** Whether this service is temporarily hidden from the beauty page */
+  is_hidden: boolean;
   created_at: string;
   updated_at: string;
 };

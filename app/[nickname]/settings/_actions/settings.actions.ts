@@ -96,3 +96,64 @@ export async function updateTimezone(input: {
 
   return { success: true };
 }
+
+// ============================================================================
+// Slot Interval Actions
+// ============================================================================
+
+/** Valid slot interval values in minutes */
+const VALID_SLOT_INTERVALS = [5, 10, 15, 30, 60] as const;
+
+const slotIntervalSchema = z.object({
+  slotInterval: z.number().refine(
+    (val): val is (typeof VALID_SLOT_INTERVALS)[number] =>
+      VALID_SLOT_INTERVALS.includes(val as (typeof VALID_SLOT_INTERVALS)[number]),
+    "Invalid slot interval",
+  ),
+});
+
+/**
+ * Update slot interval for a beauty page
+ * This setting is snapshotted to new working days when they are created
+ */
+export async function updateSlotInterval(input: {
+  beautyPageId: string;
+  nickname: string;
+  slotInterval: number;
+}): Promise<ActionResult> {
+  const t = await getTranslations("time_settings");
+
+  // Validate input
+  const validation = slotIntervalSchema.safeParse({
+    slotInterval: input.slotInterval,
+  });
+
+  if (!validation.success) {
+    return { success: false, error: t("errors.validation_failed") };
+  }
+
+  // Authorize
+  const auth = await verifyCanManageSettings(input.beautyPageId);
+  if (!auth.authorized) {
+    return { success: false, error: auth.error };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("beauty_pages")
+    .update({ slot_interval_minutes: validation.data.slotInterval })
+    .eq("id", input.beautyPageId);
+
+  if (error) {
+    console.error("Error updating slot interval:", error);
+    return { success: false, error: t("errors.save_failed") };
+  }
+
+  revalidatePath(`/${input.nickname}`);
+  revalidatePath(`/${input.nickname}/settings`);
+  revalidatePath(`/${input.nickname}/settings/time-settings`);
+  revalidatePath(`/${input.nickname}/appointments`);
+
+  return { success: true };
+}

@@ -457,6 +457,15 @@
       "description": "Set your local timezone for appointments and schedule",
       "label": "Timezone"
     },
+    "slot_interval": {
+      "title": "Booking Slot Interval",
+      "description": "Time between available booking slots. Changes apply to new working days only.",
+      "label": "Slot interval",
+      "placeholder": "Select interval",
+      "options": {
+        "minutes": "{count, plural, one {# minute} other {# minutes}}"
+      }
+    },
     "save": "Save",
     "saved": "Saved",
     "errors": {
@@ -888,6 +897,7 @@
       "closed": "Taking a break"
     },
     "services": "Services",
+    "all_filter": "All",
     "specialists": "Our Specialists",
     "hours": "Working Hours",
     "contact": "Contact",
@@ -926,9 +936,17 @@
     "book_now": "Book Now",
     "bundles": "Service Packages",
     "select_package": "Select Package",
+    "bundle_days_remaining": "{days} days left",
+    "bundle_quantity_remaining": "{remaining} of {total} left",
+    "included_in_bundle": "In package",
     "verified": {
       "title": "Verified Business",
       "description": "This beauty page has been verified by Icelook as an authentic, legitimate business."
+    },
+    "tabs": {
+      "services": "Services",
+      "reviews": "Reviews",
+      "contacts": "Contacts"
     },
     "selection": {
       "service_selected": "1 service",
@@ -1100,6 +1118,8 @@
       "services_description": "Manage your service catalog and pricing",
       "bundles": "Service Packages",
       "bundles_description": "Create bundles of services with discounts",
+      "resources": "Resources",
+      "resources_description": "Track consumables and inventory",
       "special_offers": "Special Offers",
       "special_offers_description": "Create time-limited discount offers",
       "promotions": "Promotions",
@@ -1127,8 +1147,35 @@
       "analytics": "Analytics",
       "analytics_description": "View business performance and insights",
       "clients": "Clients",
-      "clients_description": "View and manage your client base"
+      "clients_description": "View and manage your client base",
+      "share_profile": "Share Profile",
+      "share_profile_description": "QR codes and printable materials"
     }
+  },
+  "share_profile": {
+    "title": "Share Profile",
+    "subtitle": "Share your profile with clients",
+    "link": {
+      "title": "Profile Link",
+      "description": "Share this link with your clients",
+      "copy": "Copy",
+      "copied": "Copied!"
+    },
+    "qr_code": {
+      "title": "QR Code",
+      "description": "Clients can scan this to visit your profile",
+      "download": "Download PNG"
+    },
+    "print_materials": {
+      "title": "Print Materials",
+      "description": "Download ready-to-print materials",
+      "business_card": "Business Card",
+      "business_card_description": "Pocket-sized card with QR code",
+      "poster": "Poster",
+      "poster_description": "A4 poster for your workspace",
+      "generating": "Generating..."
+    },
+    "scan_to_book": "Scan to book appointment"
   },
   "clients": {
     "page_title": "Clients",
@@ -1273,6 +1320,26 @@
         "prev": "Previous",
         "next": "Next"
       }
+    },
+    "blocklist": {
+      "title": "Blocked Clients",
+      "empty_title": "No blocked clients",
+      "empty_description": "Clients you block will appear here. Blocked clients cannot book appointments with you.",
+      "manual_blocks": "Manually blocked",
+      "no_show_blocks": "Blocked due to no-shows",
+      "no_show_warnings": "No-show warnings",
+      "blocked_on": "Blocked on {date}",
+      "blocked_until": "Blocked until {date} ({count} no-shows)",
+      "blocked_permanently": "Permanently blocked ({count} no-shows)",
+      "no_show_warning": "{count} no-show(s) - 1 more and they will be blocked",
+      "unblock_title": "Unblock client",
+      "unblock_description": "Are you sure you want to unblock {name}? They will be able to book appointments again.",
+      "unblock_action": "Unblock",
+      "forgive_title": "Reset no-show count",
+      "forgive_description": "Are you sure you want to reset the no-show count for {name}? They will be able to book appointments again.",
+      "forgive_action": "Reset & Unblock",
+      "reset_count": "Reset no-show count",
+      "cancel": "Cancel"
     }
   },
   "analytics": {
@@ -1783,9 +1850,19 @@
     "service_name_label": "Service Name",
     "service_name_placeholder": "e.g. Men's Haircut",
     "service_description_label": "Description",
+    "service_description_placeholder": "Describe what this service includes...",
+    "service_description_hint": "Optional. Help clients understand what to expect.",
     "service_settings": "Service Settings",
     "service_settings_description": "Manage this service",
     "edit_service_name": "Edit Service Name",
+    "service_visibility": "Service Visibility",
+    "service_visible_hint": "Service is visible on your beauty page",
+    "service_hidden_hint": "Service is hidden from your beauty page",
+    "hide_service_bundles_title": "Service is part of active bundles",
+    "hide_service_bundles_description": "Hiding \"{name}\" will also deactivate the bundles that include it. Clients won't be able to book these bundles until you reactivate them.",
+    "affected_bundles": "{count, plural, =1 {This bundle will be deactivated:} other {These bundles will be deactivated:}}",
+    "hide_service_bundles_hint": "You can reactivate bundles later from the Bundles settings after unhiding this service.",
+    "hide_and_deactivate": "Hide & Deactivate Bundles",
     "delete_service": "Delete Service",
     "delete_service_hint": "Permanently delete this service",
     "delete_service_confirm": "Are you sure you want to delete \"{name}\"?",
@@ -1833,6 +1910,15 @@
     "no_bundles": "Not part of any bundle",
     "manage_bundles": "Manage",
     "services_count": "services",
+    "resources": "Resources",
+    "resources_description": "Consumables used when providing this service",
+    "no_resources": "No linked resources",
+    "manage_resources": "Manage",
+    "resource_usage": "uses {amount}",
+    "link_resource": "Link Resource",
+    "linked_resources": "Linked Resources",
+    "default_amount": "Default amount",
+    "unlink": "Unlink",
     "rename_group_title": "Rename Group",
     "rename_service_title": "Rename Service",
     "change_price_title": "Change Price",
@@ -1954,7 +2040,10 @@
     "description_placeholder": "Optional description for the package",
     "select_services": "Select Services",
     "select_services_hint": "Choose at least 2 services to include in the package",
-    "discount": "Discount",
+    "discount": "Discount Amount",
+    "discount_type": "Discount Type",
+    "discount_percentage": "Percentage",
+    "discount_fixed": "Fixed Amount",
     "preview": "Preview",
     "original_price": "Original Price",
     "bundle_price": "Package Price",
@@ -1965,7 +2054,61 @@
     "activate": "Activate",
     "deactivate": "Deactivate",
     "save": "Save",
-    "create": "Create"
+    "create": "Create",
+    "close": "Close",
+    "hidden_services_title": "Cannot activate package",
+    "hidden_services_description": "The package \"{bundleName}\" contains services that are currently hidden. You need to unhide these services before activating the package.",
+    "hidden_services_label": "Hidden services:",
+    "hidden_services_hint": "Go to each service's settings page and turn on visibility to unhide them.",
+    "optional_limits": "Optional Limits",
+    "time_limit_label": "Time-limited offer",
+    "time_limit_hint": "Package is only valid for appointments within this date range",
+    "valid_from": "Valid from",
+    "valid_until": "Valid until",
+    "quantity_limit_label": "Limited quantity",
+    "quantity_limit_hint": "Only a fixed number of packages available",
+    "max_quantity": "Max packages",
+    "unlimited": "Unlimited",
+    "days_remaining": "{days} days left",
+    "quantity_remaining": "{remaining} of {total} left",
+    "expired": "Expired",
+    "sold_out": "Sold out"
+  },
+  "resources_settings": {
+    "page_title": "Resources",
+    "title": "Resources",
+    "add_resource": "Add Resource",
+    "empty_title": "No resources yet",
+    "empty_description": "Add resources to track consumables like hair dye, nail polish, and other supplies",
+    "delete_confirm_title": "Delete Resource",
+    "delete_confirm_description": "Are you sure you want to delete \"{name}\"? This action cannot be undone. Any usage history will be preserved.",
+    "delete_confirm_button": "Delete",
+    "cancel": "Cancel",
+    "resource_name": "Resource Name",
+    "resource_name_placeholder": "e.g., Hair Color 6N",
+    "unit": "Unit of Measure",
+    "unit_placeholder": "Select a unit",
+    "cost_per_unit": "Cost per Unit",
+    "current_stock": "Current Stock",
+    "low_stock_threshold": "Low Stock Alert",
+    "low_stock_threshold_hint": "Get notified when stock falls below this level",
+    "in_stock": "In Stock",
+    "low_stock": "Low Stock",
+    "out_of_stock": "Out of Stock",
+    "active": "Active",
+    "inactive": "Inactive",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "adjust_stock": "Adjust Stock",
+    "adjust_stock_add": "Adding",
+    "adjust_stock_remove": "Removing",
+    "adjustment": "Adjustment",
+    "save": "Save",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "total_value": "Total Value",
+    "linked_services": "Linked Services"
   },
   "contact_settings": {
     "page_title": "Location & Contact",
@@ -2206,6 +2349,131 @@
       "reason_label": "Reason (optional)",
       "reason_placeholder": "Day marked as day off",
       "confirm_cancel": "Confirm Cancellation"
+    }
+  },
+  "legal": {
+    "privacy_title": "Privacy Policy",
+    "privacy_description": "Learn how we collect, use, and protect your personal information",
+    "terms_title": "Terms of Service",
+    "terms_description": "Terms and conditions for using Icelook services",
+    "effective_date": "Effective: {date}",
+    "copyright": "© {year} Icelook. All rights reserved.",
+    "last_updated": "Last updated: {date}",
+    "version": "Version {version}"
+  },
+  "landing": {
+    "meta": {
+      "title": "Icelook - Free Booking Page for Beauty Professionals",
+      "description": "Create your free booking page and let clients book appointments 24/7. No commission on your clients.",
+      "og_title": "Your Booking Page. Your Clients. Your Rules.",
+      "og_description": "Join thousands of beauty professionals who use Icelook to manage appointments and grow their business."
+    },
+    "header": {
+      "features": "Features",
+      "how_it_works": "How it works",
+      "login": "Log in",
+      "signup": "Sign up free"
+    },
+    "hero": {
+      "badge": "Free forever for your clients",
+      "headline": "Your booking page. Your clients. Your rules.",
+      "subheadline": "Create your free professional booking page. Let clients book 24/7 while you focus on what you do best.",
+      "cta_primary": "Create Your Free Page",
+      "cta_secondary": "See Demo",
+      "trust_indicator": "No credit card required. Set up in 5 minutes."
+    },
+    "stats": {
+      "specialists": "Active Specialists",
+      "appointments": "Appointments Booked",
+      "cities": "Cities"
+    },
+    "problems": {
+      "headline": "Sound familiar?",
+      "subheadline": "These challenges cost you time, money, and clients every day.",
+      "problem1_title": "Missed calls while working",
+      "problem1_description": "You're with a client and can't answer. By the time you call back, they've booked elsewhere.",
+      "problem2_title": "Double bookings and chaos",
+      "problem2_description": "Managing your schedule across messages, calls, and DMs leads to conflicts and embarrassment.",
+      "problem3_title": "Paying platform fees",
+      "problem3_description": "Why give away a cut of your hard-earned money for clients you already have?"
+    },
+    "solution": {
+      "headline": "There's a better way."
+    },
+    "features": {
+      "headline": "Everything you need to grow",
+      "subheadline": "Professional tools that work for you, not against you.",
+      "feature1_title": "Free booking page",
+      "feature1_description": "Get your own professional link: icelook.com/yourname",
+      "feature2_title": "24/7 booking",
+      "feature2_description": "Accept appointments while you work, sleep, or relax",
+      "feature3_title": "Automatic reminders",
+      "feature3_description": "Reduce no-shows with timely notifications to your clients",
+      "feature4_title": "No commission",
+      "feature4_description": "Keep 100% of what you earn from your clients",
+      "feature5_title": "Client management",
+      "feature5_description": "Track visits, preferences, and build lasting relationships",
+      "feature6_title": "Build trust",
+      "feature6_description": "Collect reviews and grow your professional reputation"
+    },
+    "how_it_works": {
+      "headline": "Get started in 3 minutes",
+      "subheadline": "No technical skills required. If you can use Instagram, you can use Icelook.",
+      "step1_title": "Create your page",
+      "step1_description": "Sign up with your email and choose your unique link",
+      "step2_title": "Add your services",
+      "step2_description": "Set your prices, duration, and availability",
+      "step3_title": "Share your link",
+      "step3_description": "Post it in your bio and start accepting bookings",
+      "cta": "Create Your Free Page"
+    },
+    "clients": {
+      "headline": "Looking to book an appointment?",
+      "description": "Find and book with beauty professionals near you. Fast, easy, and free.",
+      "cta": "Find Specialists"
+    },
+    "footer": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "copyright": "© {year} Icelook. All rights reserved."
+    }
+  },
+  "consent": {
+    "banner": {
+      "title": "Privacy Settings",
+      "description": "We use cookies to enhance your experience. You can choose which types of cookies and tracking technologies you allow.",
+      "acceptAll": "Accept All",
+      "rejectAll": "Reject All",
+      "customize": "Customize"
+    },
+    "dialog": {
+      "title": "Privacy Settings",
+      "description": "Customize your privacy settings here. You can choose which types of cookies and tracking technologies you allow.",
+      "acceptAll": "Accept All",
+      "rejectAll": "Reject All",
+      "saveSettings": "Save Settings"
+    },
+    "categories": {
+      "necessary": {
+        "title": "Strictly Necessary",
+        "description": "These cookies are essential for the website to function properly. They enable core functionality such as security, network management, and accessibility. You cannot disable these cookies."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "These cookies help us understand how visitors interact with our website by collecting and reporting information anonymously. This helps us improve our services."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "These cookies are used to track visitors across websites to display relevant advertisements. They help us measure the effectiveness of our marketing campaigns."
+      },
+      "functionality": {
+        "title": "Functionality",
+        "description": "These cookies enable enhanced functionality and personalization, such as remembering your preferences and settings."
+      },
+      "experience": {
+        "title": "Experience",
+        "description": "These cookies help us provide a better user experience by remembering your choices and providing personalized features."
+      }
     }
   }
 }

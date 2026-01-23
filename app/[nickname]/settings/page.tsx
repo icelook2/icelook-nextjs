@@ -1,12 +1,14 @@
 import {
   Ban,
   BarChart3,
+  Box,
   Calendar,
   Clock,
   CreditCard,
   MapPin,
   Package,
   Scissors,
+  Share2,
   Tag,
   Users,
 } from "lucide-react";
@@ -67,6 +69,15 @@ export default async function BeautyPageSettings({
       disabled: false,
     },
     {
+      href: `/${nickname}/settings/resources`,
+      icon: Box,
+      title: t("nav.resources"),
+      description: t("nav.resources_description"),
+      iconClassName:
+        "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
+      disabled: false,
+    },
+    {
       href: `/${nickname}/settings/promotions`,
       icon: Tag,
       title: t("nav.promotions"),
@@ -124,6 +135,15 @@ export default async function BeautyPageSettings({
       description: t("nav.contact_description"),
       iconClassName:
         "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
+      disabled: false,
+    },
+    {
+      href: `/${nickname}/settings/share-profile`,
+      icon: Share2,
+      title: t("nav.share_profile"),
+      description: t("nav.share_profile_description"),
+      iconClassName:
+        "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400",
       disabled: false,
     },
     {

@@ -71,6 +71,7 @@ export type WorkingDayForStatus = {
 export type ProfileService = {
   id: string;
   name: string;
+  description: string | null;
   display_order: number;
   price_cents: number;
   duration_minutes: number;
@@ -180,6 +181,7 @@ export async function getBeautyPageProfile(
     .order("date", { ascending: true });
 
   // 3. Fetch service groups with services (price and duration are on services now)
+  // We fetch is_hidden and filter in JavaScript to handle mixed visibility within groups
   const { data: serviceGroupsData } = await supabase
     .from("service_groups")
     .select(`
@@ -189,11 +191,13 @@ export async function getBeautyPageProfile(
       services (
         id,
         name,
+        description,
         display_order,
         price_cents,
         duration_minutes,
         available_from_time,
-        available_to_time
+        available_to_time,
+        is_hidden
       )
     `)
     .eq("beauty_page_id", beautyPageId)
@@ -257,8 +261,9 @@ export async function getBeautyPageProfile(
   );
 
   // Transform service groups (services now have price and duration directly)
-  const serviceGroups: ProfileServiceGroup[] = (serviceGroupsData ?? []).map(
-    (group) => ({
+  // Filter out hidden services and remove groups with no visible services
+  const serviceGroups: ProfileServiceGroup[] = (serviceGroupsData ?? [])
+    .map((group) => ({
       id: group.id,
       name: group.name,
       display_order: group.display_order,
@@ -266,23 +271,28 @@ export async function getBeautyPageProfile(
         (group.services as unknown as Array<{
           id: string;
           name: string;
+          description: string | null;
           display_order: number;
           price_cents: number;
           duration_minutes: number;
           available_from_time: string | null;
           available_to_time: string | null;
+          is_hidden: boolean;
         }>) ?? []
-      ).map((service) => ({
-        id: service.id,
-        name: service.name,
-        display_order: service.display_order,
-        price_cents: service.price_cents,
-        duration_minutes: service.duration_minutes,
-        available_from_time: service.available_from_time,
-        available_to_time: service.available_to_time,
-      })),
-    }),
-  );
+      )
+        .filter((service) => !service.is_hidden)
+        .map((service) => ({
+          id: service.id,
+          name: service.name,
+          description: service.description,
+          display_order: service.display_order,
+          price_cents: service.price_cents,
+          duration_minutes: service.duration_minutes,
+          available_from_time: service.available_from_time,
+          available_to_time: service.available_to_time,
+        })),
+    }))
+    .filter((group) => group.services.length > 0);
 
   // Create single specialist entry representing the creator
   // This maintains API compatibility while simplifying to solo creator model

@@ -82,6 +82,7 @@ export async function getScheduleData(
       date: wd.date,
       start_time: wd.start_time,
       end_time: wd.end_time,
+      slot_interval_minutes: wd.slot_interval_minutes ?? 30,
       created_at: wd.created_at,
       updated_at: wd.updated_at,
       breaks: wd.working_day_breaks ?? [],

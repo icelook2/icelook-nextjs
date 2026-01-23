@@ -10,6 +10,7 @@ import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
 import { Field } from "@/lib/ui/field";
 import { Input } from "@/lib/ui/input";
+import { Textarea } from "@/lib/ui/textarea";
 import { updateService } from "../_actions";
 
 interface EditServiceDialogProps {
@@ -22,6 +23,7 @@ interface EditServiceDialogProps {
 
 const formSchema = z.object({
   name: z.string().min(1).max(100).trim(),
+  description: z.string().max(500).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -44,16 +46,16 @@ export function EditServiceDialog({
     reset,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: service.name },
+    defaultValues: { name: service.name, description: service.description ?? "" },
   });
 
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
-      reset({ name: service.name });
+      reset({ name: service.name, description: service.description ?? "" });
       setServerError(null);
     }
-  }, [open, service.name, reset]);
+  }, [open, service.name, service.description, reset]);
 
   function handleOpenChange(newOpen: boolean) {
     onOpenChange(newOpen);
@@ -69,6 +71,7 @@ export function EditServiceDialog({
       const result = await updateService({
         id: service.id,
         name: data.name,
+        description: data.description,
         groupId,
         nickname,
       });
@@ -102,6 +105,18 @@ export function EditServiceDialog({
                 {...register("name")}
               />
               <Field.Error>{errors.name?.message}</Field.Error>
+            </Field.Root>
+
+            <Field.Root>
+              <Field.Label>{t("service_description_label")}</Field.Label>
+              <Textarea
+                placeholder={t("service_description_placeholder")}
+                rows={3}
+                state={errors.description ? "error" : "default"}
+                {...register("description")}
+              />
+              <Field.Description>{t("service_description_hint")}</Field.Description>
+              <Field.Error>{errors.description?.message}</Field.Error>
             </Field.Root>
 
             {serverError && (

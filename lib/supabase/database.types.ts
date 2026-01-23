@@ -207,6 +207,97 @@ export type Database = {
           },
         ];
       };
+      blocked_clients: {
+        Row: {
+          id: string;
+          beauty_page_id: string;
+          client_id: string | null;
+          client_phone: string | null;
+          client_email: string | null;
+          reason: string | null;
+          blocked_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          beauty_page_id: string;
+          client_id?: string | null;
+          client_phone?: string | null;
+          client_email?: string | null;
+          reason?: string | null;
+          blocked_by: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          beauty_page_id?: string;
+          client_id?: string | null;
+          client_phone?: string | null;
+          client_email?: string | null;
+          reason?: string | null;
+          blocked_by?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "blocked_clients_beauty_page_id_fkey";
+            columns: ["beauty_page_id"];
+            isOneToOne: false;
+            referencedRelation: "beauty_pages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "blocked_clients_blocked_by_fkey";
+            columns: ["blocked_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "blocked_clients_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      booking_restriction_defaults: {
+        Row: {
+          id: string;
+          max_future_appointments: number;
+          max_bookings_per_hour: number;
+          max_bookings_per_day: number;
+          booking_cooldown_seconds: number;
+          no_show_strikes_for_temp_block: number;
+          temp_block_duration_days: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          max_future_appointments?: number;
+          max_bookings_per_hour?: number;
+          max_bookings_per_day?: number;
+          booking_cooldown_seconds?: number;
+          no_show_strikes_for_temp_block?: number;
+          temp_block_duration_days?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          max_future_appointments?: number;
+          max_bookings_per_hour?: number;
+          max_bookings_per_day?: number;
+          booking_cooldown_seconds?: number;
+          no_show_strikes_for_temp_block?: number;
+          temp_block_duration_days?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       beauty_page_types: {
         Row: {
           created_at: string;
@@ -376,6 +467,76 @@ export type Database = {
             columns: ["beauty_page_id"];
             isOneToOne: false;
             referencedRelation: "beauty_pages";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      client_no_shows: {
+        Row: {
+          id: string;
+          beauty_page_id: string;
+          client_id: string | null;
+          client_phone: string | null;
+          client_email: string | null;
+          no_show_count: number;
+          is_blocked: boolean;
+          blocked_at: string | null;
+          blocked_until: string | null;
+          last_no_show_appointment_id: string | null;
+          last_no_show_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          beauty_page_id: string;
+          client_id?: string | null;
+          client_phone?: string | null;
+          client_email?: string | null;
+          no_show_count?: number;
+          is_blocked?: boolean;
+          blocked_at?: string | null;
+          blocked_until?: string | null;
+          last_no_show_appointment_id?: string | null;
+          last_no_show_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          beauty_page_id?: string;
+          client_id?: string | null;
+          client_phone?: string | null;
+          client_email?: string | null;
+          no_show_count?: number;
+          is_blocked?: boolean;
+          blocked_at?: string | null;
+          blocked_until?: string | null;
+          last_no_show_appointment_id?: string | null;
+          last_no_show_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "client_no_shows_beauty_page_id_fkey";
+            columns: ["beauty_page_id"];
+            isOneToOne: false;
+            referencedRelation: "beauty_pages";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_no_shows_client_id_fkey";
+            columns: ["client_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "client_no_shows_last_no_show_appointment_id_fkey";
+            columns: ["last_no_show_appointment_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
             referencedColumns: ["id"];
           },
         ];
@@ -610,6 +771,56 @@ export type Database = {
           },
         ];
       };
+      user_booking_limits: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          client_phone: string | null;
+          client_email: string | null;
+          max_future_appointments: number | null;
+          max_bookings_per_hour: number | null;
+          max_bookings_per_day: number | null;
+          booking_cooldown_seconds: number | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          client_phone?: string | null;
+          client_email?: string | null;
+          max_future_appointments?: number | null;
+          max_bookings_per_hour?: number | null;
+          max_bookings_per_day?: number | null;
+          booking_cooldown_seconds?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          client_phone?: string | null;
+          client_email?: string | null;
+          max_future_appointments?: number | null;
+          max_bookings_per_hour?: number | null;
+          max_bookings_per_day?: number | null;
+          booking_cooldown_seconds?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_booking_limits_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       working_days: {
         Row: {
           beauty_page_id: string;
@@ -617,6 +828,7 @@ export type Database = {
           date: string;
           end_time: string;
           id: string;
+          slot_interval_minutes: number;
           start_time: string;
           updated_at: string;
         };
@@ -626,6 +838,7 @@ export type Database = {
           date: string;
           end_time: string;
           id?: string;
+          slot_interval_minutes?: number;
           start_time: string;
           updated_at?: string;
         };
@@ -635,6 +848,7 @@ export type Database = {
           date?: string;
           end_time?: string;
           id?: string;
+          slot_interval_minutes?: number;
           start_time?: string;
           updated_at?: string;
         };

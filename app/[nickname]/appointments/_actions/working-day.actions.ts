@@ -111,6 +111,15 @@ export async function createWorkingDay(input: {
     return { success: false, error: t("errors.working_day_exists") };
   }
 
+  // Fetch beauty page's slot interval to snapshot
+  const { data: beautyPageSettings } = await supabase
+    .from("beauty_pages")
+    .select("slot_interval_minutes")
+    .eq("id", input.beautyPageId)
+    .single();
+
+  const slotInterval = beautyPageSettings?.slot_interval_minutes ?? 30;
+
   // Create working day
   const { data, error } = await supabase
     .from("working_days")
@@ -119,6 +128,7 @@ export async function createWorkingDay(input: {
       date: validation.data.date,
       start_time: `${validation.data.startTime}:00`,
       end_time: `${validation.data.endTime}:00`,
+      slot_interval_minutes: slotInterval,
     })
     .select("id")
     .single();
@@ -477,6 +487,15 @@ export async function bulkUpdateSchedule(input: {
     errors: [],
   };
 
+  // Fetch beauty page's slot interval to snapshot for new working days
+  const { data: beautyPageSettings } = await supabase
+    .from("beauty_pages")
+    .select("slot_interval_minutes")
+    .eq("id", input.beautyPageId)
+    .single();
+
+  const slotInterval = beautyPageSettings?.slot_interval_minutes ?? 30;
+
   // ============================================================================
   // Handle Deletions First
   // ============================================================================
@@ -599,6 +618,7 @@ export async function bulkUpdateSchedule(input: {
       date: item.date,
       start_time: `${item.startTime}:00`,
       end_time: `${item.endTime}:00`,
+      slot_interval_minutes: slotInterval,
     }));
 
     const { error: insertError, data: insertedData } = await supabase
@@ -617,6 +637,7 @@ export async function bulkUpdateSchedule(input: {
             date: item.date,
             start_time: `${item.startTime}:00`,
             end_time: `${item.endTime}:00`,
+            slot_interval_minutes: slotInterval,
           })
           .select("id")
           .single();

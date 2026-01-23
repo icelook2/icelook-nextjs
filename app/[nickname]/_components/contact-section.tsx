@@ -38,7 +38,9 @@ export function ContactSection({ contact, translations }: ContactSectionProps) {
   return (
     <section>
       <Paper className="space-y-3 p-4">
-        <h3 className="font-semibold">{translations.title}</h3>
+        {translations.title && (
+          <h3 className="font-semibold">{translations.title}</h3>
+        )}
 
         <div className="space-y-2.5">
           {/* Address */}

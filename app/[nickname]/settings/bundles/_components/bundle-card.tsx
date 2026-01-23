@@ -1,9 +1,10 @@
 "use client";
 
-import { Clock, Package, Scissors, Trash2 } from "lucide-react";
+import { CalendarDays, Clock, Hash, Package, Scissors, Trash2 } from "lucide-react";
 import type { ServiceBundleWithServices } from "@/lib/types/bundles";
 import { Button } from "@/lib/ui/button";
 import { SettingsRow } from "@/lib/ui/settings-group";
+import { cn } from "@/lib/utils/cn";
 import { formatDuration, formatPrice } from "../_lib/bundles-constants";
 
 interface BundleCardProps {
@@ -18,6 +19,10 @@ interface BundleCardProps {
     activate: string;
     deactivate: string;
     inactive: string;
+    daysRemaining: string;
+    quantityRemaining: string;
+    expired: string;
+    soldOut: string;
   };
   locale: string;
   currency: string;
@@ -34,6 +39,14 @@ export function BundleCard({
   locale,
   currency,
 }: BundleCardProps) {
+  // Calculate availability badges
+  const hasTimeLimit = bundle.valid_from || bundle.valid_until;
+  const hasQuantityLimit = bundle.max_quantity !== null;
+  const remainingQuantity =
+    hasQuantityLimit && bundle.max_quantity
+      ? bundle.max_quantity - bundle.booked_count
+      : null;
+
   if (variant === "active") {
     return (
       <SettingsRow noBorder={noBorder}>
@@ -43,11 +56,46 @@ export function BundleCard({
               <Package className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium">{bundle.name}</p>
                 <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-500/20 dark:text-violet-400">
-                  -{bundle.discount_percentage}%
+                  {bundle.discount_type === "fixed"
+                    ? `-${formatPrice(bundle.discount_value, locale, currency)}`
+                    : `-${bundle.discount_percentage}%`}
                 </span>
+                {/* Time limit badge */}
+                {hasTimeLimit && bundle.availability.daysRemaining !== undefined && (
+                  <span
+                    className={cn(
+                      "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                      bundle.availability.daysRemaining <= 3
+                        ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+                        : "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
+                    )}
+                  >
+                    <CalendarDays className="h-3 w-3" />
+                    {t.daysRemaining.replace(
+                      "{days}",
+                      String(bundle.availability.daysRemaining),
+                    )}
+                  </span>
+                )}
+                {/* Quantity limit badge */}
+                {hasQuantityLimit && remainingQuantity !== null && (
+                  <span
+                    className={cn(
+                      "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                      remainingQuantity <= 3
+                        ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+                        : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
+                    )}
+                  >
+                    <Hash className="h-3 w-3" />
+                    {t.quantityRemaining
+                      .replace("{remaining}", String(remainingQuantity))
+                      .replace("{total}", String(bundle.max_quantity))}
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted">
                 <Scissors className="h-3.5 w-3.5" />

@@ -73,8 +73,13 @@ export function BookingSummary({
 }: BookingSummaryProps) {
   // Calculate bundle discount percentage
   const bundleDiscountPercentage =
-    selectedBundle && originalPriceCents && totalPriceCents && originalPriceCents > totalPriceCents
-      ? Math.round(((originalPriceCents - totalPriceCents) / originalPriceCents) * 100)
+    selectedBundle &&
+    originalPriceCents &&
+    totalPriceCents &&
+    originalPriceCents > totalPriceCents
+      ? Math.round(
+          ((originalPriceCents - totalPriceCents) / originalPriceCents) * 100,
+        )
       : 0;
 
   return (
@@ -130,7 +135,9 @@ export function BookingSummary({
           {/* Bundle header if applicable */}
           {selectedBundle && (
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-medium text-foreground">{selectedBundle.name}</span>
+              <span className="font-medium text-foreground">
+                {selectedBundle.name}
+              </span>
               <DiscountBadge percentage={bundleDiscountPercentage} />
             </div>
           )}
@@ -152,11 +159,13 @@ export function BookingSummary({
       <SummaryRow label={translations.price}>
         <div className="flex items-center gap-2">
           {/* Show original price crossed out for bundles */}
-          {selectedBundle && originalPriceCents && originalPriceCents > (totalPriceCents ?? 0) && (
-            <span className="text-sm text-muted line-through">
-              {formatPrice(originalPriceCents, currency, locale)}
-            </span>
-          )}
+          {selectedBundle &&
+            originalPriceCents &&
+            originalPriceCents > (totalPriceCents ?? 0) && (
+              <span className="text-sm text-muted line-through">
+                {formatPrice(originalPriceCents, currency, locale)}
+              </span>
+            )}
           <span className="font-semibold text-foreground">
             {formattedPrice}
           </span>

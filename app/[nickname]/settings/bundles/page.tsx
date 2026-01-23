@@ -75,6 +75,9 @@ export default async function BundlesSettingsPage({
             selectServices: t("select_services"),
             selectServicesHint: t("select_services_hint"),
             discount: t("discount"),
+            discountType: t("discount_type"),
+            discountPercentage: t("discount_percentage"),
+            discountFixed: t("discount_fixed"),
             preview: t("preview"),
             originalPrice: t("original_price"),
             bundlePrice: t("bundle_price"),
@@ -86,6 +89,26 @@ export default async function BundlesSettingsPage({
             deactivate: t("deactivate"),
             save: t("save"),
             create: t("create"),
+            hiddenServicesTitle: t("hidden_services_title"),
+            hiddenServicesDescription: t("hidden_services_description"),
+            hiddenServicesLabel: t("hidden_services_label"),
+            hiddenServicesHint: t("hidden_services_hint"),
+            close: t("close"),
+            // Optional limits
+            optionalLimits: t("optional_limits"),
+            timeLimitLabel: t("time_limit_label"),
+            timeLimitHint: t("time_limit_hint"),
+            validFrom: t("valid_from"),
+            validUntil: t("valid_until"),
+            quantityLimitLabel: t("quantity_limit_label"),
+            quantityLimitHint: t("quantity_limit_hint"),
+            maxQuantity: t("max_quantity"),
+            unlimited: t("unlimited"),
+            // Availability badges
+            daysRemaining: t("days_remaining"),
+            quantityRemaining: t("quantity_remaining"),
+            expired: t("expired"),
+            soldOut: t("sold_out"),
           }}
         />
       </div>

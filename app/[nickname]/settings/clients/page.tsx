@@ -3,7 +3,11 @@ import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageByNickname, getBeautyPageClients } from "@/lib/queries";
 import { PageHeader } from "@/lib/ui/page-header";
-import { ClientsList } from "./_components";
+import {
+  getBlockedClientsForPage,
+  getNoShowRecordsForPage,
+} from "./_actions/blocklist.actions";
+import { BlockedClientsList, ClientsList } from "./_components";
 
 interface ClientsPageProps {
   params: Promise<{ nickname: string }>;
@@ -33,9 +37,12 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
   }
 
   // Fetch initial batch of clients (no search, first page)
-  const { clients, total, hasMore, pageSize } = await getBeautyPageClients(
-    beautyPage.id,
-  );
+  const [{ clients, total, hasMore, pageSize }, blockedClients, noShowRecords] =
+    await Promise.all([
+      getBeautyPageClients(beautyPage.id),
+      getBlockedClientsForPage(beautyPage.id),
+      getNoShowRecordsForPage(beautyPage.id),
+    ]);
 
   return (
     <>
@@ -46,13 +53,20 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <div className="mx-auto max-w-2xl px-4 pb-8">
+      <div className="mx-auto max-w-2xl space-y-8 px-4 pb-8">
         <ClientsList
           initialClients={clients}
           initialTotal={total}
           initialHasMore={hasMore}
           pageSize={pageSize}
           nickname={nickname}
+        />
+
+        {/* Blocked Clients Section */}
+        <BlockedClientsList
+          beautyPageId={beautyPage.id}
+          blockedClients={blockedClients}
+          noShowRecords={noShowRecords}
         />
       </div>
     </>

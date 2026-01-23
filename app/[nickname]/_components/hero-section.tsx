@@ -4,22 +4,15 @@ import Link from "next/link";
 import type { BeautyPageInfo } from "@/lib/queries/beauty-page-profile";
 import { CircleButton } from "@/lib/ui/circle-button";
 import { VerifiedBadge } from "./verified-badge";
-import { WorkingHoursBadge } from "./working-hours-badge";
 
 interface RatingStats {
   averageRating: number;
   totalReviews: number;
 }
 
-interface WorkingStatus {
-  isOpen: boolean;
-  statusMessage: string;
-}
-
 interface HeroSectionProps {
   info: BeautyPageInfo;
   ratingStats?: RatingStats;
-  workingStatus?: WorkingStatus;
   /** Whether current user is the owner of this beauty page */
   isOwner?: boolean;
   translations: {
@@ -44,7 +37,6 @@ const gradients = [
 export function HeroSection({
   info,
   ratingStats,
-  workingStatus,
   isOwner,
   translations,
   onReviewsClick,
@@ -123,14 +115,6 @@ export function HeroSection({
           </p>
         </div>
       </div>
-
-      {/* Working hours status */}
-      {workingStatus && (
-        <WorkingHoursBadge
-          isOpen={workingStatus.isOpen}
-          statusMessage={workingStatus.statusMessage}
-        />
-      )}
 
       {/* Bio */}
       {info.creator_bio && (

@@ -206,6 +206,7 @@ export default async function AppointmentsPage({
         appointments={dayAppointments}
         nickname={nickname}
         isConfigured={workingDay !== null}
+        slotIntervalMinutes={workingDay?.slot_interval_minutes ?? 30}
         beautyPageId={beautyPage.id}
         serviceGroups={serviceGroups}
         clients={clientsResult.clients}

@@ -401,8 +401,13 @@ function ServicesSection({
       {/* Services list */}
       <div className="divide-y divide-border">
         {appointment.appointment_services.map((service) => (
-          <div key={service.id} className="flex items-center justify-between p-4">
-            <p className="font-medium text-foreground">{service.service_name}</p>
+          <div
+            key={service.id}
+            className="flex items-center justify-between p-4"
+          >
+            <p className="font-medium text-foreground">
+              {service.service_name}
+            </p>
             <div className="flex items-center gap-4 text-sm">
               <span className="text-muted">
                 {formatDuration(service.duration_minutes, durationLabels)}

@@ -1,6 +1,6 @@
 import type { ServiceGroupWithServices } from "@/lib/queries/services";
 
-// Discount preset options
+// Percentage discount preset options
 export const DISCOUNT_OPTIONS = [
   { value: 5, label: "5%" },
   { value: 10, label: "10%" },
@@ -8,6 +8,16 @@ export const DISCOUNT_OPTIONS = [
   { value: 20, label: "20%" },
   { value: 25, label: "25%" },
   { value: 30, label: "30%" },
+];
+
+// Fixed discount preset options (in currency units, e.g., 50 = 50 UAH)
+export const FIXED_DISCOUNT_OPTIONS = [
+  { value: 50, label: "50" },
+  { value: 100, label: "100" },
+  { value: 150, label: "150" },
+  { value: 200, label: "200" },
+  { value: 300, label: "300" },
+  { value: 500, label: "500" },
 ];
 
 export interface FlattenedService {

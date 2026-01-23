@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CalendarDays, Hash, Percent } from "lucide-react";
 import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils/cn";
 import { createBundle } from "../_actions/bundle.actions";
 import {
   DISCOUNT_OPTIONS,
+  FIXED_DISCOUNT_OPTIONS,
   type FlattenedService,
   flattenServices,
   formatDuration,
@@ -23,8 +25,13 @@ import {
 const createBundleFormSchema = z.object({
   name: z.string().min(1, "Bundle name is required").max(100),
   description: z.string().max(500).optional(),
-  discountPercentage: z.number().min(1).max(90),
+  discountType: z.enum(["percentage", "fixed"]),
+  discountValue: z.number().min(1),
   serviceIds: z.array(z.string()).min(2, "Select at least 2 services"),
+  // Optional limits
+  validFrom: z.string().optional(),
+  validUntil: z.string().optional(),
+  maxQuantity: z.number().int().min(1).optional(),
 });
 
 type CreateBundleFormData = z.infer<typeof createBundleFormSchema>;
@@ -44,6 +51,9 @@ interface CreateBundleDialogProps {
     selectServices: string;
     selectServicesHint: string;
     discount: string;
+    discountType: string;
+    discountPercentage: string;
+    discountFixed: string;
     preview: string;
     originalPrice: string;
     bundlePrice: string;
@@ -51,6 +61,16 @@ interface CreateBundleDialogProps {
     services: string;
     cancel: string;
     create: string;
+    // Optional limits
+    optionalLimits: string;
+    timeLimitLabel: string;
+    timeLimitHint: string;
+    validFrom: string;
+    validUntil: string;
+    quantityLimitLabel: string;
+    quantityLimitHint: string;
+    maxQuantity: string;
+    unlimited: string;
   };
   locale: string;
   currency: string;
@@ -68,6 +88,8 @@ export function CreateBundleDialog({
 }: CreateBundleDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showTimeLimit, setShowTimeLimit] = useState(false);
+  const [showQuantityLimit, setShowQuantityLimit] = useState(false);
 
   const services = flattenServices(serviceGroups);
 
@@ -77,18 +99,24 @@ export function CreateBundleDialog({
     formState: { errors },
     reset,
     watch,
+    setValue,
   } = useForm<CreateBundleFormData>({
     resolver: zodResolver(createBundleFormSchema),
     defaultValues: {
       name: "",
       description: "",
-      discountPercentage: 10,
+      discountType: "percentage" as const,
+      discountValue: 10,
       serviceIds: [],
+      validFrom: undefined,
+      validUntil: undefined,
+      maxQuantity: undefined,
     },
   });
 
   const selectedServiceIds = watch("serviceIds");
-  const discountPercentage = watch("discountPercentage");
+  const discountType = watch("discountType");
+  const discountValue = watch("discountValue");
 
   // Calculate preview totals
   const selectedServices = services.filter((s) =>
@@ -98,9 +126,11 @@ export function CreateBundleDialog({
     (sum, s) => sum + s.priceCents,
     0,
   );
-  const discountedTotal = Math.round(
-    originalTotal * (1 - discountPercentage / 100),
-  );
+  // For fixed discount, value is in cents
+  const discountedTotal =
+    discountType === "percentage"
+      ? Math.round(originalTotal * (1 - discountValue / 100))
+      : Math.max(0, originalTotal - discountValue * 100);
   const totalDuration = selectedServices.reduce(
     (sum, s) => sum + s.durationMinutes,
     0,
@@ -110,8 +140,16 @@ export function CreateBundleDialog({
     onOpenChange(newOpen);
     if (!newOpen) {
       setServerError(null);
+      setShowTimeLimit(false);
+      setShowQuantityLimit(false);
       reset();
     }
+  }
+
+  function handleDiscountTypeChange(type: "percentage" | "fixed") {
+    setValue("discountType", type);
+    // Reset discount value to appropriate default
+    setValue("discountValue", type === "percentage" ? 10 : 50);
   }
 
   function onSubmit(data: CreateBundleFormData) {
@@ -123,13 +161,24 @@ export function CreateBundleDialog({
         nickname,
         name: data.name,
         description: data.description,
-        discountPercentage: data.discountPercentage,
+        discountType: data.discountType,
+        // For fixed discount, convert to cents for the server
+        discountValue:
+          data.discountType === "fixed"
+            ? data.discountValue * 100
+            : data.discountValue,
         serviceIds: data.serviceIds,
+        validFrom: showTimeLimit && data.validFrom ? data.validFrom : null,
+        validUntil: showTimeLimit && data.validUntil ? data.validUntil : null,
+        maxQuantity:
+          showQuantityLimit && data.maxQuantity ? data.maxQuantity : null,
       });
 
       if (result.success) {
         onOpenChange(false);
         reset();
+        setShowTimeLimit(false);
+        setShowQuantityLimit(false);
       } else {
         setServerError(result.error ?? "Failed to create bundle");
       }
@@ -198,15 +247,51 @@ export function CreateBundleDialog({
               <Field.Error>{errors.serviceIds?.message}</Field.Error>
             </Field.Root>
 
-            {/* Discount */}
+            {/* Discount Type Toggle */}
+            <Field.Root>
+              <Field.Label>{t.discountType}</Field.Label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDiscountTypeChange("percentage")}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors",
+                    discountType === "percentage"
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border hover:bg-muted/10",
+                  )}
+                >
+                  <Percent className="h-4 w-4" />
+                  {t.discountPercentage}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDiscountTypeChange("fixed")}
+                  className={cn(
+                    "flex flex-1 items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors",
+                    discountType === "fixed"
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border hover:bg-muted/10",
+                  )}
+                >
+                  <Hash className="h-4 w-4" />
+                  {t.discountFixed}
+                </button>
+              </div>
+            </Field.Root>
+
+            {/* Discount Value */}
             <Field.Root>
               <Field.Label>{t.discount}</Field.Label>
               <Controller
-                name="discountPercentage"
+                name="discountValue"
                 control={control}
                 render={({ field }) => (
                   <div className="flex flex-wrap gap-2">
-                    {DISCOUNT_OPTIONS.map((option) => (
+                    {(discountType === "percentage"
+                      ? DISCOUNT_OPTIONS
+                      : FIXED_DISCOUNT_OPTIONS
+                    ).map((option) => (
                       <button
                         key={option.value}
                         type="button"
@@ -218,14 +303,135 @@ export function CreateBundleDialog({
                             : "bg-muted/20 hover:bg-muted/30",
                         )}
                       >
-                        {option.label}
+                        {discountType === "percentage"
+                          ? option.label
+                          : `${option.label} ₴`}
                       </button>
                     ))}
                   </div>
                 )}
               />
-              <Field.Error>{errors.discountPercentage?.message}</Field.Error>
+              <Field.Error>{errors.discountValue?.message}</Field.Error>
             </Field.Root>
+
+            {/* Optional Limits Section */}
+            <div className="space-y-3 rounded-lg border border-border p-3">
+              <p className="text-sm font-medium text-muted">
+                {t.optionalLimits}
+              </p>
+
+              {/* Time Limit Toggle */}
+              <div className="space-y-2">
+                <label className="flex cursor-pointer items-center gap-3">
+                  <Checkbox
+                    checked={showTimeLimit}
+                    onCheckedChange={(checked: boolean) => {
+                      setShowTimeLimit(checked);
+                      if (!checked) {
+                        setValue("validFrom", undefined);
+                        setValue("validUntil", undefined);
+                      }
+                    }}
+                  />
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-muted" />
+                    <span className="text-sm font-medium">
+                      {t.timeLimitLabel}
+                    </span>
+                  </div>
+                </label>
+                {showTimeLimit && (
+                  <div className="ml-7 grid grid-cols-2 gap-3">
+                    <Controller
+                      name="validFrom"
+                      control={control}
+                      render={({ field }) => (
+                        <Field.Root>
+                          <Field.Label className="text-xs">
+                            {t.validFrom}
+                          </Field.Label>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value ?? ""}
+                            className="text-sm"
+                          />
+                        </Field.Root>
+                      )}
+                    />
+                    <Controller
+                      name="validUntil"
+                      control={control}
+                      render={({ field }) => (
+                        <Field.Root>
+                          <Field.Label className="text-xs">
+                            {t.validUntil}
+                          </Field.Label>
+                          <Input
+                            type="date"
+                            {...field}
+                            value={field.value ?? ""}
+                            className="text-sm"
+                          />
+                        </Field.Root>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Quantity Limit Toggle */}
+              <div className="space-y-2">
+                <label className="flex cursor-pointer items-center gap-3">
+                  <Checkbox
+                    checked={showQuantityLimit}
+                    onCheckedChange={(checked: boolean) => {
+                      setShowQuantityLimit(checked);
+                      if (!checked) {
+                        setValue("maxQuantity", undefined);
+                      } else {
+                        setValue("maxQuantity", 10);
+                      }
+                    }}
+                  />
+                  <div className="flex items-center gap-2">
+                    <Hash className="h-4 w-4 text-muted" />
+                    <span className="text-sm font-medium">
+                      {t.quantityLimitLabel}
+                    </span>
+                  </div>
+                </label>
+                {showQuantityLimit && (
+                  <div className="ml-7">
+                    <Controller
+                      name="maxQuantity"
+                      control={control}
+                      render={({ field }) => (
+                        <Field.Root>
+                          <Field.Label className="text-xs">
+                            {t.maxQuantity}
+                          </Field.Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            {...field}
+                            value={field.value ?? ""}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  ? parseInt(e.target.value, 10)
+                                  : undefined,
+                              )
+                            }
+                            className="w-24 text-sm"
+                          />
+                        </Field.Root>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
 
             {/* Preview */}
             {selectedServiceIds.length >= 2 && (

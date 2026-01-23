@@ -147,6 +147,11 @@ export async function updateAppointmentStatus(input: {
     // Don't fail the action, history is secondary
   }
 
+  // Deduct resources when completing appointment
+  if (validation.data.status === "completed") {
+    await deductResourcesForAppointment(supabase, input.appointmentId);
+  }
+
   revalidatePath(`/${input.nickname}/schedule`);
 
   return { success: true };
@@ -725,4 +730,102 @@ function minutesToTime(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+}
+
+/**
+ * Deduct resources when an appointment is completed.
+ * Gets services from the appointment, finds linked resources, and deducts stock.
+ */
+async function deductResourcesForAppointment(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  appointmentId: string,
+): Promise<void> {
+  // Get all services in this appointment
+  const { data: appointmentServices, error: servicesError } = await supabase
+    .from("appointment_services")
+    .select("service_id")
+    .eq("appointment_id", appointmentId);
+
+  if (servicesError || !appointmentServices?.length) {
+    // No services or error - silently skip resource deduction
+    return;
+  }
+
+  const serviceIds = appointmentServices.map((s) => s.service_id);
+
+  // Get resources linked to these services
+  const { data: serviceResources, error: resourcesError } = await supabase
+    .from("service_resources")
+    .select(
+      `
+      resource_id,
+      default_amount,
+      resources!inner (
+        id,
+        cost_per_unit_cents,
+        is_active
+      )
+    `,
+    )
+    .in("service_id", serviceIds);
+
+  if (resourcesError || !serviceResources?.length) {
+    // No linked resources or error - nothing to deduct
+    return;
+  }
+
+  // Aggregate usage by resource (same resource might be used by multiple services)
+  const usageByResource = new Map<
+    string,
+    { amount: number; costCents: number }
+  >();
+
+  for (const sr of serviceResources) {
+    // Skip inactive resources
+    // Supabase !inner join returns single object but TS may see array
+    const resourceData = sr.resources as unknown as
+      | { id: string; cost_per_unit_cents: number; is_active: boolean }
+      | { id: string; cost_per_unit_cents: number; is_active: boolean }[]
+      | null;
+    const resource = Array.isArray(resourceData) ? resourceData[0] : resourceData;
+    if (!resource?.is_active) {
+      continue;
+    }
+
+    const existing = usageByResource.get(sr.resource_id);
+    const amountToAdd = sr.default_amount;
+    const costToAdd = amountToAdd * resource.cost_per_unit_cents;
+
+    if (existing) {
+      existing.amount += amountToAdd;
+      existing.costCents += costToAdd;
+    } else {
+      usageByResource.set(sr.resource_id, {
+        amount: amountToAdd,
+        costCents: costToAdd,
+      });
+    }
+  }
+
+  if (usageByResource.size === 0) {
+    return;
+  }
+
+  // Insert resource_usage records and deduct stock
+  for (const [resourceId, usage] of usageByResource) {
+    // Insert usage record
+    await supabase.from("resource_usage").insert({
+      appointment_id: appointmentId,
+      resource_id: resourceId,
+      amount_used: usage.amount,
+      unit_cost_cents: Math.round(usage.costCents / usage.amount),
+      auto_deducted: true,
+    });
+
+    // Deduct stock using RPC function (handles going negative gracefully)
+    await supabase.rpc("deduct_resource_stock", {
+      p_resource_id: resourceId,
+      p_amount: usage.amount,
+    });
+  }
 }

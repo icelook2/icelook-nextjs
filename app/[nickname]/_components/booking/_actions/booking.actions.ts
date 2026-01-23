@@ -15,14 +15,24 @@
  * - Applies the best discount (highest percentage)
  * - Stores original and discounted prices
  * - Marks slot promotions as "booked" after successful booking
+ *
+ * Abuse Prevention (added):
+ * - Overlapping appointment validation (client can't be in two places)
+ * - Max future appointments limit (configurable, default 10)
+ * - Booking velocity rate limiting (hourly/daily limits + cooldown)
+ * - No-show strike system (2 strikes = blocked from beauty page)
+ * - Manual blocklist (creator can block specific clients)
  */
 
+import { checkBookingRestrictions } from "@/lib/queries/booking-restrictions";
+import { getBundleForBookingValidation } from "@/lib/queries/bundles";
 import {
   getBestPromotionForBooking,
   markSlotPromotionAsBooked,
   type PublicPromotion,
 } from "@/lib/queries/promotions";
 import { createClient } from "@/lib/supabase/server";
+import { checkBundleAvailability } from "@/lib/types/bundles";
 import type { BookingResult, CreateBookingInput } from "../_lib/booking-types";
 
 // ============================================================================
@@ -36,6 +46,7 @@ interface ServiceDetails {
   duration_minutes: number;
   available_from_time: string | null;
   available_to_time: string | null;
+  is_hidden: boolean;
 }
 
 interface ServiceWithPromotion extends ServiceDetails {
@@ -84,12 +95,101 @@ export async function createBooking(
     // Determine if this is a bundle booking
     const isBundleBooking = !!bundleId;
 
+    // For bundle bookings, validate bundle availability (time limits, quantity)
+    let validatedBundle: Awaited<
+      ReturnType<typeof getBundleForBookingValidation>
+    > = null;
+
+    if (isBundleBooking && bundleId) {
+      validatedBundle = await getBundleForBookingValidation(bundleId);
+
+      if (!validatedBundle) {
+        return {
+          success: false,
+          error: "validation",
+          message: "Bundle not found",
+        };
+      }
+
+      // Check bundle availability for the appointment date
+      const bundleAvailability = checkBundleAvailability(
+        {
+          is_active: validatedBundle.is_active,
+          valid_from: validatedBundle.valid_from,
+          valid_until: validatedBundle.valid_until,
+          max_quantity: validatedBundle.max_quantity,
+          booked_count: validatedBundle.booked_count,
+        },
+        date,
+      );
+
+      if (!bundleAvailability.isAvailable) {
+        const errorMessages: Record<string, string> = {
+          inactive: "This bundle is no longer available",
+          not_started:
+            "This bundle is not yet available for your appointment date",
+          expired: "This bundle has expired for your appointment date",
+          sold_out: "This bundle is sold out",
+        };
+
+        return {
+          success: false,
+          error: "validation",
+          message:
+            errorMessages[bundleAvailability.reason ?? "inactive"] ??
+            "Bundle not available",
+        };
+      }
+    }
+
     // Validate we have at least one service
     if (serviceIds.length === 0) {
       return {
         success: false,
         error: "validation",
         message: "At least one service must be selected",
+      };
+    }
+
+    // ========================================================================
+    // Booking Abuse Prevention Checks
+    // ========================================================================
+    // Check all booking restrictions before proceeding:
+    // - Manual blocklist
+    // - No-show blocks
+    // - Overlapping appointments (client can't be in two places at once)
+    // - Max future appointments limit
+    // - Velocity rate limiting (hourly/daily + cooldown)
+    const restrictionResult = await checkBookingRestrictions(
+      beautyPageId,
+      {
+        clientId: clientId ?? undefined,
+        clientPhone: clientInfo.phone ?? undefined,
+        clientEmail: clientInfo.email ?? undefined,
+      },
+      date,
+      startTime,
+      endTime,
+    );
+
+    if (!restrictionResult.allowed) {
+      // Map restriction reasons to user-friendly error types
+      const errorTypeMap: Record<string, "validation" | "slot_taken"> = {
+        blocked: "validation",
+        no_show_blocked: "validation",
+        overlapping: "slot_taken",
+        max_future_reached: "validation",
+        hourly_limit: "validation",
+        daily_limit: "validation",
+        cooldown: "validation",
+      };
+
+      return {
+        success: false,
+        error: restrictionResult.reason
+          ? errorTypeMap[restrictionResult.reason] ?? "validation"
+          : "validation",
+        message: restrictionResult.message ?? "Booking not allowed",
       };
     }
 
@@ -114,7 +214,7 @@ export async function createBooking(
       };
     }
 
-    // Get services with their prices, durations, and time windows
+    // Get services with their prices, durations, time windows, and visibility
     const { data: services, error: servicesError } = await supabase
       .from("services")
       .select(`
@@ -123,7 +223,8 @@ export async function createBooking(
         price_cents,
         duration_minutes,
         available_from_time,
-        available_to_time
+        available_to_time,
+        is_hidden
       `)
       .in("id", serviceIds);
 
@@ -152,7 +253,18 @@ export async function createBooking(
       duration_minutes: s.duration_minutes,
       available_from_time: s.available_from_time,
       available_to_time: s.available_to_time,
+      is_hidden: s.is_hidden,
     }));
+
+    // Validate that no hidden services are being booked
+    const hiddenServices = serviceDetails.filter((s) => s.is_hidden);
+    if (hiddenServices.length > 0) {
+      return {
+        success: false,
+        error: "validation",
+        message: "Some selected services are currently unavailable",
+      };
+    }
 
     // For bundle bookings, skip individual promotion lookup
     // The bundle's discounted price is used directly
@@ -221,7 +333,9 @@ export async function createBooking(
         (sum, s) => sum + s.duration_minutes,
         0,
       );
-      combinedServiceName = servicesWithPromotions.map((s) => s.name).join(", ");
+      combinedServiceName = servicesWithPromotions
+        .map((s) => s.name)
+        .join(", ");
 
       // Collect slot promotions to mark as booked after successful booking
       slotPromotionsToBook = servicesWithPromotions
@@ -425,6 +539,50 @@ export async function createBooking(
       );
       // Note: Appointment is already created, so we don't fail the booking
       // The appointment still has the aggregated service data
+    }
+
+    // For bundle bookings: increment booked_count and record in appointment_bundles
+    if (isBundleBooking && validatedBundle && bundleId) {
+      // Increment booked_count atomically with optimistic locking
+      // This prevents race conditions when multiple users book the same limited bundle
+      const { error: incrementError, count: updateCount } = await supabase
+        .from("service_bundles")
+        .update({
+          booked_count: validatedBundle.booked_count + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", bundleId)
+        .eq("booked_count", validatedBundle.booked_count); // Optimistic lock
+
+      if (incrementError) {
+        console.error("Error incrementing bundle booked_count:", incrementError);
+        // Don't fail the booking - the appointment is still valid
+        // The count will be slightly off but the booking succeeded
+      } else if (updateCount === 0) {
+        // Race condition detected - another booking happened simultaneously
+        // The booking is still valid, but we should log this
+        console.warn(
+          `Bundle ${bundleId} booked_count race condition detected - count may be off by one`,
+        );
+      }
+
+      // Record the bundle usage for future reference and cancellation restoration
+      const { error: bundleRecordError } = await supabase
+        .from("appointment_bundles")
+        .insert({
+          appointment_id: appointment.id,
+          bundle_id: bundleId,
+          bundle_name: bundleName ?? validatedBundle.name,
+          discount_type: validatedBundle.discount_type,
+          discount_value: validatedBundle.discount_value,
+          original_total_cents: totalOriginalPriceCents,
+          discounted_total_cents: totalFinalPriceCents,
+        });
+
+      if (bundleRecordError) {
+        console.error("Error recording bundle usage:", bundleRecordError);
+        // Don't fail the booking - the appointment is still valid
+      }
     }
 
     // Mark slot promotions as "booked" (they can only be used once)
