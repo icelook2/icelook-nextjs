@@ -1,17 +1,20 @@
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
-import { getBeautyPageByNickname, getBeautyPageClients } from "@/lib/queries";
+import { getBeautyPageByNickname } from "@/lib/queries";
 import { PageHeader } from "@/lib/ui/page-header";
-import { ClientsList } from "./_components";
+import { getBlockedClientsForPage } from "../clients/_actions/blocklist.actions";
+import { BlockedClientsList, BlockClientButton } from "./_components";
 
-interface ClientsPageProps {
+interface BlockedClientsPageProps {
   params: Promise<{ nickname: string }>;
 }
 
-export default async function ClientsPage({ params }: ClientsPageProps) {
+export default async function BlockedClientsPage({
+  params,
+}: BlockedClientsPageProps) {
   const { nickname } = await params;
-  const t = await getTranslations("clients");
+  const t = await getTranslations("blocked_clients");
 
   const beautyPage = await getBeautyPageByNickname(nickname);
 
@@ -32,10 +35,7 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
     redirect(`/${nickname}`);
   }
 
-  // Fetch initial batch of clients (no search, first page)
-  const { clients, total, hasMore, pageSize } = await getBeautyPageClients(
-    beautyPage.id,
-  );
+  const blockedClients = await getBlockedClientsForPage(beautyPage.id);
 
   return (
     <>
@@ -46,13 +46,17 @@ export default async function ClientsPage({ params }: ClientsPageProps) {
         containerClassName="mx-auto max-w-2xl"
       />
 
-      <div className="mx-auto max-w-2xl px-4 pb-8">
-        <ClientsList
-          initialClients={clients}
-          initialTotal={total}
-          initialHasMore={hasMore}
-          pageSize={pageSize}
+      <div className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
+        {/* Block Client Button */}
+        <BlockClientButton
+          beautyPageId={beautyPage.id}
           nickname={nickname}
+        />
+
+        {/* Blocked Clients List */}
+        <BlockedClientsList
+          beautyPageId={beautyPage.id}
+          blockedClients={blockedClients}
         />
       </div>
     </>

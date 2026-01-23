@@ -29,7 +29,7 @@ export function StepClient({
     const searchLower = searchQuery.toLowerCase();
     return (
       client.clientName.toLowerCase().includes(searchLower) ||
-      client.clientPhone.includes(searchQuery)
+      (client.clientEmail?.toLowerCase().includes(searchLower) ?? false)
     );
   });
 
@@ -71,11 +71,11 @@ export function StepClient({
         {filteredClients.map((client) => {
           const isSelected =
             clientMode === "existing" &&
-            selectedClient?.clientKey === client.clientKey;
+            selectedClient?.clientId === client.clientId;
 
           return (
             <button
-              key={client.clientKey}
+              key={client.clientId}
               type="button"
               onClick={() => onSelectClient(client)}
               className={`flex w-full items-center gap-3 border-l-2 px-4 py-3 text-left transition-colors ${
@@ -87,11 +87,6 @@ export function StepClient({
               <Avatar name={client.clientName} size="sm" />
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <span className="font-medium">{client.clientName}</span>
-                {client.isGuest && (
-                  <span className="rounded bg-muted/20 px-1.5 py-0.5 text-xs text-muted">
-                    Guest
-                  </span>
-                )}
               </div>
               {/* Radio indicator */}
               <div

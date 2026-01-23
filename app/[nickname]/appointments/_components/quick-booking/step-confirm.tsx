@@ -11,7 +11,6 @@ interface StepConfirmProps {
   startTime: string;
   endTime: string;
   clientName: string;
-  clientPhone?: string;
   selectedServices: Service[];
   totalPriceCents: number;
   currency: string;

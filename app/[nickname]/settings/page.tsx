@@ -9,6 +9,7 @@ import {
   Package,
   Scissors,
   Share2,
+  ShieldX,
   Tag,
   Users,
 } from "lucide-react";
@@ -126,6 +127,15 @@ export default async function BeautyPageSettings({
       description: t("nav.clients_description"),
       iconClassName:
         "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-400",
+      disabled: false,
+    },
+    {
+      href: `/${nickname}/settings/blocked-clients`,
+      icon: ShieldX,
+      title: t("nav.blocked_clients"),
+      description: t("nav.blocked_clients_description"),
+      iconClassName:
+        "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
       disabled: false,
     },
     {

@@ -24,6 +24,13 @@ export type SearchBeautyPagesResult = {
   hasMore: boolean;
 };
 
+export type SearchBeautyPagesOptions = {
+  offset?: number;
+  limit?: number;
+  /** User ID of the viewer - beauty pages where viewer is banned will be filtered out */
+  viewerId?: string | null;
+};
+
 /**
  * Searches beauty pages by nickname (slug), name, and display_name
  * using trigram similarity (pg_trgm) for fuzzy matching.
@@ -31,15 +38,18 @@ export type SearchBeautyPagesResult = {
  * Handles typos gracefully - "mariya" will match "Maria" etc.
  * Pagination is handled at the database level for efficiency.
  *
+ * If viewerId is provided, beauty pages where the viewer is banned
+ * will be automatically filtered out of the results.
+ *
  * @param query - Search query string (minimum 2 characters recommended)
- * @param options - Pagination options (offset, limit)
+ * @param options - Pagination and filtering options
  * @returns Search results with pagination info
  */
 export async function searchBeautyPages(
   query: string,
-  options: { offset?: number; limit?: number } = {},
+  options: SearchBeautyPagesOptions = {},
 ): Promise<SearchBeautyPagesResult> {
-  const { offset = 0, limit = SEARCH_PAGE_SIZE } = options;
+  const { offset = 0, limit = SEARCH_PAGE_SIZE, viewerId } = options;
 
   if (!query || query.trim().length === 0) {
     return { results: [], hasMore: false };
@@ -52,6 +62,7 @@ export async function searchBeautyPages(
     search_query: query.trim().toLowerCase(),
     result_limit: limit + 1,
     result_offset: offset,
+    viewer_id: viewerId ?? null,
   });
 
   if (error) {

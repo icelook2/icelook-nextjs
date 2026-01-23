@@ -32,7 +32,6 @@ const quickBookingSchema = z.object({
     .min(1, "At least one service required"),
   clientId: z.string().uuid().optional(),
   clientName: z.string().min(1).max(100),
-  clientPhone: z.string().max(20).optional(),
   notes: z.string().max(500).optional(),
 });
 
@@ -220,7 +219,7 @@ export async function createQuickBooking(
         service_currency: beautyPage.currency ?? "UAH",
         service_duration_minutes: totalDurationMinutes,
         client_name: validated.clientName,
-        client_phone: validated.clientPhone ?? null,
+        client_phone: null,
         client_email: null, // Not collected in quick booking
         date: validated.date,
         start_time: validated.startTime,

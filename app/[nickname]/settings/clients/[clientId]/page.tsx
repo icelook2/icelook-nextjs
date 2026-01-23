@@ -2,10 +2,11 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageByNickname, getClientDetails } from "@/lib/queries";
-import { decodeClientKey } from "@/lib/queries/clients";
+import { isClientBlocked } from "@/lib/queries/clients";
 import { PageHeader } from "@/lib/ui/page-header";
 import {
   AppointmentHistory,
+  BlockClientSection,
   ClientContacts,
   ClientProfile,
   ClientStats,
@@ -42,16 +43,12 @@ export default async function ClientDetailPage({
     redirect(`/${nickname}`);
   }
 
-  // Decode and validate client key
-  let decodedKey: { clientId: string | null; clientPhone: string | null };
-  try {
-    decodedKey = decodeClientKey(clientId);
-  } catch {
-    notFound();
-  }
-
-  // Fetch client details
-  const details = await getClientDetails(beautyPage.id, clientId);
+  // Fetch client details and block status in parallel
+  // clientId is the user's UUID (only authenticated users can book)
+  const [details, blocked] = await Promise.all([
+    getClientDetails(beautyPage.id, clientId),
+    isClientBlocked(beautyPage.id, clientId),
+  ]);
 
   if (!details) {
     notFound();
@@ -78,8 +75,7 @@ export default async function ClientDetailPage({
           <CreatorNotesSection
             beautyPageId={beautyPage.id}
             nickname={nickname}
-            clientId={decodedKey.clientId}
-            clientPhone={details.client.clientPhone}
+            clientId={clientId}
             initialNotes={details.client.creatorNotes}
           />
 
@@ -99,6 +95,14 @@ export default async function ClientDetailPage({
 
           {/* Stats Grid - at the end for quick reference */}
           <ClientStats details={details} />
+
+          {/* Block Client Section - allows creator to block this client */}
+          <BlockClientSection
+            beautyPageId={beautyPage.id}
+            clientId={clientId}
+            clientName={details.client.clientName}
+            isBlocked={blocked}
+          />
         </div>
       </div>
     </>

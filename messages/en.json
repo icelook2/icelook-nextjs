@@ -1148,6 +1148,8 @@
       "analytics_description": "View business performance and insights",
       "clients": "Clients",
       "clients_description": "View and manage your client base",
+      "blocked_clients": "Blocked Clients",
+      "blocked_clients_description": "Manage blocked and restricted clients",
       "share_profile": "Share Profile",
       "share_profile_description": "QR codes and printable materials"
     }
@@ -1340,7 +1342,49 @@
       "forgive_action": "Reset & Unblock",
       "reset_count": "Reset no-show count",
       "cancel": "Cancel"
+    },
+    "block_client": {
+      "title": "Block Client",
+      "description": "Blocked clients cannot book appointments or see your profile",
+      "block_button": "Block",
+      "already_blocked": "Client is blocked",
+      "already_blocked_description": "This client cannot book appointments with you",
+      "dialog_title": "Block this client?",
+      "dialog_description": "{name} will not be able to book appointments with you and will not see your profile in search results.",
+      "cancel": "Cancel",
+      "confirm_block": "Block"
     }
+  },
+  "blocked_clients": {
+    "page_title": "Blocked Clients",
+    "block_button": "Block a Client",
+    "dialog_title": "Select Client to Block",
+    "search_placeholder": "Search by name or phone...",
+    "clear_search": "Clear search",
+    "no_results": "No clients found",
+    "no_clients": "No clients to block",
+    "showing_count": "Showing {shown} of {total}",
+    "guest_badge": "Guest",
+    "confirm_title": "Block Client",
+    "confirm_description": "{name} will not be able to book appointments with you and will not see your profile in search results.",
+    "cancel": "Cancel",
+    "confirm_block": "Block",
+    "empty_title": "No blocked clients",
+    "empty_description": "Clients you block will appear here. Blocked clients cannot book appointments with you.",
+    "manual_blocks": "Manually blocked",
+    "no_show_blocks": "Blocked due to no-shows",
+    "no_show_warnings": "No-show warnings",
+    "blocked_on": "Blocked on {date}",
+    "blocked_until": "Blocked until {date} ({count} no-shows)",
+    "blocked_permanently": "Permanently blocked ({count} no-shows)",
+    "no_show_warning": "{count} no-show(s) - 1 more and they will be blocked",
+    "unblock_title": "Unblock client",
+    "unblock_description": "Are you sure you want to unblock {name}? They will be able to book appointments again.",
+    "unblock_action": "Unblock",
+    "forgive_title": "Reset no-show count",
+    "forgive_description": "Are you sure you want to reset the no-show count for {name}? They will be able to book appointments again.",
+    "forgive_action": "Reset & Unblock",
+    "reset_count": "Reset no-show count"
   },
   "analytics": {
     "page_title": "Analytics",

@@ -164,7 +164,6 @@ export async function createBooking(
       beautyPageId,
       {
         clientId: clientId ?? undefined,
-        clientPhone: clientInfo.phone ?? undefined,
         clientEmail: clientInfo.email ?? undefined,
       },
       date,

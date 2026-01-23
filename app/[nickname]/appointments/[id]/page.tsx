@@ -6,7 +6,7 @@ import {
   getAppointmentById,
   getClientHistoryForAppointment,
 } from "@/lib/queries/appointments";
-import { encodeClientKey, getClientNotes } from "@/lib/queries/clients";
+import { getClientNotes } from "@/lib/queries/clients";
 import { getServiceGroupsWithServices } from "@/lib/queries/services";
 import { PageHeader } from "@/lib/ui/page-header";
 import { AppointmentDetailsView, AppointmentStatusLabel } from "./_components";
@@ -51,26 +51,15 @@ export default async function AppointmentDetailPage({
     appointment.status === "pending" || appointment.status === "confirmed";
 
   // Fetch client history, creator notes, and service groups in parallel
+  // client_id is always present since only authenticated users can book
   const [clientHistory, creatorNotes, serviceGroups] = await Promise.all([
-    getClientHistoryForAppointment(
-      beautyPage.id,
-      appointment.client_id,
-      appointment.client_phone,
-    ),
-    getClientNotes(
-      beautyPage.id,
-      appointment.client_id,
-      appointment.client_phone,
-    ),
+    getClientHistoryForAppointment(beautyPage.id, appointment.client_id),
+    appointment.client_id
+      ? getClientNotes(beautyPage.id, appointment.client_id)
+      : null,
     // Only fetch service groups if appointment can be modified
     canModifyServices ? getServiceGroupsWithServices(beautyPage.id) : [],
   ]);
-
-  // Encode client key for linking to client page (server-side only)
-  const clientKey = encodeClientKey(
-    appointment.client_id,
-    appointment.client_phone,
-  );
 
   // Format time and price for subtitle
   const appointmentTime = appointment.start_time.slice(0, 5);
@@ -273,7 +262,6 @@ export default async function AppointmentDetailPage({
         <AppointmentDetailsView
           appointment={appointment}
           clientHistory={clientHistory}
-          clientKey={clientKey}
           nickname={nickname}
           beautyPageId={beautyPage.id}
           creatorNotes={creatorNotes}

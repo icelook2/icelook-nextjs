@@ -29,7 +29,6 @@ export interface DateTimeTranslations {
 interface AppointmentDetailsViewProps {
   appointment: Appointment;
   clientHistory: ClientHistorySummary | null;
-  clientKey: string;
   nickname: string;
   beautyPageId: string;
   creatorNotes: string | null;
@@ -42,7 +41,6 @@ interface AppointmentDetailsViewProps {
 export function AppointmentDetailsView({
   appointment,
   clientHistory,
-  clientKey,
   nickname,
   beautyPageId,
   creatorNotes,
@@ -76,13 +74,14 @@ export function AppointmentDetailsView({
   return (
     <div className="space-y-4">
       {/* 1. CLIENT DETAILS - Who is this? */}
-      <ClientDetailsCard
-        clientName={appointment.client_name}
-        clientId={appointment.client_id}
-        clientHistory={clientHistory}
-        clientKey={clientKey}
-        nickname={nickname}
-      />
+      {appointment.client_id && (
+        <ClientDetailsCard
+          clientName={appointment.client_name}
+          clientId={appointment.client_id}
+          clientHistory={clientHistory}
+          nickname={nickname}
+        />
+      )}
 
       {/* 2. DATE & TIME - When is the appointment? */}
       <AppointmentDateTimeCard
@@ -110,13 +109,14 @@ export function AppointmentDetailsView({
       {hasClientNotes && <ClientNotesCard notes={appointment.client_notes!} />}
 
       {/* 4. YOUR NOTES - Creator's notes about this client */}
-      <CreatorNotesEditableCard
-        beautyPageId={beautyPageId}
-        nickname={nickname}
-        clientId={appointment.client_id}
-        clientPhone={appointment.client_phone}
-        initialNotes={creatorNotes}
-      />
+      {appointment.client_id && (
+        <CreatorNotesEditableCard
+          beautyPageId={beautyPageId}
+          nickname={nickname}
+          clientId={appointment.client_id}
+          initialNotes={creatorNotes}
+        />
+      )}
 
       {/* 5. SERVICES - What are they booking? */}
       <ServicesCard

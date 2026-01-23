@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
-import { getBeautyPageProfile } from "@/lib/queries/beauty-page-profile";
+import { getBeautyPageForViewer } from "@/lib/queries/beauty-page-viewer";
 import { getActiveBundles } from "@/lib/queries/bundles";
 import { getActivePromotions } from "@/lib/queries/promotions";
 import { PageHeader } from "@/lib/ui/page-header";
@@ -23,19 +23,25 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
   const tBooking = await getTranslations("booking");
   const tBookingDialog = await getTranslations("beauty_page.booking");
 
-  const profile = await getBeautyPageProfile(nickname);
+  // Get current user first (needed for ban check)
+  const currentUser = await getProfile();
 
-  if (!profile) {
+  // Fetch beauty page with ban check - single RPC call
+  // Returns "banned" if user is blocked, "not_found" if page doesn't exist
+  const result = await getBeautyPageForViewer(nickname, currentUser?.id ?? null);
+
+  // Both "banned" and "not_found" show 404 (don't reveal ban status)
+  if (result.type !== "success") {
     notFound();
   }
+
+  const profile = result.profile;
 
   // Fetch promotions and bundles for this beauty page
   const [promotions, bundles] = await Promise.all([
     getActivePromotions(profile.info.id),
     getActiveBundles(profile.info.id),
   ]);
-
-  const currentUser = await getProfile();
 
   // Check if current user is the owner of this beauty page
   const isOwner = currentUser?.id === profile.info.owner_id;

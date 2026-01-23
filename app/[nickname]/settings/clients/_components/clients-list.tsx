@@ -128,7 +128,7 @@ export function ClientsList({
         ) : (
           clients.map((client, index) => (
             <ClientRow
-              key={client.clientKey}
+              key={client.clientId}
               client={client}
               nickname={nickname}
               noBorder={index === clients.length - 1}

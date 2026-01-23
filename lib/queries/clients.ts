@@ -16,15 +16,11 @@ export interface BeautyPageClientsResult {
 }
 
 export interface BeautyPageClient {
-  /** URL-safe identifier (u_<uuid> for users, g_<base64> for guests) */
-  clientKey: string;
-  /** Null for guest clients */
-  clientId: string | null;
+  /** Client's user ID (always present since only authenticated users can book) */
+  clientId: string;
   clientName: string;
-  clientPhone: string;
   clientEmail: string | null;
-  /** True if client booked as guest (no account) */
-  isGuest: boolean;
+  avatarUrl: string | null;
   /** Number of completed appointments */
   totalVisits: number;
   /** Total revenue from this client in cents */
@@ -32,13 +28,19 @@ export interface BeautyPageClient {
   /** Currency code */
   currency: string;
   /** ISO date string of last completed appointment */
-  lastVisitDate: string;
+  lastVisitDate: string | null;
   /** ISO date string of first completed appointment */
-  firstVisitDate: string;
-  /** Top services booked by this client */
-  topServices: Array<{ serviceName: string; count: number }>;
-  /** Creator's private notes (null if no notes or table not created yet) */
+  firstVisitDate: string | null;
+  /** Number of no-shows */
+  noShowCount: number;
+  /** Creator's private notes (null if no notes) */
   creatorNotes: string | null;
+  /** When the client was blocked (null if not blocked) */
+  blockedAt: string | null;
+  /** When the block expires (null = permanent) */
+  blockedUntil: string | null;
+  /** When the client relationship was created */
+  createdAt: string;
 }
 
 export interface ClientAppointmentHistory {
@@ -75,48 +77,34 @@ export interface ClientDetails {
 }
 
 // ============================================================================
-// URL Encoding for Client Keys
+// RPC Response Types (from database)
 // ============================================================================
 
-/**
- * Encode client identifier for use in URLs
- * - Authenticated users: "u_<uuid>"
- * - Guests: "g_<base64url(phone)>"
- */
-export function encodeClientKey(
-  clientId: string | null,
-  clientPhone: string,
-): string {
-  if (clientId) {
-    return `u_${clientId}`;
-  }
-  // Use base64url encoding for phone (URL-safe)
-  return `g_${Buffer.from(normalizePhone(clientPhone)).toString("base64url")}`;
+interface GetBeautyPageClientsRow {
+  client_id: string;
+  full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  notes: string | null;
+  blocked_at: string | null;
+  blocked_until: string | null;
+  no_show_count: number;
+  total_visits: number;
+  total_spent_cents: number;
+  first_visit_at: string | null;
+  last_visit_at: string | null;
+  created_at: string;
 }
 
-/**
- * Decode client key back to identifier
- */
-export function decodeClientKey(key: string): {
-  clientId: string | null;
-  clientPhone: string | null;
-} {
-  if (key.startsWith("u_")) {
-    return { clientId: key.slice(2), clientPhone: null };
-  }
-  if (key.startsWith("g_")) {
-    const phone = Buffer.from(key.slice(2), "base64url").toString();
-    return { clientId: null, clientPhone: phone };
-  }
-  throw new Error(`Invalid client key format: ${key}`);
-}
-
-/**
- * Normalize phone number for consistent matching
- * Strips spaces, dashes, parentheses
- */
-function normalizePhone(phone: string): string {
-  return phone.replace(/[\s\-()]/g, "");
+interface GetBlockedClientsRow {
+  client_id: string;
+  full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  blocked_at: string;
+  blocked_until: string | null;
+  no_show_count: number;
+  notes: string | null;
 }
 
 // ============================================================================
@@ -124,8 +112,9 @@ function normalizePhone(phone: string): string {
 // ============================================================================
 
 /**
- * Get clients for a beauty page with aggregated stats and pagination
- * Clients are sorted alphabetically by name
+ * Get clients for a beauty page using RPC function
+ * Returns paginated list of clients with aggregated stats
+ * Blocked clients are excluded by default
  */
 export async function getBeautyPageClients(
   beautyPageId: string,
@@ -133,162 +122,99 @@ export async function getBeautyPageClients(
     search?: string;
     limit?: number;
     offset?: number;
+    includeBlocked?: boolean;
   },
 ): Promise<BeautyPageClientsResult> {
   const supabase = await createClient();
   const limit = options?.limit ?? CLIENTS_PAGE_SIZE;
   const offset = options?.offset ?? 0;
 
-  // Fetch all completed appointments for aggregation
-  // Note: We need all appointments to properly aggregate client data
-  // Pagination happens after aggregation
-  const { data: appointments, error } = await supabase
-    .from("appointments")
-    .select(
-      "client_id, client_name, client_phone, client_email, date, service_name, service_price_cents, service_currency, status",
-    )
-    .eq("beauty_page_id", beautyPageId)
-    .eq("status", "completed")
-    .order("date", { ascending: false });
+  const { data, error } = await supabase.rpc("get_beauty_page_clients", {
+    p_beauty_page_id: beautyPageId,
+    p_search: options?.search || null,
+    p_limit: limit + 1, // Fetch one extra to check hasMore
+    p_offset: offset,
+    p_include_blocked: options?.includeBlocked ?? false,
+  });
 
   if (error) {
-    console.error("Error fetching appointments for clients:", error);
+    console.error("Error fetching clients:", error);
     throw error;
   }
 
-  if (!appointments || appointments.length === 0) {
-    return { clients: [], total: 0, hasMore: false, pageSize: limit };
-  }
+  const rows = (data as GetBeautyPageClientsRow[]) || [];
+  const hasMore = rows.length > limit;
+  const clients = rows.slice(0, limit).map(mapRowToClient);
 
-  // Try to fetch creator notes (table may not exist yet)
-  const notesMap = new Map<string, string>();
-  try {
-    const { data: notes } = await supabase
-      .from("client_notes")
-      .select("client_id, client_phone, notes")
-      .eq("beauty_page_id", beautyPageId);
-
-    if (notes) {
-      for (const note of notes) {
-        const key = note.client_id
-          ? `u_${note.client_id}`
-          : `g_${normalizePhone(note.client_phone ?? "")}`;
-        notesMap.set(key, note.notes ?? "");
-      }
-    }
-  } catch {
-    // Table doesn't exist yet - that's okay
-  }
-
-  // Aggregate appointments by client
-  const clientMap = new Map<
-    string,
-    {
-      clientId: string | null;
-      clientName: string;
-      clientPhone: string;
-      clientEmail: string | null;
-      appointments: typeof appointments;
-    }
-  >();
-
-  for (const apt of appointments) {
-    // Use client_id if available, otherwise use normalized phone
-    const key = apt.client_id
-      ? `u_${apt.client_id}`
-      : `g_${normalizePhone(apt.client_phone)}`;
-
-    const existing = clientMap.get(key);
-    if (existing) {
-      existing.appointments.push(apt);
-      // Update name/email to latest (in case they changed)
-      existing.clientName = apt.client_name;
-      if (apt.client_email) {
-        existing.clientEmail = apt.client_email;
-      }
-    } else {
-      clientMap.set(key, {
-        clientId: apt.client_id,
-        clientName: apt.client_name,
-        clientPhone: apt.client_phone,
-        clientEmail: apt.client_email,
-        appointments: [apt],
-      });
-    }
-  }
-
-  // Build client list with aggregated data
-  let clients: BeautyPageClient[] = [];
-
-  for (const [key, data] of clientMap) {
-    const totalVisits = data.appointments.length;
-    const totalSpentCents = data.appointments.reduce(
-      (sum, a) => sum + a.service_price_cents,
-      0,
-    );
-
-    // Get dates (appointments are already sorted desc)
-    const lastVisitDate = data.appointments[0].date;
-    const firstVisitDate = data.appointments[data.appointments.length - 1].date;
-
-    // Get currency from first appointment
-    const currency = data.appointments[0].service_currency;
-
-    // Count services
-    const serviceCount = new Map<string, number>();
-    for (const apt of data.appointments) {
-      serviceCount.set(
-        apt.service_name,
-        (serviceCount.get(apt.service_name) ?? 0) + 1,
-      );
-    }
-    const topServices = Array.from(serviceCount.entries())
-      .map(([serviceName, count]) => ({ serviceName, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
-
-    clients.push({
-      clientKey: key,
-      clientId: data.clientId,
-      clientName: data.clientName,
-      clientPhone: data.clientPhone,
-      clientEmail: data.clientEmail,
-      isGuest: !data.clientId,
-      totalVisits,
-      totalSpentCents,
-      currency,
-      lastVisitDate,
-      firstVisitDate,
-      topServices,
-      creatorNotes: notesMap.get(key) ?? null,
-    });
-  }
-
-  // Apply search filter (server-side)
-  if (options?.search) {
-    const searchLower = options.search.toLowerCase();
-    clients = clients.filter(
-      (c) =>
-        c.clientName.toLowerCase().includes(searchLower) ||
-        c.clientPhone.includes(options.search!),
-    );
-  }
-
-  // Sort alphabetically by name (A-Z)
-  clients.sort((a, b) => a.clientName.localeCompare(b.clientName));
-
-  // Get total before pagination
-  const total = clients.length;
-
-  // Apply pagination
-  const paginatedClients = clients.slice(offset, offset + limit);
-  const hasMore = offset + limit < total;
+  // Get total count (separate query for accurate count)
+  const { count } = await supabase
+    .from("beauty_page_clients")
+    .select("*", { count: "exact", head: true })
+    .eq("beauty_page_id", beautyPageId)
+    .is("blocked_at", options?.includeBlocked ? undefined : null);
 
   return {
-    clients: paginatedClients,
-    total,
+    clients,
+    total: count ?? clients.length,
     hasMore,
     pageSize: limit,
+  };
+}
+
+/**
+ * Get blocked clients for a beauty page using RPC function
+ */
+export async function getBlockedClients(
+  beautyPageId: string,
+): Promise<BeautyPageClient[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc("get_blocked_clients", {
+    p_beauty_page_id: beautyPageId,
+  });
+
+  if (error) {
+    console.error("Error fetching blocked clients:", error);
+    throw error;
+  }
+
+  return ((data as GetBlockedClientsRow[]) || []).map((row) => ({
+    clientId: row.client_id,
+    clientName: row.full_name ?? "Unknown",
+    clientEmail: row.email,
+    avatarUrl: row.avatar_url,
+    totalVisits: 0,
+    totalSpentCents: 0,
+    currency: "UAH",
+    lastVisitDate: null,
+    firstVisitDate: null,
+    noShowCount: row.no_show_count,
+    creatorNotes: row.notes,
+    blockedAt: row.blocked_at,
+    blockedUntil: row.blocked_until,
+    createdAt: row.blocked_at,
+  }));
+}
+
+/**
+ * Map database row to BeautyPageClient
+ */
+function mapRowToClient(row: GetBeautyPageClientsRow): BeautyPageClient {
+  return {
+    clientId: row.client_id,
+    clientName: row.full_name ?? "Unknown",
+    clientEmail: row.email,
+    avatarUrl: row.avatar_url,
+    totalVisits: row.total_visits,
+    totalSpentCents: row.total_spent_cents,
+    currency: "UAH", // Default currency
+    lastVisitDate: row.last_visit_at,
+    firstVisitDate: row.first_visit_at,
+    noShowCount: row.no_show_count,
+    creatorNotes: row.notes,
+    blockedAt: row.blocked_at,
+    blockedUntil: row.blocked_until,
+    createdAt: row.created_at,
   };
 }
 
@@ -297,56 +223,55 @@ export async function getBeautyPageClients(
  */
 export async function getClientDetails(
   beautyPageId: string,
-  clientKey: string,
+  clientId: string,
 ): Promise<ClientDetails | null> {
   const supabase = await createClient();
-  const { clientId, clientPhone } = decodeClientKey(clientKey);
 
-  // Build query based on client type
-  let query = supabase
+  // Get client info from beauty_page_clients
+  const { data: clientData, error: clientError } = await supabase
+    .from("beauty_page_clients")
+    .select(
+      `
+      client_id,
+      notes,
+      blocked_at,
+      blocked_until,
+      no_show_count,
+      created_at,
+      profiles!inner (
+        id,
+        full_name,
+        email,
+        avatar_url
+      )
+    `,
+    )
+    .eq("beauty_page_id", beautyPageId)
+    .eq("client_id", clientId)
+    .single();
+
+  if (clientError || !clientData) {
+    console.error("Error fetching client:", clientError);
+    return null;
+  }
+
+  // Get all appointments for this client
+  const { data: appointments, error: appointmentsError } = await supabase
     .from("appointments")
     .select("*")
-    .eq("beauty_page_id", beautyPageId);
+    .eq("beauty_page_id", beautyPageId)
+    .eq("client_id", clientId)
+    .order("date", { ascending: false });
 
-  if (clientId) {
-    query = query.eq("client_id", clientId);
-  } else if (clientPhone) {
-    // For guests, match by normalized phone
-    // Note: This assumes phone numbers are stored consistently
-    query = query.eq("client_phone", clientPhone);
-  } else {
-    return null;
+  if (appointmentsError) {
+    console.error("Error fetching appointments:", appointmentsError);
+    throw appointmentsError;
   }
 
-  const { data: appointments, error } = await query.order("date", {
-    ascending: false,
-  });
-
-  if (error) {
-    console.error("Error fetching client details:", error);
-    throw error;
-  }
-
-  if (!appointments || appointments.length === 0) {
-    return null;
-  }
-
-  // Filter to completed only for stats
-  const completedAppointments = appointments.filter(
+  const allAppointments = appointments || [];
+  const completedAppointments = allAppointments.filter(
     (a) => a.status === "completed",
   );
-
-  // Get latest client info (from any appointment, not just completed)
-  const latestApt = appointments[0];
-
-  // For stats, use completed appointments if available, otherwise use defaults
-  const hasCompletedAppointments = completedAppointments.length > 0;
-  const latestCompleted = hasCompletedAppointments
-    ? completedAppointments[0]
-    : null;
-  const oldestCompleted = hasCompletedAppointments
-    ? completedAppointments[completedAppointments.length - 1]
-    : null;
 
   // Calculate totals
   const totalSpentCents = completedAppointments.reduce(
@@ -378,51 +303,47 @@ export async function getClientDetails(
     }))
     .sort((a, b) => b.count - a.count);
 
-  // Top services for the client object
-  const topServices = servicesBreakdown.slice(0, 3).map((s) => ({
-    serviceName: s.serviceName,
-    count: s.count,
-  }));
+  // Get dates
+  const lastVisitDate =
+    completedAppointments.length > 0 ? completedAppointments[0].date : null;
+  const firstVisitDate =
+    completedAppointments.length > 0
+      ? completedAppointments[completedAppointments.length - 1].date
+      : null;
 
-  // Try to get creator notes
-  let creatorNotes: string | null = null;
-  try {
-    let notesQuery = supabase
-      .from("client_notes")
-      .select("notes")
-      .eq("beauty_page_id", beautyPageId);
+  // Get currency from first completed appointment or default
+  const currency =
+    completedAppointments.length > 0
+      ? completedAppointments[0].service_currency
+      : "UAH";
 
-    if (clientId) {
-      notesQuery = notesQuery.eq("client_id", clientId);
-    } else if (clientPhone) {
-      notesQuery = notesQuery.eq("client_phone", clientPhone);
-    }
+  // Type assertion for nested profile data
+  const profile = clientData.profiles as unknown as {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  };
 
-    const { data: notesData } = await notesQuery.single();
-    creatorNotes = notesData?.notes ?? null;
-  } catch {
-    // Table doesn't exist yet
-  }
-
-  // Build client object
   const client: BeautyPageClient = {
-    clientKey,
-    clientId: latestApt.client_id,
-    clientName: latestApt.client_name,
-    clientPhone: latestApt.client_phone,
-    clientEmail: latestApt.client_email,
-    isGuest: !latestApt.client_id,
+    clientId: clientData.client_id,
+    clientName: profile.full_name ?? "Unknown",
+    clientEmail: profile.email,
+    avatarUrl: profile.avatar_url,
     totalVisits: completedAppointments.length,
     totalSpentCents,
-    currency: latestCompleted?.service_currency ?? latestApt.service_currency,
-    lastVisitDate: latestCompleted?.date ?? "",
-    firstVisitDate: oldestCompleted?.date ?? "",
-    topServices,
-    creatorNotes,
+    currency,
+    lastVisitDate,
+    firstVisitDate,
+    noShowCount: clientData.no_show_count,
+    creatorNotes: clientData.notes,
+    blockedAt: clientData.blocked_at,
+    blockedUntil: clientData.blocked_until,
+    createdAt: clientData.created_at,
   };
 
   // Map all appointments to history format
-  const appointmentHistory: ClientAppointmentHistory[] = appointments.map(
+  const appointmentHistory: ClientAppointmentHistory[] = allAppointments.map(
     (apt) => ({
       id: apt.id,
       date: apt.date,
@@ -485,11 +406,10 @@ export interface ServicePreferencesResult {
  */
 export async function getServicePreferencesPaginated(
   beautyPageId: string,
-  clientKey: string,
+  clientId: string,
   options?: ServicePreferencesOptions,
 ): Promise<ServicePreferencesResult> {
   const supabase = await createClient();
-  const { clientId, clientPhone } = decodeClientKey(clientKey);
 
   const search = options?.search?.trim().toLowerCase();
   const sort = options?.sort ?? "count";
@@ -497,22 +417,12 @@ export async function getServicePreferencesPaginated(
   const page = options?.page ?? 1;
   const pageSize = options?.pageSize ?? SERVICE_PREFERENCES_PAGE_SIZE;
 
-  // Build query based on client type
-  let query = supabase
+  const { data: appointments, error } = await supabase
     .from("appointments")
     .select("service_name, service_price_cents")
     .eq("beauty_page_id", beautyPageId)
+    .eq("client_id", clientId)
     .eq("status", "completed");
-
-  if (clientId) {
-    query = query.eq("client_id", clientId);
-  } else if (clientPhone) {
-    query = query.eq("client_phone", clientPhone);
-  } else {
-    return { services: [], total: 0, totalPages: 0, currentPage: 1 };
-  }
-
-  const { data: appointments, error } = await query;
 
   if (error) {
     console.error("Error fetching service preferences:", error);
@@ -678,11 +588,10 @@ function getPeriodDateRange(period: AppointmentsPeriod): {
  */
 export async function getAppointmentsPaginated(
   beautyPageId: string,
-  clientKey: string,
+  clientId: string,
   options?: AppointmentsOptions,
 ): Promise<AppointmentsResult> {
   const supabase = await createClient();
-  const { clientId, clientPhone } = decodeClientKey(clientKey);
 
   const sort = options?.sort ?? "date";
   const order = options?.order ?? "desc";
@@ -693,19 +602,12 @@ export async function getAppointmentsPaginated(
   // Calculate date range
   const { fromDate, toDate } = getPeriodDateRange(period);
 
-  // Build query based on client type
+  // Build query
   let query = supabase
     .from("appointments")
     .select("*")
-    .eq("beauty_page_id", beautyPageId);
-
-  if (clientId) {
-    query = query.eq("client_id", clientId);
-  } else if (clientPhone) {
-    query = query.eq("client_phone", clientPhone);
-  } else {
-    return { appointments: [], total: 0, totalPages: 0, currentPage: 1 };
-  }
+    .eq("beauty_page_id", beautyPageId)
+    .eq("client_id", clientId);
 
   // Apply date filters
   if (fromDate) {
@@ -783,32 +685,120 @@ export async function getAppointmentsPaginated(
 }
 
 // ============================================================================
-// Client Notes
+// Client Notes (using RPC)
 // ============================================================================
 
 /**
  * Get creator's notes for a specific client
- * Matches by client_id (if authenticated) or client_phone (if guest)
  */
 export async function getClientNotes(
   beautyPageId: string,
-  clientId: string | null,
-  clientPhone: string,
+  clientId: string,
 ): Promise<string | null> {
   const supabase = await createClient();
 
-  let query = supabase
-    .from("client_notes")
+  const { data } = await supabase
+    .from("beauty_page_clients")
     .select("notes")
-    .eq("beauty_page_id", beautyPageId);
-
-  if (clientId) {
-    query = query.eq("client_id", clientId);
-  } else {
-    query = query.eq("client_phone", clientPhone);
-  }
-
-  const { data } = await query.single();
+    .eq("beauty_page_id", beautyPageId)
+    .eq("client_id", clientId)
+    .single();
 
   return data?.notes ?? null;
+}
+
+/**
+ * Update creator's notes for a specific client
+ */
+export async function updateClientNotes(
+  beautyPageId: string,
+  clientId: string,
+  notes: string,
+): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("update_client_notes", {
+    p_beauty_page_id: beautyPageId,
+    p_client_id: clientId,
+    p_notes: notes,
+  });
+
+  if (error) {
+    console.error("Error updating client notes:", error);
+    return false;
+  }
+
+  return true;
+}
+
+// ============================================================================
+// Client Blocking (using RPC)
+// ============================================================================
+
+/**
+ * Check if a client is blocked
+ */
+export async function isClientBlocked(
+  beautyPageId: string,
+  clientId: string,
+): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc("is_client_blocked", {
+    p_beauty_page_id: beautyPageId,
+    p_client_id: clientId,
+  });
+
+  if (error) {
+    console.error("Error checking if client is blocked:", error);
+    return false;
+  }
+
+  return data ?? false;
+}
+
+/**
+ * Block a client
+ */
+export async function blockClient(
+  beautyPageId: string,
+  clientId: string,
+  blockedUntil?: string | null,
+): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("block_client", {
+    p_beauty_page_id: beautyPageId,
+    p_client_id: clientId,
+    p_blocked_until: blockedUntil ?? null,
+  });
+
+  if (error) {
+    console.error("Error blocking client:", error);
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Unblock a client
+ */
+export async function unblockClient(
+  beautyPageId: string,
+  clientId: string,
+): Promise<boolean> {
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("unblock_client", {
+    p_beauty_page_id: beautyPageId,
+    p_client_id: clientId,
+  });
+
+  if (error) {
+    console.error("Error unblocking client:", error);
+    return false;
+  }
+
+  return true;
 }

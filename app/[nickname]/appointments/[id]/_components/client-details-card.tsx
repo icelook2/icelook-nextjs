@@ -8,9 +8,8 @@ import { Paper } from "@/lib/ui/paper";
 
 interface ClientDetailsCardProps {
   clientName: string;
-  clientId: string | null;
+  clientId: string;
   clientHistory: ClientHistorySummary | null;
-  clientKey: string;
   nickname: string;
 }
 
@@ -18,12 +17,10 @@ export function ClientDetailsCard({
   clientName,
   clientId,
   clientHistory,
-  clientKey,
   nickname,
 }: ClientDetailsCardProps) {
   const totalVisits = clientHistory?.totalVisits ?? 0;
   const isNewClient = totalVisits === 0;
-  const isGuest = !clientId;
 
   // Build badges array
   const badges: string[] = [];
@@ -32,14 +29,11 @@ export function ClientDetailsCard({
   } else if (totalVisits > 0) {
     badges.push(`${totalVisits} visit${totalVisits !== 1 ? "s" : ""}`);
   }
-  if (isGuest) {
-    badges.push("Guest");
-  }
 
   return (
     <Paper className="p-4">
       <Link
-        href={`/${nickname}/settings/clients/${clientKey}`}
+        href={`/${nickname}/settings/clients/${clientId}`}
         className="flex items-center gap-3"
       >
         <Avatar name={clientName} size="md" />

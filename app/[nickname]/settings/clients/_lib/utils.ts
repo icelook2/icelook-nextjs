@@ -21,8 +21,13 @@ export function formatCurrency(
 
 /**
  * Format date for display
+ * Returns "-" for null/undefined dates
  */
-export function formatDate(dateString: string): string {
+export function formatDate(dateString: string | null | undefined): string {
+  if (!dateString) {
+    return "-";
+  }
+
   const date = new Date(dateString);
   return date.toLocaleDateString("en-GB", {
     day: "numeric",

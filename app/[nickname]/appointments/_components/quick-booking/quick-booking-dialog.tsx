@@ -173,11 +173,6 @@ export function QuickBookingDialog({
           ? state.selectedClient.clientName
           : "Guest";
 
-      const clientPhone =
-        state.clientMode === "existing" && state.selectedClient
-          ? state.selectedClient.clientPhone
-          : "";
-
       const clientId =
         state.clientMode === "existing" && state.selectedClient
           ? state.selectedClient.clientId
@@ -192,7 +187,6 @@ export function QuickBookingDialog({
         serviceIds: state.selectedServiceIds,
         clientId: clientId ?? undefined,
         clientName,
-        clientPhone: clientPhone || undefined,
         notes: state.notes || undefined,
       });
 
@@ -215,11 +209,6 @@ export function QuickBookingDialog({
     state.clientMode === "existing" && state.selectedClient
       ? state.selectedClient.clientName
       : "Guest";
-
-  const clientDisplayPhone =
-    state.clientMode === "existing" && state.selectedClient
-      ? state.selectedClient.clientPhone
-      : undefined;
 
   return (
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
@@ -306,7 +295,6 @@ export function QuickBookingDialog({
               startTime={slot.startTime}
               endTime={endTime}
               clientName={clientDisplayName}
-              clientPhone={clientDisplayPhone}
               selectedServices={selectedServices}
               totalPriceCents={totalPriceCents}
               currency={currency}

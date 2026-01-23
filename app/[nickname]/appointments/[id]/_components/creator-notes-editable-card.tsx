@@ -9,8 +9,7 @@ import { Paper } from "@/lib/ui/paper";
 interface CreatorNotesEditableCardProps {
   beautyPageId: string;
   nickname: string;
-  clientId: string | null;
-  clientPhone: string;
+  clientId: string;
   initialNotes: string | null;
 }
 
@@ -18,7 +17,6 @@ export function CreatorNotesEditableCard({
   beautyPageId,
   nickname,
   clientId,
-  clientPhone,
   initialNotes,
 }: CreatorNotesEditableCardProps) {
   const t = useTranslations("appointment_details.creator_notes");
@@ -50,7 +48,6 @@ export function CreatorNotesEditableCard({
           beautyPageId,
           nickname,
           clientId,
-          clientPhone,
           notes,
         });
 
@@ -74,7 +71,7 @@ export function CreatorNotesEditableCard({
         clearTimeout(debounceRef.current);
       }
     };
-  }, [notes, hasChanges, beautyPageId, nickname, clientId, clientPhone]);
+  }, [notes, hasChanges, beautyPageId, nickname, clientId]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {

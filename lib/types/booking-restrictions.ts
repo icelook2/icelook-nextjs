@@ -69,7 +69,7 @@ export interface BlockedClient {
 
 export type BookingRestrictionReason =
   | "blocked"
-  | "no_show_blocked"
+  | "not_authenticated"
   | "overlapping"
   | "max_future_reached"
   | "hourly_limit"
@@ -93,7 +93,6 @@ export interface BookingRestrictionCheckResult {
 
 export interface ClientIdentifier {
   clientId?: string | null;
-  clientPhone?: string | null;
   clientEmail?: string | null;
 }
 

@@ -5,16 +5,15 @@
  *
  * Allows creators to manage their client blocklist.
  * Blocked clients cannot book appointments with the beauty page.
+ * Uses the beauty_page_clients junction table for blocking.
  */
 
 import {
   blockClient,
   getBlockedClients,
-  getNoShowRecords,
-  resetNoShowCount,
   unblockClient,
-} from "@/lib/queries/booking-restrictions";
-import type { BlockedClient, ClientNoShow } from "@/lib/types/booking-restrictions";
+  type BeautyPageClient,
+} from "@/lib/queries/clients";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
@@ -27,24 +26,16 @@ interface ActionResult {
   error?: string;
 }
 
-interface BlockedClientWithInfo extends BlockedClient {
-  clientDisplayName: string;
-}
-
-interface NoShowRecordWithInfo extends ClientNoShow {
-  clientDisplayName: string;
-}
-
 // ============================================================================
 // Queries
 // ============================================================================
 
 /**
- * Get blocked clients for a beauty page with display names
+ * Get blocked clients for a beauty page
  */
 export async function getBlockedClientsForPage(
   beautyPageId: string,
-): Promise<BlockedClientWithInfo[]> {
+): Promise<BeautyPageClient[]> {
   const supabase = await createClient();
 
   // Verify the user owns this beauty page
@@ -66,49 +57,7 @@ export async function getBlockedClientsForPage(
     return [];
   }
 
-  const blockedClients = await getBlockedClients(beautyPageId);
-
-  // Enrich with display names
-  return blockedClients.map((client) => ({
-    ...client,
-    clientDisplayName: getClientDisplayName(client),
-  }));
-}
-
-/**
- * Get no-show records for a beauty page with display names
- */
-export async function getNoShowRecordsForPage(
-  beautyPageId: string,
-): Promise<NoShowRecordWithInfo[]> {
-  const supabase = await createClient();
-
-  // Verify the user owns this beauty page
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return [];
-  }
-
-  const { data: beautyPage } = await supabase
-    .from("beauty_pages")
-    .select("owner_id")
-    .eq("id", beautyPageId)
-    .single();
-
-  if (!beautyPage || beautyPage.owner_id !== user.id) {
-    return [];
-  }
-
-  const noShowRecords = await getNoShowRecords(beautyPageId);
-
-  // Enrich with display names
-  return noShowRecords.map((record) => ({
-    ...record,
-    clientDisplayName: getClientDisplayName(record),
-  }));
+  return getBlockedClients(beautyPageId);
 }
 
 // ============================================================================
@@ -117,12 +66,12 @@ export async function getNoShowRecordsForPage(
 
 /**
  * Block a client from booking
+ * Uses the block_client RPC function
  */
 export async function blockClientAction(
   beautyPageId: string,
-  clientPhone: string,
-  clientEmail: string | null,
-  reason?: string,
+  clientId: string,
+  blockedUntil?: string | null,
 ): Promise<ActionResult> {
   const supabase = await createClient();
 
@@ -145,40 +94,24 @@ export async function blockClientAction(
     return { success: false, error: "Not authorized" };
   }
 
-  // Look up client_id from appointments if they have booked before
-  const { data: existingAppointment } = await supabase
-    .from("appointments")
-    .select("client_id")
-    .eq("beauty_page_id", beautyPageId)
-    .eq("client_phone", clientPhone)
-    .not("client_id", "is", null)
-    .limit(1)
-    .single();
+  const success = await blockClient(beautyPageId, clientId, blockedUntil);
 
-  const result = await blockClient(
-    beautyPageId,
-    user.id,
-    {
-      clientId: existingAppointment?.client_id ?? undefined,
-      clientPhone,
-      clientEmail: clientEmail ?? undefined,
-    },
-    reason,
-  );
-
-  if (result.success) {
+  if (success) {
     revalidatePath(`/${beautyPage.slug}/settings/clients`);
+    revalidatePath(`/${beautyPage.slug}/settings/blocked-clients`);
+    return { success: true };
   }
 
-  return result;
+  return { success: false, error: "Failed to block client" };
 }
 
 /**
  * Unblock a client
+ * Uses the unblock_client RPC function
  */
 export async function unblockClientAction(
   beautyPageId: string,
-  clientPhone: string,
+  clientId: string,
 ): Promise<ActionResult> {
   const supabase = await createClient();
 
@@ -201,50 +134,15 @@ export async function unblockClientAction(
     return { success: false, error: "Not authorized" };
   }
 
-  const result = await unblockClient(beautyPageId, { clientPhone });
+  const success = await unblockClient(beautyPageId, clientId);
 
-  if (result.success) {
+  if (success) {
     revalidatePath(`/${beautyPage.slug}/settings/clients`);
+    revalidatePath(`/${beautyPage.slug}/settings/blocked-clients`);
+    return { success: true };
   }
 
-  return result;
-}
-
-/**
- * Reset no-show count for a client (forgive them)
- */
-export async function resetNoShowCountAction(
-  beautyPageId: string,
-  clientPhone: string,
-): Promise<ActionResult> {
-  const supabase = await createClient();
-
-  // Verify the user owns this beauty page
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { success: false, error: "Not authenticated" };
-  }
-
-  const { data: beautyPage } = await supabase
-    .from("beauty_pages")
-    .select("owner_id, slug")
-    .eq("id", beautyPageId)
-    .single();
-
-  if (!beautyPage || beautyPage.owner_id !== user.id) {
-    return { success: false, error: "Not authorized" };
-  }
-
-  const result = await resetNoShowCount(beautyPageId, { clientPhone });
-
-  if (result.success) {
-    revalidatePath(`/${beautyPage.slug}/settings/clients`);
-  }
-
-  return result;
+  return { success: false, error: "Failed to unblock client" };
 }
 
 /**
@@ -252,7 +150,7 @@ export async function resetNoShowCountAction(
  */
 export async function blockClientFromAppointment(
   appointmentId: string,
-  reason?: string,
+  blockedUntil?: string | null,
 ): Promise<ActionResult> {
   const supabase = await createClient();
 
@@ -271,8 +169,6 @@ export async function blockClientFromAppointment(
     .select(`
       id,
       client_id,
-      client_phone,
-      client_email,
       beauty_page_id,
       beauty_pages!inner(owner_id, slug)
     `)
@@ -281,6 +177,10 @@ export async function blockClientFromAppointment(
 
   if (!appointment) {
     return { success: false, error: "Appointment not found" };
+  }
+
+  if (!appointment.client_id) {
+    return { success: false, error: "No client associated with this appointment" };
   }
 
   const beautyPageData = appointment.beauty_pages as unknown as {
@@ -292,38 +192,18 @@ export async function blockClientFromAppointment(
     return { success: false, error: "Not authorized" };
   }
 
-  const result = await blockClient(
+  const success = await blockClient(
     appointment.beauty_page_id,
-    user.id,
-    {
-      clientId: appointment.client_id ?? undefined,
-      clientPhone: appointment.client_phone ?? undefined,
-      clientEmail: appointment.client_email ?? undefined,
-    },
-    reason,
+    appointment.client_id,
+    blockedUntil,
   );
 
-  if (result.success) {
+  if (success) {
     revalidatePath(`/${beautyPageData.slug}/settings/clients`);
+    revalidatePath(`/${beautyPageData.slug}/settings/blocked-clients`);
     revalidatePath(`/${beautyPageData.slug}/appointments`);
+    return { success: true };
   }
 
-  return result;
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function getClientDisplayName(
-  client: Pick<BlockedClient | ClientNoShow, "client_phone" | "client_email">,
-): string {
-  if (client.client_phone) {
-    // Format phone for display
-    return client.client_phone;
-  }
-  if (client.client_email) {
-    return client.client_email;
-  }
-  return "Unknown client";
+  return { success: false, error: "Failed to block client" };
 }

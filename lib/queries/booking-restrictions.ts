@@ -1,10 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import type {
-  BlockedClient,
   BookingRestrictionCheckResult,
   BookingRestrictionDefaults,
   ClientIdentifier,
-  ClientNoShow,
 } from "@/lib/types/booking-restrictions";
 
 // ============================================================================
@@ -59,12 +57,11 @@ export async function getBookingRestrictionDefaults(): Promise<BookingRestrictio
  * This is the main function called before creating a booking.
  *
  * Checks:
- * 1. Manual blocklist
- * 2. No-show blocks
- * 3. Overlapping appointments (across all beauty pages)
- * 4. Max future appointments
- * 5. Hourly/daily velocity limits
- * 6. Cooldown between bookings
+ * 1. Client blocklist (via beauty_page_clients)
+ * 2. Overlapping appointments (across all beauty pages)
+ * 3. Max future appointments
+ * 4. Hourly/daily velocity limits
+ * 5. Cooldown between bookings
  */
 export async function checkBookingRestrictions(
   beautyPageId: string,
@@ -76,38 +73,25 @@ export async function checkBookingRestrictions(
   const supabase = await createClient();
   const defaults = await getBookingRestrictionDefaults();
 
-  // Build client identifier conditions for queries
-  const clientConditions = buildClientConditions(client);
-
-  if (!clientConditions.hasIdentifier) {
-    // No client identifier - allow booking (will be tracked by phone after creation)
-    return { allowed: true };
+  // Only authenticated users can book - must have clientId
+  if (!client.clientId) {
+    return {
+      allowed: false,
+      reason: "not_authenticated",
+      message: "You must be logged in to book an appointment",
+    };
   }
 
-  // 1. Check manual blocklist
-  const blocklistResult = await checkBlocklist(
-    supabase,
-    beautyPageId,
-    clientConditions,
-  );
-  if (!blocklistResult.allowed) {
-    return blocklistResult;
+  // 1. Check if client is blocked (using RPC function)
+  const blockResult = await checkClientBlocked(supabase, beautyPageId, client.clientId);
+  if (!blockResult.allowed) {
+    return blockResult;
   }
 
-  // 2. Check no-show blocks
-  const noShowResult = await checkNoShowBlock(
-    supabase,
-    beautyPageId,
-    clientConditions,
-  );
-  if (!noShowResult.allowed) {
-    return noShowResult;
-  }
-
-  // 3. Check overlapping appointments
+  // 2. Check overlapping appointments
   const overlapResult = await checkOverlappingAppointments(
     supabase,
-    clientConditions,
+    client.clientId,
     appointmentDate,
     startTime,
     endTime,
@@ -116,20 +100,20 @@ export async function checkBookingRestrictions(
     return overlapResult;
   }
 
-  // 4. Check max future appointments
+  // 3. Check max future appointments
   const futureResult = await checkMaxFutureAppointments(
     supabase,
-    clientConditions,
+    client.clientId,
     defaults.max_future_appointments,
   );
   if (!futureResult.allowed) {
     return futureResult;
   }
 
-  // 5. Check velocity limits
+  // 4. Check velocity limits
   const velocityResult = await checkVelocityLimits(
     supabase,
-    clientConditions,
+    client.clientId,
     defaults.max_bookings_per_hour,
     defaults.max_bookings_per_day,
     defaults.booking_cooldown_seconds,
@@ -145,121 +129,27 @@ export async function checkBookingRestrictions(
 // Individual Check Functions
 // ============================================================================
 
-interface ClientConditions {
-  hasIdentifier: boolean;
-  clientId: string | null;
-  clientPhone: string | null;
-  clientEmail: string | null;
-}
-
-function buildClientConditions(client: ClientIdentifier): ClientConditions {
-  return {
-    hasIdentifier: !!(client.clientId || client.clientPhone || client.clientEmail),
-    clientId: client.clientId ?? null,
-    clientPhone: client.clientPhone ?? null,
-    clientEmail: client.clientEmail ?? null,
-  };
-}
-
-async function checkBlocklist(
+async function checkClientBlocked(
   supabase: Awaited<ReturnType<typeof createClient>>,
   beautyPageId: string,
-  client: ClientConditions,
+  clientId: string,
 ): Promise<BookingRestrictionCheckResult> {
   try {
-    let query = supabase
-      .from("blocked_clients")
-      .select("id")
-      .eq("beauty_page_id", beautyPageId);
-
-    // Build OR conditions for client identifiers
-    const orConditions: string[] = [];
-    if (client.clientId) {
-      orConditions.push(`client_id.eq.${client.clientId}`);
-    }
-    if (client.clientPhone) {
-      orConditions.push(`client_phone.eq.${client.clientPhone}`);
-    }
-    if (client.clientEmail) {
-      orConditions.push(`client_email.eq.${client.clientEmail}`);
-    }
-
-    if (orConditions.length > 0) {
-      query = query.or(orConditions.join(","));
-    }
-
-    const { data, error } = await query.limit(1);
+    const { data, error } = await supabase.rpc("is_client_blocked", {
+      p_beauty_page_id: beautyPageId,
+      p_client_id: clientId,
+    });
 
     if (error) {
-      // Table might not exist yet - allow booking
-      console.warn("Error checking blocklist:", error);
+      console.warn("Error checking if client is blocked:", error);
       return { allowed: true };
     }
 
-    if (data && data.length > 0) {
+    if (data === true) {
       return {
         allowed: false,
         reason: "blocked",
         message: "You are not able to book appointments with this specialist",
-      };
-    }
-
-    return { allowed: true };
-  } catch {
-    // Table doesn't exist - allow booking
-    return { allowed: true };
-  }
-}
-
-async function checkNoShowBlock(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  beautyPageId: string,
-  client: ClientConditions,
-): Promise<BookingRestrictionCheckResult> {
-  try {
-    let query = supabase
-      .from("client_no_shows")
-      .select("is_blocked, blocked_until")
-      .eq("beauty_page_id", beautyPageId)
-      .eq("is_blocked", true);
-
-    // Build OR conditions
-    const orConditions: string[] = [];
-    if (client.clientId) {
-      orConditions.push(`client_id.eq.${client.clientId}`);
-    }
-    if (client.clientPhone) {
-      orConditions.push(`client_phone.eq.${client.clientPhone}`);
-    }
-
-    if (orConditions.length > 0) {
-      query = query.or(orConditions.join(","));
-    }
-
-    const { data, error } = await query.limit(1);
-
-    if (error) {
-      console.warn("Error checking no-show block:", error);
-      return { allowed: true };
-    }
-
-    if (data && data.length > 0) {
-      const record = data[0] as ClientNoShow;
-
-      // Check if block has expired
-      if (record.blocked_until) {
-        const blockedUntil = new Date(record.blocked_until);
-        if (blockedUntil <= new Date()) {
-          // Block expired - allow booking
-          return { allowed: true };
-        }
-      }
-
-      return {
-        allowed: false,
-        reason: "no_show_blocked",
-        message: "Booking temporarily restricted due to missed appointments",
-        blocked_until: record.blocked_until ?? undefined,
       };
     }
 
@@ -271,38 +161,21 @@ async function checkNoShowBlock(
 
 async function checkOverlappingAppointments(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  client: ClientConditions,
+  clientId: string,
   appointmentDate: string,
   startTime: string,
   endTime: string,
 ): Promise<BookingRestrictionCheckResult> {
   // Query for overlapping appointments across ALL beauty pages
-  let query = supabase
+  const { data: appointments, error } = await supabase
     .from("appointments")
     .select("id, start_time, end_time, beauty_page_id")
     .eq("date", appointmentDate)
+    .eq("client_id", clientId)
     .in("status", ["pending", "confirmed"]);
-
-  // Build OR conditions for client
-  const orConditions: string[] = [];
-  if (client.clientId) {
-    orConditions.push(`client_id.eq.${client.clientId}`);
-  }
-  if (client.clientPhone) {
-    orConditions.push(`client_phone.eq.${client.clientPhone}`);
-  }
-
-  if (orConditions.length === 0) {
-    return { allowed: true };
-  }
-
-  query = query.or(orConditions.join(","));
-
-  const { data: appointments, error } = await query;
 
   if (error) {
     console.error("Error checking overlapping appointments:", error);
-    // Err on side of caution - but don't block if query fails
     return { allowed: true };
   }
 
@@ -334,33 +207,17 @@ async function checkOverlappingAppointments(
 
 async function checkMaxFutureAppointments(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  client: ClientConditions,
+  clientId: string,
   maxFuture: number,
 ): Promise<BookingRestrictionCheckResult> {
   const today = new Date().toISOString().split("T")[0];
 
-  let query = supabase
+  const { count, error } = await supabase
     .from("appointments")
     .select("id", { count: "exact", head: true })
+    .eq("client_id", clientId)
     .in("status", ["pending", "confirmed"])
     .gte("date", today);
-
-  // Build OR conditions
-  const orConditions: string[] = [];
-  if (client.clientId) {
-    orConditions.push(`client_id.eq.${client.clientId}`);
-  }
-  if (client.clientPhone) {
-    orConditions.push(`client_phone.eq.${client.clientPhone}`);
-  }
-
-  if (orConditions.length === 0) {
-    return { allowed: true };
-  }
-
-  query = query.or(orConditions.join(","));
-
-  const { count, error } = await query;
 
   if (error) {
     console.error("Error checking future appointments:", error);
@@ -384,7 +241,7 @@ async function checkMaxFutureAppointments(
 
 async function checkVelocityLimits(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  client: ClientConditions,
+  clientId: string,
   maxPerHour: number,
   maxPerDay: number,
   cooldownSeconds: number,
@@ -393,25 +250,12 @@ async function checkVelocityLimits(
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
 
-  // Build OR conditions
-  const orConditions: string[] = [];
-  if (client.clientId) {
-    orConditions.push(`client_id.eq.${client.clientId}`);
-  }
-  if (client.clientPhone) {
-    orConditions.push(`client_phone.eq.${client.clientPhone}`);
-  }
-
-  if (orConditions.length === 0) {
-    return { allowed: true };
-  }
-
   // Get recent appointments for velocity checks
   const { data: recentAppointments, error } = await supabase
     .from("appointments")
     .select("created_at")
+    .eq("client_id", clientId)
     .gte("created_at", oneDayAgo)
-    .or(orConditions.join(","))
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -465,163 +309,6 @@ async function checkVelocityLimits(
   }
 
   return { allowed: true };
-}
-
-// ============================================================================
-// Blocklist Management
-// ============================================================================
-
-/**
- * Add a client to the blocklist
- */
-export async function blockClient(
-  beautyPageId: string,
-  blockedBy: string,
-  client: ClientIdentifier,
-  reason?: string,
-): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
-
-  const { error } = await supabase.from("blocked_clients").insert({
-    beauty_page_id: beautyPageId,
-    blocked_by: blockedBy,
-    client_id: client.clientId ?? null,
-    client_phone: client.clientPhone ?? null,
-    client_email: client.clientEmail ?? null,
-    reason: reason ?? null,
-  });
-
-  if (error) {
-    if (error.code === "23505") {
-      // Unique violation - already blocked
-      return { success: true };
-    }
-    console.error("Error blocking client:", error);
-    return { success: false, error: "Failed to block client" };
-  }
-
-  return { success: true };
-}
-
-/**
- * Remove a client from the blocklist
- */
-export async function unblockClient(
-  beautyPageId: string,
-  client: ClientIdentifier,
-): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
-
-  let query = supabase
-    .from("blocked_clients")
-    .delete()
-    .eq("beauty_page_id", beautyPageId);
-
-  if (client.clientId) {
-    query = query.eq("client_id", client.clientId);
-  } else if (client.clientPhone) {
-    query = query.eq("client_phone", client.clientPhone);
-  } else if (client.clientEmail) {
-    query = query.eq("client_email", client.clientEmail);
-  } else {
-    return { success: false, error: "No client identifier provided" };
-  }
-
-  const { error } = await query;
-
-  if (error) {
-    console.error("Error unblocking client:", error);
-    return { success: false, error: "Failed to unblock client" };
-  }
-
-  return { success: true };
-}
-
-/**
- * Get all blocked clients for a beauty page
- */
-export async function getBlockedClients(
-  beautyPageId: string,
-): Promise<BlockedClient[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("blocked_clients")
-    .select("*")
-    .eq("beauty_page_id", beautyPageId)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching blocked clients:", error);
-    return [];
-  }
-
-  return (data ?? []) as BlockedClient[];
-}
-
-// ============================================================================
-// No-Show Management
-// ============================================================================
-
-/**
- * Get no-show records for a beauty page
- */
-export async function getNoShowRecords(
-  beautyPageId: string,
-): Promise<ClientNoShow[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("client_no_shows")
-    .select("*")
-    .eq("beauty_page_id", beautyPageId)
-    .gt("no_show_count", 0)
-    .order("no_show_count", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching no-show records:", error);
-    return [];
-  }
-
-  return (data ?? []) as ClientNoShow[];
-}
-
-/**
- * Reset no-show count for a client (forgive them)
- */
-export async function resetNoShowCount(
-  beautyPageId: string,
-  client: ClientIdentifier,
-): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
-
-  let query = supabase
-    .from("client_no_shows")
-    .update({
-      no_show_count: 0,
-      is_blocked: false,
-      blocked_at: null,
-      blocked_until: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("beauty_page_id", beautyPageId);
-
-  if (client.clientId) {
-    query = query.eq("client_id", client.clientId);
-  } else if (client.clientPhone) {
-    query = query.eq("client_phone", client.clientPhone);
-  } else {
-    return { success: false, error: "No client identifier provided" };
-  }
-
-  const { error } = await query;
-
-  if (error) {
-    console.error("Error resetting no-show count:", error);
-    return { success: false, error: "Failed to reset no-show count" };
-  }
-
-  return { success: true };
 }
 
 // ============================================================================

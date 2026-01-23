@@ -26,7 +26,6 @@ export interface LastAppointment {
   end_time: string;
   status: AppointmentStatus;
   client_name: string;
-  client_phone: string;
   service_name: string;
   service_price_cents: number;
   service_currency: string;
@@ -90,35 +89,27 @@ export async function getAppointmentById(
 
 /**
  * Get summarized client history for showing on appointment details page
- * Matches client by client_id (if authenticated) or normalized phone (if guest)
+ * Matches client by client_id (all clients are authenticated)
  */
 export async function getClientHistoryForAppointment(
   beautyPageId: string,
   clientId: string | null,
-  clientPhone: string,
 ): Promise<ClientHistorySummary | null> {
-  const supabase = await createClient();
-
-  // Build query to match client
-  let query = supabase
-    .from("appointments")
-    .select(
-      "id, date, start_time, end_time, status, client_name, client_phone, service_name, service_price_cents, service_currency",
-    )
-    .eq("beauty_page_id", beautyPageId)
-    .eq("status", "completed");
-
-  if (clientId) {
-    // Authenticated client - match by ID
-    query = query.eq("client_id", clientId);
-  } else {
-    // Guest client - match by phone
-    query = query.eq("client_phone", clientPhone);
+  if (!clientId) {
+    return null;
   }
 
-  const { data: appointments, error } = await query.order("date", {
-    ascending: false,
-  });
+  const supabase = await createClient();
+
+  const { data: appointments, error } = await supabase
+    .from("appointments")
+    .select(
+      "id, date, start_time, end_time, status, client_name, service_name, service_price_cents, service_currency",
+    )
+    .eq("beauty_page_id", beautyPageId)
+    .eq("status", "completed")
+    .eq("client_id", clientId)
+    .order("date", { ascending: false });
 
   if (error) {
     console.error("Error fetching client history:", error);
@@ -146,7 +137,6 @@ export async function getClientHistoryForAppointment(
     end_time: last.end_time,
     status: last.status,
     client_name: last.client_name,
-    client_phone: last.client_phone,
     service_name: last.service_name,
     service_price_cents: last.service_price_cents,
     service_currency: last.service_currency,

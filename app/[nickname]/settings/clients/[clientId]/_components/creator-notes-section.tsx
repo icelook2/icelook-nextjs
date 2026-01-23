@@ -9,8 +9,7 @@ import { upsertClientNotes } from "../../_actions/clients.actions";
 interface CreatorNotesSectionProps {
   beautyPageId: string;
   nickname: string;
-  clientId: string | null;
-  clientPhone: string;
+  clientId: string;
   initialNotes: string | null;
 }
 
@@ -18,7 +17,6 @@ export function CreatorNotesSection({
   beautyPageId,
   nickname,
   clientId,
-  clientPhone,
   initialNotes,
 }: CreatorNotesSectionProps) {
   const t = useTranslations("clients.notes");
@@ -47,7 +45,6 @@ export function CreatorNotesSection({
           beautyPageId,
           nickname,
           clientId,
-          clientPhone,
           notes,
         });
 
@@ -71,7 +68,7 @@ export function CreatorNotesSection({
         clearTimeout(debounceRef.current);
       }
     };
-  }, [notes, hasChanges, beautyPageId, nickname, clientId, clientPhone]);
+  }, [notes, hasChanges, beautyPageId, nickname, clientId]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {

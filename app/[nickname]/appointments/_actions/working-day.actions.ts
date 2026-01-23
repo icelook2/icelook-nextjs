@@ -300,7 +300,6 @@ export interface DayOffAppointment {
   endTime: string;
   status: "pending" | "confirmed";
   clientName: string;
-  clientPhone: string | null;
   serviceName: string;
   serviceDurationMinutes: number;
 }
@@ -318,7 +317,7 @@ export async function getAppointmentsForWorkingDay(input: {
   const { data, error } = await supabase
     .from("appointments")
     .select(
-      "id, date, start_time, end_time, status, client_name, client_phone, service_name, service_duration_minutes",
+      "id, date, start_time, end_time, status, client_name, service_name, service_duration_minutes",
     )
     .eq("beauty_page_id", input.beautyPageId)
     .eq("date", input.date)
@@ -337,7 +336,6 @@ export async function getAppointmentsForWorkingDay(input: {
     endTime: apt.end_time,
     status: apt.status as "pending" | "confirmed",
     clientName: apt.client_name,
-    clientPhone: apt.client_phone,
     serviceName: apt.service_name,
     serviceDurationMinutes: apt.service_duration_minutes,
   }));

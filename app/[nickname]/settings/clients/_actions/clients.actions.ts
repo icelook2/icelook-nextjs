@@ -5,14 +5,12 @@ import { z } from "zod";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageByNickname, getBeautyPageClients } from "@/lib/queries";
 import type { BeautyPageClientsResult } from "@/lib/queries/clients";
-import { CLIENTS_PAGE_SIZE } from "@/lib/queries/clients";
-import { createClient } from "@/lib/supabase/server";
+import { CLIENTS_PAGE_SIZE, updateClientNotes } from "@/lib/queries/clients";
 
 const upsertClientNotesSchema = z.object({
   beautyPageId: z.string().uuid(),
   nickname: z.string(),
-  clientId: z.string().uuid().nullable(),
-  clientPhone: z.string().min(1),
+  clientId: z.string().uuid(),
   notes: z.string().max(5000),
 });
 
@@ -41,82 +39,15 @@ export async function upsertClientNotes(
       return { success: false, error: "Invalid beauty page" };
     }
 
-    const supabase = await createClient();
+    // Update notes using RPC function
+    const success = await updateClientNotes(
+      validated.beautyPageId,
+      validated.clientId,
+      validated.notes,
+    );
 
-    // Save notes using select-then-update/insert approach
-    // This is more reliable than upsert with partial unique indexes
-    if (validated.clientId) {
-      // Authenticated client - use client_id
-      const { data: existing } = await supabase
-        .from("client_notes")
-        .select("id")
-        .eq("beauty_page_id", validated.beautyPageId)
-        .eq("client_id", validated.clientId)
-        .single();
-
-      if (existing) {
-        // Update existing note
-        const { error } = await supabase
-          .from("client_notes")
-          .update({
-            notes: validated.notes,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", existing.id);
-
-        if (error) {
-          console.error("Error updating client notes:", error);
-          return { success: false, error: "Failed to save notes" };
-        }
-      } else {
-        // Insert new note
-        const { error } = await supabase.from("client_notes").insert({
-          beauty_page_id: validated.beautyPageId,
-          client_id: validated.clientId,
-          notes: validated.notes,
-        });
-
-        if (error) {
-          console.error("Error inserting client notes:", error);
-          return { success: false, error: "Failed to save notes" };
-        }
-      }
-    } else {
-      // Guest client - use client_phone
-      const { data: existing } = await supabase
-        .from("client_notes")
-        .select("id")
-        .eq("beauty_page_id", validated.beautyPageId)
-        .eq("client_phone", validated.clientPhone)
-        .single();
-
-      if (existing) {
-        // Update existing note
-        const { error } = await supabase
-          .from("client_notes")
-          .update({
-            notes: validated.notes,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", existing.id);
-
-        if (error) {
-          console.error("Error updating client notes:", error);
-          return { success: false, error: "Failed to save notes" };
-        }
-      } else {
-        // Insert new note
-        const { error } = await supabase.from("client_notes").insert({
-          beauty_page_id: validated.beautyPageId,
-          client_phone: validated.clientPhone,
-          notes: validated.notes,
-        });
-
-        if (error) {
-          console.error("Error inserting client notes:", error);
-          return { success: false, error: "Failed to save notes" };
-        }
-      }
+    if (!success) {
+      return { success: false, error: "Failed to save notes" };
     }
 
     // Revalidate the client detail page

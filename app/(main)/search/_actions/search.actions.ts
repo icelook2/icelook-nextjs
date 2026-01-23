@@ -1,5 +1,6 @@
 "use server";
 
+import { getProfile } from "@/lib/auth/session";
 import {
   type BeautyPageSearchResult,
   SEARCH_PAGE_SIZE,
@@ -18,6 +19,8 @@ type SearchResult =
  * Server action for searching beauty pages.
  * Called from the client-side search component with debouncing.
  *
+ * Automatically filters out beauty pages where the current user is banned.
+ *
  * @param query - Search query (minimum 2 characters)
  * @param offset - Number of results to skip (for pagination)
  * @returns Search results with pagination info or error
@@ -32,9 +35,13 @@ export async function searchAction(
   }
 
   try {
+    // Get current user for ban filtering
+    const currentUser = await getProfile();
+
     const { results, hasMore } = await searchBeautyPages(query, {
       offset,
       limit: SEARCH_PAGE_SIZE,
+      viewerId: currentUser?.id ?? null,
     });
     return { success: true, results, hasMore };
   } catch (error) {
