@@ -60,7 +60,7 @@ export default async function ResourcesSettingsPage({
             emptyTitle: t("empty_title"),
             emptyDescription: t("empty_description"),
             deleteConfirmTitle: t("delete_confirm_title"),
-            deleteConfirmDescription: t("delete_confirm_description"),
+            deleteConfirmDescription: t.raw("delete_confirm_description"),
             deleteConfirmButton: t("delete_confirm_button"),
             cancel: t("cancel"),
             resourceName: t("resource_name"),

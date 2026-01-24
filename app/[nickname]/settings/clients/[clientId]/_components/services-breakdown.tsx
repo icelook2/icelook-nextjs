@@ -12,15 +12,20 @@ interface ServicesBreakdownProps {
   details: ClientDetails;
   nickname: string;
   clientId: string;
+  /** Base path for service links (defaults to /nickname/settings/clients/clientId) */
+  basePath?: string;
 }
 
 export function ServicesBreakdown({
   details,
   nickname,
   clientId,
+  basePath,
 }: ServicesBreakdownProps) {
   const t = useTranslations("clients.services");
   const { servicesBreakdown, client } = details;
+  const effectiveBasePath =
+    basePath ?? `/${nickname}/settings/clients/${clientId}`;
 
   if (servicesBreakdown.length === 0) {
     return null;
@@ -66,7 +71,7 @@ export function ServicesBreakdown({
           {displayedServices.map((service) => (
             <Link
               key={service.serviceName}
-              href={`/${nickname}/settings/clients/${clientId}/services/${encodeURIComponent(service.serviceName)}`}
+              href={`${effectiveBasePath}/services/${encodeURIComponent(service.serviceName)}`}
               className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-muted"
             >
               {/* Service Icon */}
@@ -97,7 +102,7 @@ export function ServicesBreakdown({
           {/* Show All Link */}
           {hasMore && (
             <Link
-              href={`/${nickname}/settings/clients/${clientId}/services`}
+              href={`${effectiveBasePath}/services`}
               className="flex items-center justify-center gap-1 px-4 py-3 text-sm text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
             >
               {t("show_all")}

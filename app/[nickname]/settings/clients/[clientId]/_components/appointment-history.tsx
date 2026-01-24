@@ -20,6 +20,8 @@ interface AppointmentHistoryProps {
   appointments: ClientAppointmentHistory[];
   nickname: string;
   clientId: string;
+  /** Base path for the "Show All" link (defaults to /nickname/settings/clients/clientId) */
+  basePath?: string;
 }
 
 const STATUS_CONFIG: Record<
@@ -57,8 +59,11 @@ export function AppointmentHistory({
   appointments,
   nickname,
   clientId,
+  basePath,
 }: AppointmentHistoryProps) {
   const t = useTranslations("clients.history");
+  const effectiveBasePath =
+    basePath ?? `/${nickname}/settings/clients/${clientId}`;
 
   if (appointments.length === 0) {
     return null;
@@ -148,7 +153,7 @@ export function AppointmentHistory({
           {/* Show All Link */}
           {hasMore && (
             <Link
-              href={`/${nickname}/settings/clients/${clientId}/appointments`}
+              href={`${effectiveBasePath}/appointments`}
               className="flex items-center justify-center gap-1 px-4 py-3 text-sm text-muted transition-colors hover:bg-surface-muted hover:text-foreground"
             >
               {t("show_all")}

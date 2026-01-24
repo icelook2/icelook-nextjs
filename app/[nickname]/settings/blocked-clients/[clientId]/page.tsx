@@ -1,20 +1,20 @@
 import { ClientDetailContent } from "../../_shared/client-detail-content";
 
-interface ClientDetailPageProps {
+interface BlockedClientDetailPageProps {
   params: Promise<{ nickname: string; clientId: string }>;
 }
 
-export default async function ClientDetailPage({
+export default async function BlockedClientDetailPage({
   params,
-}: ClientDetailPageProps) {
+}: BlockedClientDetailPageProps) {
   const { nickname, clientId } = await params;
 
   return (
     <ClientDetailContent
       nickname={nickname}
       clientId={clientId}
-      backHref={`/${nickname}/settings/clients`}
-      basePath={`/${nickname}/settings/clients/${clientId}`}
+      backHref={`/${nickname}/settings/blocked-clients`}
+      basePath={`/${nickname}/settings/blocked-clients/${clientId}`}
     />
   );
 }

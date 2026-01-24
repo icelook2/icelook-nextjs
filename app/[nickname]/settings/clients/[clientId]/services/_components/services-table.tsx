@@ -20,6 +20,8 @@ interface ServicesTableProps {
   sort: ServicePreferencesSortField;
   order: SortOrder;
   search: string;
+  /** Base path for service detail links (defaults to /nickname/settings/clients/clientId) */
+  basePath?: string;
 }
 
 export function ServicesTable({
@@ -30,7 +32,10 @@ export function ServicesTable({
   sort,
   order,
   search,
+  basePath,
 }: ServicesTableProps) {
+  const effectiveBasePath =
+    basePath ?? `/${nickname}/settings/clients/${clientId}`;
   const t = useTranslations("clients.services_page");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -121,7 +126,7 @@ export function ServicesTable({
         {services.map((service) => (
           <Link
             key={service.serviceName}
-            href={`/${nickname}/settings/clients/${clientId}/services/${encodeURIComponent(service.serviceName)}`}
+            href={`${effectiveBasePath}/services/${encodeURIComponent(service.serviceName)}`}
             className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-muted"
           >
             {/* Service Icon */}

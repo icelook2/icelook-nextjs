@@ -1,6 +1,6 @@
 import { ClientServicesContent } from "../../../_shared/client-services-content";
 
-interface ServicesPageProps {
+interface BlockedClientServicesPageProps {
   params: Promise<{ nickname: string; clientId: string }>;
   searchParams: Promise<{
     search?: string;
@@ -10,10 +10,10 @@ interface ServicesPageProps {
   }>;
 }
 
-export default async function ServicesPage({
+export default async function BlockedClientServicesPage({
   params,
   searchParams,
-}: ServicesPageProps) {
+}: BlockedClientServicesPageProps) {
   const { nickname, clientId } = await params;
   const query = await searchParams;
 
@@ -21,8 +21,8 @@ export default async function ServicesPage({
     <ClientServicesContent
       nickname={nickname}
       clientId={clientId}
-      backHref={`/${nickname}/settings/clients/${clientId}`}
-      basePath={`/${nickname}/settings/clients/${clientId}`}
+      backHref={`/${nickname}/settings/blocked-clients/${clientId}`}
+      basePath={`/${nickname}/settings/blocked-clients/${clientId}`}
       searchParams={query}
     />
   );

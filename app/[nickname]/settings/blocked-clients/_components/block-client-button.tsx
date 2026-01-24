@@ -1,12 +1,12 @@
 "use client";
 
-import { Ban, ChevronDown, Loader2, Plus, Search, UserPlus, X } from "lucide-react";
+import { Ban, ChevronDown, ChevronRight, Loader2, Search, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useDeferredValue, useEffect, useRef, useState, useTransition } from "react";
 import type { BeautyPageClient } from "@/lib/queries/clients";
+import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
-import { Input } from "@/lib/ui/input";
 import { blockClientAction } from "../../clients/_actions/blocklist.actions";
 import { loadClients } from "../../clients/_actions/clients.actions";
 
@@ -38,6 +38,7 @@ export function BlockClientButton({
 
   // Search state
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [clients, setClients] = useState<BeautyPageClient[]>([]);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -165,87 +166,92 @@ export function BlockClientButton({
         <Dialog.Portal open={isOpen} size="md">
           {step === "search" ? (
             <>
-              <Dialog.Header onClose={handleClose}>
-                {t("dialog_title")}
-              </Dialog.Header>
-              <Dialog.Body className="space-y-4 p-4">
-                {/* Search input */}
-                <div className="relative">
-                  <Search
-                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-                    aria-hidden="true"
-                  />
-                  <Input
-                    type="text"
-                    value={search}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                    placeholder={t("search_placeholder")}
-                    className="pl-9 pr-9"
-                    autoComplete="off"
-                  />
-                  {search && (
+              <Dialog.Header
+                onClose={handleClose}
+                subtitle={
+                  total > 0
+                    ? t("showing_count", { shown: clients.length, total })
+                    : undefined
+                }
+                action={
+                  selectedClient ? (
                     <button
                       type="button"
-                      onClick={() => handleSearchChange("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted transition-colors hover:bg-accent-soft hover:text-foreground"
-                      aria-label={t("clear_search")}
+                      onClick={() => setStep("confirm")}
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-accent transition-colors hover:bg-accent/10"
+                      aria-label={t("confirm_title")}
                     >
-                      <X className="h-4 w-4" />
+                      <ChevronRight className="h-6 w-6" />
                     </button>
-                  )}
-                </div>
+                  ) : undefined
+                }
+              >
+                {t("dialog_title")}
+              </Dialog.Header>
 
+              <Dialog.Body className="p-0">
                 {/* Clients list */}
                 {isSearching ? (
-                  <div className="flex items-center justify-center py-8">
+                  <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-6 w-6 animate-spin text-muted" />
                   </div>
                 ) : clients.length === 0 ? (
-                  <div className="py-8 text-center">
+                  <div className="py-12 text-center">
                     <Ban className="mx-auto h-12 w-12 text-muted" />
                     <p className="mt-4 text-sm text-muted">
-                      {search ? t("no_results") : t("no_clients")}
+                      {deferredSearch ? t("no_results") : t("no_clients")}
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-1">
-                    {/* Show count */}
-                    <p className="text-right text-xs text-muted">
-                      {t("showing_count", { shown: clients.length, total })}
-                    </p>
-
+                  <div className="pb-4 pt-2">
                     {/* Client rows */}
-                    <div className="rounded-lg border border-default">
-                      {clients.map((client, index) => (
+                    {clients.map((client) => {
+                      const isSelected =
+                        selectedClient?.clientId === client.clientId;
+
+                      return (
                         <button
                           key={client.clientId}
                           type="button"
                           onClick={() => handleSelectClient(client)}
-                          className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-hover ${
-                            index !== clients.length - 1
-                              ? "border-b border-default"
-                              : ""
+                          className={`flex w-full items-center gap-3 border-l-2 px-4 py-3 text-left transition-colors ${
+                            isSelected
+                              ? "border-l-accent bg-accent/5"
+                              : "border-l-transparent hover:bg-surface-hover"
                           }`}
                         >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-surface-hover text-sm font-medium">
-                            {client.clientName.charAt(0).toUpperCase()}
-                          </div>
+                          <Avatar
+                            name={client.clientName}
+                            url={client.avatarUrl}
+                            size="sm"
+                          />
                           <div className="min-w-0 flex-1">
                             <p className="font-medium">{client.clientName}</p>
                             {client.clientEmail && (
-                              <p className="text-sm text-muted truncate">
+                              <p className="truncate text-sm text-muted">
                                 {client.clientEmail}
                               </p>
                             )}
                           </div>
-                          <Plus className="h-4 w-4 text-muted" />
+                          {/* Selection indicator */}
+                          <div
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                              isSelected
+                                ? "border-accent bg-accent"
+                                : "border-border"
+                            }`}
+                          >
+                            {isSelected && (
+                              <div className="h-2 w-2 rounded-full bg-white" />
+                            )}
+                          </div>
                         </button>
-                      ))}
-                    </div>
+                      );
+                    })}
 
                     {/* Load more */}
                     {hasMore && (
-                      <div className="flex justify-center pt-2">
+                      <div className="flex justify-center pt-4">
                         <Button
                           variant="soft"
                           size="icon"
@@ -263,6 +269,41 @@ export function BlockClientButton({
                   </div>
                 )}
               </Dialog.Body>
+
+              <Dialog.Footer className="flex-col gap-0 p-0 md:flex-row md:justify-end md:px-6 md:py-4">
+                {/* Mobile: Search input in footer */}
+                <div className="w-full border-t border-border p-4 md:hidden">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                    <input
+                      type="text"
+                      placeholder={t("search_placeholder")}
+                      value={search}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      className="w-full rounded-lg border border-border bg-surface py-2.5 pl-10 pr-4 text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                </div>
+                {/* Desktop: Search + Next button */}
+                <div className="hidden items-center gap-3 md:flex">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                    <input
+                      type="text"
+                      placeholder={t("search_placeholder")}
+                      value={search}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      className="w-64 rounded-lg border border-border bg-surface py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  <Button
+                    onClick={() => setStep("confirm")}
+                    disabled={!selectedClient}
+                  >
+                    {t("next")}
+                  </Button>
+                </div>
+              </Dialog.Footer>
             </>
           ) : (
             <>

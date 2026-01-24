@@ -57,6 +57,7 @@ export default async function BlockedClientsPage({
         <BlockedClientsList
           beautyPageId={beautyPage.id}
           blockedClients={blockedClients}
+          nickname={nickname}
         />
       </div>
     </>

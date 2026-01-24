@@ -1,14 +1,14 @@
 import { ClientServiceDetailContent } from "../../../../_shared/client-service-detail-content";
 
-interface ServiceDetailPageProps {
+interface BlockedClientServiceDetailPageProps {
   params: Promise<{ nickname: string; clientId: string; serviceName: string }>;
   searchParams: Promise<{ page?: string }>;
 }
 
-export default async function ServiceDetailPage({
+export default async function BlockedClientServiceDetailPage({
   params,
   searchParams,
-}: ServiceDetailPageProps) {
+}: BlockedClientServiceDetailPageProps) {
   const { nickname, clientId, serviceName: encodedServiceName } = await params;
   const query = await searchParams;
   const serviceName = decodeURIComponent(encodedServiceName);
@@ -18,7 +18,7 @@ export default async function ServiceDetailPage({
       nickname={nickname}
       clientId={clientId}
       serviceName={serviceName}
-      backHref={`/${nickname}/settings/clients/${clientId}`}
+      backHref={`/${nickname}/settings/blocked-clients/${clientId}`}
       searchParams={query}
     />
   );

@@ -1,6 +1,6 @@
 import { ClientAppointmentsContent } from "../../../_shared/client-appointments-content";
 
-interface AppointmentsPageProps {
+interface BlockedClientAppointmentsPageProps {
   params: Promise<{ nickname: string; clientId: string }>;
   searchParams: Promise<{
     sort?: string;
@@ -9,10 +9,10 @@ interface AppointmentsPageProps {
   }>;
 }
 
-export default async function AppointmentsPage({
+export default async function BlockedClientAppointmentsPage({
   params,
   searchParams,
-}: AppointmentsPageProps) {
+}: BlockedClientAppointmentsPageProps) {
   const { nickname, clientId } = await params;
   const query = await searchParams;
 
@@ -20,7 +20,7 @@ export default async function AppointmentsPage({
     <ClientAppointmentsContent
       nickname={nickname}
       clientId={clientId}
-      backHref={`/${nickname}/settings/clients/${clientId}`}
+      backHref={`/${nickname}/settings/blocked-clients/${clientId}`}
       searchParams={query}
     />
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { Ban, Loader2, Trash2, UserX } from "lucide-react";
+import { Ban, ChevronRight, Loader2, Trash2, UserX } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import type { BeautyPageClient } from "@/lib/queries/clients";
@@ -16,6 +17,7 @@ import { unblockClientAction } from "../../clients/_actions/blocklist.actions";
 interface BlockedClientsListProps {
   beautyPageId: string;
   blockedClients: BeautyPageClient[];
+  nickname: string;
 }
 
 // ============================================================================
@@ -25,6 +27,7 @@ interface BlockedClientsListProps {
 export function BlockedClientsList({
   beautyPageId,
   blockedClients,
+  nickname,
 }: BlockedClientsListProps) {
   const t = useTranslations("blocked_clients");
 
@@ -55,6 +58,7 @@ export function BlockedClientsList({
               key={client.clientId}
               beautyPageId={beautyPageId}
               client={client}
+              nickname={nickname}
               noBorder={index === permanentBlocks.length - 1}
             />
           ))}
@@ -69,6 +73,7 @@ export function BlockedClientsList({
               key={client.clientId}
               beautyPageId={beautyPageId}
               client={client}
+              nickname={nickname}
               noBorder={index === temporaryBlocks.length - 1}
             />
           ))}
@@ -85,12 +90,14 @@ export function BlockedClientsList({
 interface BlockedClientRowProps {
   beautyPageId: string;
   client: BeautyPageClient;
+  nickname: string;
   noBorder?: boolean;
 }
 
 function BlockedClientRow({
   beautyPageId,
   client,
+  nickname,
   noBorder,
 }: BlockedClientRowProps) {
   const t = useTranslations("blocked_clients");
@@ -114,9 +121,12 @@ function BlockedClientRow({
   return (
     <>
       <div
-        className={`flex items-center justify-between px-4 py-4 ${!noBorder ? "border-b border-default" : ""}`}
+        className={`flex items-center justify-between ${!noBorder ? "border-b border-default" : ""}`}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        <Link
+          href={`/${nickname}/settings/blocked-clients/${client.clientId}`}
+          className="flex min-w-0 flex-1 items-center gap-3 px-4 py-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+        >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
             <Ban className="h-5 w-5" />
           </div>
@@ -133,19 +143,22 @@ function BlockedClientRow({
               </p>
             )}
           </div>
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted" />
+        </Link>
+        <div className="pr-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowConfirm(true)}
+            disabled={isPending}
+          >
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowConfirm(true)}
-          disabled={isPending}
-        >
-          {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Trash2 className="h-4 w-4" />
-          )}
-        </Button>
       </div>
 
       <AlertDialog.Root open={showConfirm} onOpenChange={setShowConfirm}>

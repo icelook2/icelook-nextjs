@@ -90,7 +90,7 @@ export default async function BundlesSettingsPage({
             save: t("save"),
             create: t("create"),
             hiddenServicesTitle: t("hidden_services_title"),
-            hiddenServicesDescription: t("hidden_services_description"),
+            hiddenServicesDescription: t.raw("hidden_services_description"),
             hiddenServicesLabel: t("hidden_services_label"),
             hiddenServicesHint: t("hidden_services_hint"),
             close: t("close"),
@@ -105,8 +105,8 @@ export default async function BundlesSettingsPage({
             maxQuantity: t("max_quantity"),
             unlimited: t("unlimited"),
             // Availability badges
-            daysRemaining: t("days_remaining"),
-            quantityRemaining: t("quantity_remaining"),
+            daysRemaining: t.raw("days_remaining"),
+            quantityRemaining: t.raw("quantity_remaining"),
             expired: t("expired"),
             soldOut: t("sold_out"),
           }}
