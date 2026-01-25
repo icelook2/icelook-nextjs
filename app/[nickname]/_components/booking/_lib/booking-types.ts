@@ -223,6 +223,9 @@ export interface BookingLayoutProps {
 
 /** Creator info for display in booking flow */
 export interface CreatorInfo {
+  /** Beauty page name - used for consistent gradient calculation across the app */
+  name: string;
+  /** Display name for visual text (may differ from name) */
   displayName: string;
   avatarUrl: string | null;
 }

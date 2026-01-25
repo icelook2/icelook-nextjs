@@ -44,5 +44,5 @@ export async function updateProfile(name: string): Promise<ActionResult> {
     return { success: false, error: t("update_failed") };
   }
 
-  redirect("/");
+  redirect("/appointments");
 }

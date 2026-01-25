@@ -4,14 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import type { BeautyPageType } from "@/lib/queries";
 import { Button, buttonVariants } from "@/lib/ui/button";
 import { Dialog } from "@/lib/ui/dialog";
 import { Field } from "@/lib/ui/field";
 import { Input } from "@/lib/ui/input";
-import { Select } from "@/lib/ui/select";
 import {
   createTranslatedBeautyPageNameSchema,
   createTranslatedBeautyPageSlugSchema,
@@ -20,13 +18,7 @@ import { createBeautyPage } from "../_actions";
 
 type DialogStep = "intro" | "form";
 
-interface CreateBeautyPageDialogProps {
-  beautyPageTypes: BeautyPageType[];
-}
-
-export function CreateBeautyPageDialog({
-  beautyPageTypes,
-}: CreateBeautyPageDialogProps) {
+export function CreateBeautyPageDialog() {
   const t = useTranslations("settings");
   const tValidation = useTranslations("validation");
   const router = useRouter();
@@ -46,7 +38,6 @@ export function CreateBeautyPageDialog({
   const formSchema = z.object({
     name: nameSchema,
     slug: slugSchema,
-    typeId: z.string().uuid(tValidation("beauty_page_type_required")),
   });
 
   type FormData = z.infer<typeof formSchema>;
@@ -54,7 +45,6 @@ export function CreateBeautyPageDialog({
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors },
     reset,
   } = useForm<FormData>({
@@ -62,7 +52,6 @@ export function CreateBeautyPageDialog({
     defaultValues: {
       name: "",
       slug: "",
-      typeId: "",
     },
   });
 
@@ -87,7 +76,6 @@ export function CreateBeautyPageDialog({
       const result = await createBeautyPage({
         name: data.name,
         slug: data.slug,
-        typeId: data.typeId,
       });
 
       if (result.success) {
@@ -175,41 +163,6 @@ export function CreateBeautyPageDialog({
                     {t("beauty_page_slug_hint")}
                   </Field.Description>
                   <Field.Error>{errors.slug?.message}</Field.Error>
-                </Field.Root>
-
-                <Field.Root>
-                  <Field.Label>{t("beauty_page_type_label")}</Field.Label>
-                  <Controller
-                    name="typeId"
-                    control={control}
-                    render={({ field }) => {
-                      const items = beautyPageTypes.map((type) => ({
-                        value: type.id,
-                        label: type.name,
-                      }));
-                      return (
-                        <Select.Root
-                          items={items}
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <Select.Trigger
-                            items={items}
-                            placeholder={t("beauty_page_type_placeholder")}
-                            state={errors.typeId ? "error" : "default"}
-                          />
-                          <Select.Content>
-                            {beautyPageTypes.map((type) => (
-                              <Select.Item key={type.id} value={type.id}>
-                                {type.name}
-                              </Select.Item>
-                            ))}
-                          </Select.Content>
-                        </Select.Root>
-                      );
-                    }}
-                  />
-                  <Field.Error>{errors.typeId?.message}</Field.Error>
                 </Field.Root>
 
                 {serverError && <p className="text-sm text-">{serverError}</p>}

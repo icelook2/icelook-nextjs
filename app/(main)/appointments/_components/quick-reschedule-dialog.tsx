@@ -185,6 +185,7 @@ export function QuickRescheduleDialog({
     };
 
     const creatorInfo: CreatorInfo = {
+      name: rescheduleData.beautyPage.name,
       displayName: rescheduleData.creator.display_name,
       avatarUrl: rescheduleData.creator.avatar_url,
     };

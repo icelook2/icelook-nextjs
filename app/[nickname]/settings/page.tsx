@@ -69,24 +69,6 @@ export default async function BeautyPageSettings({
         "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-400",
       disabled: false,
     },
-    {
-      href: `/${nickname}/settings/resources`,
-      icon: Box,
-      title: t("nav.resources"),
-      description: t("nav.resources_description"),
-      iconClassName:
-        "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
-      disabled: false,
-    },
-    {
-      href: `/${nickname}/settings/promotions`,
-      icon: Tag,
-      title: t("nav.promotions"),
-      description: t("nav.promotions_description"),
-      iconClassName:
-        "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
-      disabled: false,
-    },
   ];
 
   const scheduleLinks = [
@@ -110,16 +92,7 @@ export default async function BeautyPageSettings({
     },
   ];
 
-  const operationsLinks = [
-    {
-      href: `/${nickname}/settings/analytics`,
-      icon: BarChart3,
-      title: t("nav.analytics"),
-      description: t("nav.analytics_description"),
-      iconClassName:
-        "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
-      disabled: false,
-    },
+  const clientsLinks = [
     {
       href: `/${nickname}/settings/clients`,
       icon: Users,
@@ -138,13 +111,25 @@ export default async function BeautyPageSettings({
         "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
       disabled: false,
     },
+  ];
+
+  const marketingLinks = [
     {
-      href: `/${nickname}/settings/contact`,
-      icon: MapPin,
-      title: t("nav.contact"),
-      description: t("nav.contact_description"),
+      href: `/${nickname}/settings/promotions`,
+      icon: Tag,
+      title: t("nav.promotions"),
+      description: t("nav.promotions_description"),
       iconClassName:
-        "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400",
+        "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400",
+      disabled: false,
+    },
+    {
+      href: `/${nickname}/settings/analytics`,
+      icon: BarChart3,
+      title: t("nav.analytics"),
+      description: t("nav.analytics_description"),
+      iconClassName:
+        "bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-400",
       disabled: false,
     },
     {
@@ -154,6 +139,27 @@ export default async function BeautyPageSettings({
       description: t("nav.share_profile_description"),
       iconClassName:
         "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400",
+      disabled: false,
+    },
+  ];
+
+  const businessLinks = [
+    {
+      href: `/${nickname}/settings/resources`,
+      icon: Box,
+      title: t("nav.resources"),
+      description: t("nav.resources_description"),
+      iconClassName:
+        "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
+      disabled: false,
+    },
+    {
+      href: `/${nickname}/settings/contact`,
+      icon: MapPin,
+      title: t("nav.contact"),
+      description: t("nav.contact_description"),
+      iconClassName:
+        "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-400",
       disabled: false,
     },
     {
@@ -221,9 +227,9 @@ export default async function BeautyPageSettings({
             ))}
           </SettingsGroup>
 
-          {/* Operations */}
-          <SettingsGroup title={t("groups.operations")}>
-            {operationsLinks.map((link, index) => (
+          {/* Clients */}
+          <SettingsGroup title={t("groups.clients")}>
+            {clientsLinks.map((link, index) => (
               <SettingsItem
                 key={link.href}
                 href={link.href}
@@ -232,7 +238,41 @@ export default async function BeautyPageSettings({
                 description={link.description}
                 iconClassName={link.iconClassName}
                 variant="grouped"
-                noBorder={index === operationsLinks.length - 1}
+                noBorder={index === clientsLinks.length - 1}
+                disabled={link.disabled}
+              />
+            ))}
+          </SettingsGroup>
+
+          {/* Marketing */}
+          <SettingsGroup title={t("groups.marketing")}>
+            {marketingLinks.map((link, index) => (
+              <SettingsItem
+                key={link.href}
+                href={link.href}
+                icon={link.icon}
+                title={link.title}
+                description={link.description}
+                iconClassName={link.iconClassName}
+                variant="grouped"
+                noBorder={index === marketingLinks.length - 1}
+                disabled={link.disabled}
+              />
+            ))}
+          </SettingsGroup>
+
+          {/* Business */}
+          <SettingsGroup title={t("groups.business")}>
+            {businessLinks.map((link, index) => (
+              <SettingsItem
+                key={link.href}
+                href={link.href}
+                icon={link.icon}
+                title={link.title}
+                description={link.description}
+                iconClassName={link.iconClassName}
+                variant="grouped"
+                noBorder={index === businessLinks.length - 1}
                 disabled={link.disabled}
               />
             ))}

@@ -133,6 +133,7 @@ export function QuickBookingDialog({
     };
 
     const creatorInfo: CreatorInfo = {
+      name: rebookingData.beautyPage.name,
       displayName: rebookingData.creator.display_name,
       avatarUrl: rebookingData.creator.avatar_url,
     };

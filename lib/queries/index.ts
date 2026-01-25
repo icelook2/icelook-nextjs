@@ -1,6 +1,5 @@
 export * from "./analytics";
 export * from "./beauty-page-profile";
-export * from "./beauty-page-types";
 export * from "./beauty-pages";
 export * from "./clients";
 export * from "./promotions";

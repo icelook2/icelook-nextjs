@@ -41,6 +41,20 @@
     "not_authenticated": "Not authenticated",
     "update_failed": "Failed to update profile"
   },
+  "avatar_upload": {
+    "hint": "{formats} • Max {maxSize}",
+    "cancel": "Cancel",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "remove": "Remove",
+    "invalid_file_type": "Please select an image file (JPG, PNG, WebP, or GIF)",
+    "file_too_large": "File is too large. Maximum size is 5 MB",
+    "not_authenticated": "Please sign in to upload",
+    "configuration_error": "Upload is not configured properly",
+    "upload_failed": "Upload failed. Please try again",
+    "network_error": "Network error. Please check your connection",
+    "delete_failed": "Failed to remove image"
+  },
   "validation": {
     "required": "This field is required",
     "email_invalid": "Please enter a valid email address",
@@ -74,7 +88,10 @@
     "price_too_high": "Price is too high",
     "duration_too_short": "Duration must be at least 5 minutes",
     "duration_too_long": "Duration must be at most 8 hours",
-    "contact_too_long": "Contact information is too long"
+    "contact_too_long": "Contact information is too long",
+    "service_price_required": "Price is required",
+    "service_price_too_high": "Price is too high",
+    "service_duration_required": "Duration is required"
   },
   "common": {
     "loading": "Loading...",
@@ -82,7 +99,23 @@
     "sign_out": "Sign out",
     "signing_out": "Signing out...",
     "search": "Search",
-    "no_results": "No results found"
+    "no_results": "No results found",
+    "days": {
+      "monday": "Monday",
+      "monday_short": "Mon",
+      "tuesday": "Tuesday",
+      "tuesday_short": "Tue",
+      "wednesday": "Wednesday",
+      "wednesday_short": "Wed",
+      "thursday": "Thursday",
+      "thursday_short": "Thu",
+      "friday": "Friday",
+      "friday_short": "Fri",
+      "saturday": "Saturday",
+      "saturday_short": "Sat",
+      "sunday": "Sunday",
+      "sunday_short": "Sun"
+    }
   },
   "profile_menu": {
     "appearance": "Appearance",
@@ -130,9 +163,9 @@
     "subtitle": "Manage your account settings and preferences",
     "groups": {
       "account": "Account",
-      "preferences": "Preferences",
-      "activity": "Activity",
-      "business": "Business"
+      "site_preferences": "Site Preferences",
+      "my_activity": "My Activity",
+      "beauty_pages": "Beauty Pages"
     },
     "nav": {
       "account": "Account",
@@ -1088,6 +1121,25 @@
         "view_appointment": "View Appointment",
         "close": "Close"
       }
+    },
+    "edit_profile": {
+      "button": "Edit Profile",
+      "title": "Edit Profile",
+      "name_label": "Name",
+      "name_placeholder": "e.g. Anna's Beauty Studio",
+      "slug_label": "Nickname",
+      "slug_placeholder": "e.g. annas-beauty",
+      "slug_hint": "Your page will be at icelook.app/{slug}",
+      "slug_cooldown_warning": "You can change your nickname again in {days} days",
+      "slug_change_warning": "Changing your nickname will affect shared links. Old links will redirect for 30 days.",
+      "bio_label": "Bio",
+      "bio_placeholder": "Tell clients about your services...",
+      "bio_hint": "A short description that appears on your profile",
+      "type_label": "Type",
+      "type_placeholder": "Select a type",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving..."
     }
   },
   "beauty_page_settings": {
@@ -1098,9 +1150,10 @@
     "saved": "Saved",
     "groups": {
       "services": "Services",
-      "people": "Team",
-      "operations": "Operations",
-      "schedule": "Schedule"
+      "schedule": "Schedule",
+      "clients": "Clients",
+      "marketing": "Marketing",
+      "business": "Business"
     },
     "timezone": {
       "title": "Timezone",
@@ -1113,6 +1166,20 @@
       "validation_failed": "Please check your input",
       "save_failed": "Failed to save changes"
     },
+    "not_authenticated": "You must be logged in",
+    "not_authorized": "You don't have permission to edit this",
+    "beauty_page_not_found": "Beauty page not found",
+    "update_failed": "Failed to update profile",
+    "slug_cooldown_active": "You can change your nickname again in {days} days",
+    "edit_name_title": "Edit Name",
+    "edit_slug_title": "Edit Nickname",
+    "edit_bio_title": "Edit Bio",
+    "edit_type_title": "Edit Type",
+    "edit_avatar_title": "Edit Photo",
+    "add_bio": "Add a bio",
+    "avatar_label": "Photo",
+    "avatar_set": "Photo uploaded",
+    "avatar_placeholder": "Add a photo",
     "nav": {
       "services": "Services & Groups",
       "services_description": "Manage your service catalog and pricing",
@@ -2551,6 +2618,283 @@
         "title": "Experience",
         "description": "These cookies help us provide a better user experience by remembering your choices and providing personalized features."
       }
+    }
+  },
+  "product2": {
+    "meta": {
+      "title": "Icelook - Free Booking Page for Beauty Professionals",
+      "description": "Create your free booking page and let clients book appointments 24/7. See how real beauty professionals use Icelook.",
+      "og_title": "See Icelook in Action",
+      "og_description": "Join 500+ beauty professionals who use Icelook to manage appointments and grow their business."
+    },
+    "header": {
+      "features": "Features",
+      "how_it_works": "How it works",
+      "login": "Log in",
+      "signup": "Sign up free"
+    },
+    "hero": {
+      "badge": "Watch how it works",
+      "headline": "Your booking page. Your clients. Your rules.",
+      "subheadline": "Create your free professional booking page. Let clients book 24/7 while you focus on what you do best.",
+      "video_label": "Booking Flow Walkthrough",
+      "video_step1": "Client opens your beauty page",
+      "video_step2": "Selects a service",
+      "video_step3": "Picks date and time",
+      "video_step4": "Confirms booking",
+      "testimonial_name": "Olena K.",
+      "testimonial_role": "Nail Artist, Kyiv",
+      "testimonial_quote": "Clients book while I work. No more missed calls!",
+      "cta_primary": "Create Your Free Page",
+      "cta_secondary": "Watch Demo",
+      "trust_indicator": "No credit card required. Set up in 5 minutes."
+    },
+    "stats": {
+      "specialists": "Active Specialists",
+      "appointments": "Appointments Booked",
+      "cities": "Cities",
+      "join_message": "Join Maria, Anna, Olena and 500+ beauty professionals"
+    },
+    "demo": {
+      "headline": "See Icelook in Action",
+      "subheadline": "Watch how easy it is for clients to book with you",
+      "video_label": "Full Booking Experience",
+      "step1": "Client opens your beauty page link",
+      "step2": "Browses services with prices",
+      "step3": "Selects date and time from calendar",
+      "step4": "Confirms the booking",
+      "step5": "Receives confirmation",
+      "supporting_text": "Your clients book in under 60 seconds"
+    },
+    "features": {
+      "feature1_badge": "Your Booking Page",
+      "feature1_title": "A beautiful page that converts visitors to clients",
+      "feature1_description": "Your personal booking page showcases your services, portfolio, and availability. Clients can book in under 30 seconds.",
+      "feature1_bullet1": "Custom branding and colors",
+      "feature1_bullet2": "Service descriptions and pricing",
+      "feature1_bullet3": "Real-time availability",
+      "screenshot1_label": "Beauty Page Screenshot",
+      "screenshot1_description": "Specialist profile with photo, services list, prices, ratings, and book button",
+      "feature2_badge": "Your Dashboard",
+      "feature2_title": "Manage your day at a glance",
+      "feature2_description": "See all your appointments, manage your schedule, and keep track of your clients — all from one simple dashboard.",
+      "feature2_bullet1": "Daily and weekly schedule view",
+      "feature2_bullet2": "Client history and notes",
+      "feature2_bullet3": "Quick actions for common tasks",
+      "screenshot2_label": "Dashboard Screenshot",
+      "screenshot2_description": "Calendar view with today's appointments, client names, services, and status indicators",
+      "feature3_badge": "Smart Reminders",
+      "feature3_title": "Reduce no-shows automatically",
+      "feature3_description": "Automatic reminders via SMS and email keep your clients informed and reduce no-shows by up to 80%.",
+      "feature3_bullet1": "24-hour reminder before appointment",
+      "feature3_bullet2": "Confirmation when booked",
+      "feature3_bullet3": "Rescheduling made easy",
+      "screenshot3_label": "Notification Screenshot",
+      "screenshot3_description": "Mobile notification showing new booking with client name, service, time, and confirm/decline buttons"
+    },
+    "testimonials": {
+      "headline": "Trusted by Beauty Professionals",
+      "subheadline": "See what specialists say about using Icelook",
+      "quote1": "I used to miss calls during appointments. Now clients book themselves and I focus on my work.",
+      "name1": "Anna M.",
+      "role1": "Nail Artist",
+      "city1": "Kyiv",
+      "quote2": "Setting up took 5 minutes. My booking page looks professional and clients love it.",
+      "name2": "Oleksandr K.",
+      "role2": "Hairdresser",
+      "city2": "Lviv",
+      "quote3": "No more double bookings. The calendar syncs everything automatically.",
+      "name3": "Maria L.",
+      "role3": "Lash Artist",
+      "city3": "Odesa",
+      "placeholder_note": "Placeholder testimonials — will be replaced with real quotes"
+    },
+    "problems": {
+      "headline": "Sound familiar?",
+      "subheadline": "These challenges cost you time, money, and clients every day.",
+      "problem1_title": "Missed calls while working",
+      "problem1_description": "You're with a client and can't answer. By the time you call back, they've booked elsewhere.",
+      "problem2_title": "Double bookings and chaos",
+      "problem2_description": "Managing your schedule across messages, calls, and DMs leads to conflicts and embarrassment.",
+      "problem3_title": "Paying platform fees",
+      "problem3_description": "Why give away a cut of your hard-earned money for clients you already have?",
+      "solution_teaser": "There's a better way. →"
+    },
+    "how_it_works": {
+      "headline": "Get started in 3 minutes",
+      "subheadline": "No technical skills required. If you can use Instagram, you can use Icelook.",
+      "step1_title": "Create your page",
+      "step1_description": "Sign up with your email and choose your unique link",
+      "screenshot1_label": "Sign-up Screenshot",
+      "screenshot1_description": "Registration form with nickname/URL selection",
+      "step2_title": "Add your services",
+      "step2_description": "Set your prices, duration, and availability",
+      "screenshot2_label": "Services Screenshot",
+      "screenshot2_description": "Service creation form with name, price, and duration fields",
+      "step3_title": "Share your link",
+      "step3_description": "Post it in your bio and start accepting bookings",
+      "screenshot3_label": "Share Screenshot",
+      "screenshot3_description": "Beauty page with highlighted shareable URL",
+      "cta": "Create Your Free Page"
+    },
+    "clients": {
+      "headline": "Looking to book an appointment?",
+      "description": "Find and book with beauty professionals near you.",
+      "cta": "Find Specialists"
+    },
+    "final_cta": {
+      "headline": "Join 500+ beauty professionals",
+      "subheadline": "Create your free booking page and start growing your business today",
+      "cta": "Get started free",
+      "trust_note": "Free forever • No credit card required"
+    }
+  },
+  "create_beauty_page": {
+    "page_title": "Create Beauty Page",
+    "navigation": {
+      "previous": "Previous",
+      "continue": "Continue",
+      "skip": "Skip",
+      "get_started": "Get Started",
+      "create": "Create Beauty Page"
+    },
+    "progress": {
+      "choose_type": "Type",
+      "name_nickname": "Name",
+      "services": "Services",
+      "select_days": "Days",
+      "configure_hours": "Hours"
+    },
+    "intro": {
+      "title": "Create Your Beauty Page",
+      "subtitle": "Set up your professional booking profile in minutes",
+      "cta": "Get Started",
+      "what_is_title": "What is a Beauty Page?",
+      "what_is_description": "A Beauty Page is your personal booking profile on Icelook. It's a dedicated page where clients can discover your services, view your prices and availability, and book appointments directly — no more managing bookings through DMs.",
+      "benefits_title": "What you'll get",
+      "benefit_1_title": "Your own booking link",
+      "benefit_1_description": "A unique URL like icelook.app/@yourname that you can share anywhere",
+      "benefit_2_title": "24/7 online booking",
+      "benefit_2_description": "Clients can book with you anytime, even while you sleep",
+      "benefit_3_title": "Build your reputation",
+      "benefit_3_description": "Collect reviews and showcase your work to attract new clients",
+      "perfect_for": "Perfect for",
+      "audience_hair": "Hair stylists",
+      "audience_nails": "Nail technicians",
+      "audience_makeup": "Makeup artists",
+      "audience_skin": "Estheticians"
+    },
+    "name": {
+      "title": "Name your beauty page",
+      "subtitle": "This is how clients will see your business. You can change it anytime.",
+      "label": "Page name",
+      "placeholder": "e.g., Anna's Nail Studio"
+    },
+    "nickname": {
+      "title": "Create your nickname",
+      "subtitle": "Your unique link that clients will use to find and book with you.",
+      "label": "Nickname",
+      "placeholder": "e.g., anna-nails",
+      "prefix": "@",
+      "url_preview": "icelook.app/@{nickname}",
+      "checking": "Checking...",
+      "available": "Available",
+      "taken": "Already taken",
+      "invalid": "Invalid format"
+    },
+    "choose_type": {
+      "title": "What do you do?",
+      "subtitle": "Tap to select your profession",
+      "next": "Next",
+      "selected_confirmation": "Great choice! You're creating a page as a {profession}"
+    },
+    "name_nickname": {
+      "title": "Name your page",
+      "subtitle": "Choose a name for your beauty page",
+      "name_label": "Name",
+      "name_placeholder": "e.g., Anna's Beauty Studio",
+      "nickname_label": "Nickname",
+      "nickname_placeholder": "e.g., annas-beauty",
+      "nickname_hint": "Your page: icelook.app/{nickname}",
+      "nickname_checking": "Checking...",
+      "nickname_available": "Available!",
+      "nickname_taken": "Already taken",
+      "back": "Back",
+      "next": "Next"
+    },
+    "services": {
+      "title": "Add your services",
+      "subtitle": "What do you offer to clients?",
+      "empty_title": "No services yet",
+      "empty_subtitle": "Add services to show clients what you offer",
+      "add_first": "Add First Service",
+      "add_another": "Add Service",
+      "back": "Back",
+      "skip": "Skip",
+      "next": "Next",
+      "preview_empty": "No services added",
+      "preview_count": "{count, plural, =1 {1 service} other {# services}}",
+      "dialog": {
+        "add_title": "Add Service",
+        "edit_title": "Edit Service",
+        "name_label": "Service name",
+        "name_placeholder": "e.g., Haircut",
+        "price_label": "Price",
+        "duration_label": "Duration",
+        "duration_placeholder": "Select duration",
+        "cancel": "Cancel",
+        "add": "Add",
+        "save": "Save"
+      }
+    },
+    "select_days": {
+      "title": "Select working days",
+      "subtitle": "Choose which days you want to work",
+      "weekdays": {
+        "mo": "Mo",
+        "tu": "Tu",
+        "we": "We",
+        "th": "Th",
+        "fr": "Fr",
+        "sa": "Sa",
+        "su": "Su"
+      },
+      "week_short": "W",
+      "preview_empty": "No days selected",
+      "preview_count": "{count, plural, =1 {1 day} other {# days}} selected",
+      "preview_weekdays": "{count} weekdays",
+      "preview_saturdays": "{count} Saturdays",
+      "preview_sundays": "{count} Sundays",
+      "back": "Back",
+      "skip": "Skip",
+      "next": "Next"
+    },
+    "configure_hours": {
+      "title": "Set working hours",
+      "subtitle": "When are you available on these days?",
+      "description": "Configure hours for each day type. All days of the same type will share these hours.",
+      "weekdays_label": "Weekdays",
+      "saturday_label": "Saturday",
+      "sunday_label": "Sunday",
+      "error_invalid_hours": "End time must be after start time",
+      "preview_empty": "No hours configured",
+      "preview_summary": "Working hours for {count, plural, one {# day} other {# days}}",
+      "back": "Back",
+      "skip": "Skip",
+      "create": "Create Beauty Page"
+    },
+    "confirmation": {
+      "title": "Ready to create your page?",
+      "subtitle": "You can always edit everything later in your page settings.",
+      "services_label": "Services",
+      "services_count": "{count, plural, =0 {No services yet} =1 {1 service} other {# services}}",
+      "availability_label": "Availability",
+      "availability_count": "{count, plural, =0 {Not set yet} =1 {1 working day} other {# working days}}",
+      "missing_note": "You can add services and availability later in settings."
+    },
+    "errors": {
+      "not_authenticated": "You must be logged in",
+      "create_failed": "Failed to create beauty page"
     }
   }
 }

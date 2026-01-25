@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
 import { getUserBeautyPages } from "@/lib/queries";
+import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
 import { PageHeader } from "@/lib/ui/page-header";
 
@@ -46,14 +47,15 @@ export default async function BeautyPagesPage() {
               <Link
                 key={page.id}
                 href={`/${page.slug}`}
-                className="group rounded-xl border border-border bg-surface p-4 transition-colors hover:border-accent/50 hover:bg-accent-soft/50"
+                className="rounded-xl border border-border bg-surface p-4"
               >
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft text-accent transition-colors group-hover:bg-accent/20">
-                    <span className="text-lg font-semibold">
-                      {page.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  <Avatar
+                    url={page.avatar_url}
+                    name={page.name}
+                    size="md"
+                    shape="rounded"
+                  />
                   <div>
                     <h3 className="font-semibold">{page.name}</h3>
                     <p className="text-sm text-muted">@{page.slug}</p>

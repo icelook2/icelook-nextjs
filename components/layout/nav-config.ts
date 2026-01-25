@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { CalendarDays, Search, Settings } from "lucide-react";
+import { CalendarDays, Search } from "lucide-react";
 import type { UserRole } from "./active-beauty-page-context";
 
 /** Context for dynamic route generation */
@@ -38,13 +38,6 @@ export const navItems: NavItem[] = [
     href: "/appointments",
     labelKey: "nav.appointments",
     icon: CalendarDays,
-    roles: ["client"],
-  },
-  // Settings - client only (creators access settings from their beauty page)
-  {
-    href: "/settings",
-    labelKey: "nav.settings",
-    icon: Settings,
     roles: ["client"],
   },
 ];

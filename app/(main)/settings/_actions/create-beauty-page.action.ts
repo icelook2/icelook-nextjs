@@ -13,7 +13,6 @@ import {
 type CreateBeautyPageInput = {
   name: string;
   slug: string;
-  typeId: string;
 };
 
 type ActionResult =
@@ -23,7 +22,6 @@ type ActionResult =
 const inputSchema = z.object({
   name: beautyPageNameSchema,
   slug: beautyPageSlugSchema,
-  typeId: z.string().uuid(),
 });
 
 /**
@@ -76,17 +74,10 @@ export async function createBeautyPage(
       };
     }
 
-    if (path === "typeId") {
-      return {
-        success: false,
-        error: tValidation("beauty_page_type_required"),
-      };
-    }
-
     return { success: false, error: tValidation("invalid_input") };
   }
 
-  const { name, slug, typeId } = validation.data;
+  const { name, slug } = validation.data;
 
   // Check for reserved slugs
   if (RESERVED_SLUGS.includes(slug as (typeof RESERVED_SLUGS)[number])) {
@@ -119,7 +110,6 @@ export async function createBeautyPage(
   const { error } = await supabase.from("beauty_pages").insert({
     name,
     slug,
-    type_id: typeId,
     owner_id: user.id,
   });
 

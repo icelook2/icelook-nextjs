@@ -35,7 +35,7 @@ export function CreatorAvatarNav({ compact = false }: CreatorAvatarNavProps) {
     >
       <Avatar
         url={activeBeautyPage.avatar_url}
-        name={displayName}
+        name={activeBeautyPage.name}
         size="sm"
         shape="rounded"
       />

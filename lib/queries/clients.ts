@@ -219,7 +219,52 @@ function mapRowToClient(row: GetBeautyPageClientsRow): BeautyPageClient {
 }
 
 /**
+ * RPC response type from get_client_details
+ */
+interface ClientDetailsRpcResponse {
+  client: {
+    clientId: string;
+    clientName: string;
+    clientEmail: string | null;
+    avatarUrl: string | null;
+    noShowCount: number;
+    creatorNotes: string | null;
+    blockedAt: string | null;
+    blockedUntil: string | null;
+    createdAt: string;
+    totalVisits: number;
+    totalSpentCents: number;
+    averageSpendCents: number;
+    firstVisitDate: string | null;
+    lastVisitDate: string | null;
+    currency: string;
+  };
+  appointments: Array<{
+    id: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+    serviceName: string;
+    servicePriceCents: number;
+    serviceCurrency: string;
+    serviceDurationMinutes: number;
+    clientNotes: string | null;
+    creatorNotes: string | null;
+    cancelledAt: string | null;
+    createdAt: string;
+  }>;
+  servicesBreakdown: Array<{
+    serviceName: string;
+    count: number;
+    totalCents: number;
+  }>;
+  averageSpendCents: number;
+}
+
+/**
  * Get detailed client info including full appointment history
+ * Uses RPC function for efficient single-query aggregation
  */
 export async function getClientDetails(
   beautyPageId: string,
@@ -227,145 +272,63 @@ export async function getClientDetails(
 ): Promise<ClientDetails | null> {
   const supabase = await createClient();
 
-  // Get client info from beauty_page_clients
-  const { data: clientData, error: clientError } = await supabase
-    .from("beauty_page_clients")
-    .select(
-      `
-      client_id,
-      notes,
-      blocked_at,
-      blocked_until,
-      no_show_count,
-      created_at,
-      profiles!inner (
-        id,
-        full_name,
-        email,
-        avatar_url
-      )
-    `,
-    )
-    .eq("beauty_page_id", beautyPageId)
-    .eq("client_id", clientId)
-    .single();
+  const { data, error } = await supabase.rpc("get_client_details", {
+    p_beauty_page_id: beautyPageId,
+    p_client_id: clientId,
+  });
 
-  if (clientError || !clientData) {
-    console.error("Error fetching client:", clientError);
+  if (error) {
+    console.error("Error fetching client details:", error);
     return null;
   }
 
-  // Get all appointments for this client
-  const { data: appointments, error: appointmentsError } = await supabase
-    .from("appointments")
-    .select("*")
-    .eq("beauty_page_id", beautyPageId)
-    .eq("client_id", clientId)
-    .order("date", { ascending: false });
-
-  if (appointmentsError) {
-    console.error("Error fetching appointments:", appointmentsError);
-    throw appointmentsError;
+  if (!data) {
+    return null;
   }
 
-  const allAppointments = appointments || [];
-  const completedAppointments = allAppointments.filter(
-    (a) => a.status === "completed",
-  );
+  const rpcData = data as ClientDetailsRpcResponse;
 
-  // Calculate totals
-  const totalSpentCents = completedAppointments.reduce(
-    (sum, a) => sum + a.service_price_cents,
-    0,
-  );
-  const averageSpendCents =
-    completedAppointments.length > 0
-      ? Math.round(totalSpentCents / completedAppointments.length)
-      : 0;
-
-  // Services breakdown
-  const serviceMap = new Map<string, { count: number; totalCents: number }>();
-  for (const apt of completedAppointments) {
-    const existing = serviceMap.get(apt.service_name) ?? {
-      count: 0,
-      totalCents: 0,
-    };
-    serviceMap.set(apt.service_name, {
-      count: existing.count + 1,
-      totalCents: existing.totalCents + apt.service_price_cents,
-    });
-  }
-  const servicesBreakdown = Array.from(serviceMap.entries())
-    .map(([serviceName, data]) => ({
-      serviceName,
-      count: data.count,
-      totalCents: data.totalCents,
-    }))
-    .sort((a, b) => b.count - a.count);
-
-  // Get dates
-  const lastVisitDate =
-    completedAppointments.length > 0 ? completedAppointments[0].date : null;
-  const firstVisitDate =
-    completedAppointments.length > 0
-      ? completedAppointments[completedAppointments.length - 1].date
-      : null;
-
-  // Get currency from first completed appointment or default
-  const currency =
-    completedAppointments.length > 0
-      ? completedAppointments[0].service_currency
-      : "UAH";
-
-  // Type assertion for nested profile data
-  const profile = clientData.profiles as unknown as {
-    id: string;
-    full_name: string | null;
-    email: string | null;
-    avatar_url: string | null;
-  };
-
+  // Transform RPC response to ClientDetails format
   const client: BeautyPageClient = {
-    clientId: clientData.client_id,
-    clientName: profile.full_name ?? "Unknown",
-    clientEmail: profile.email,
-    avatarUrl: profile.avatar_url,
-    totalVisits: completedAppointments.length,
-    totalSpentCents,
-    currency,
-    lastVisitDate,
-    firstVisitDate,
-    noShowCount: clientData.no_show_count,
-    creatorNotes: clientData.notes,
-    blockedAt: clientData.blocked_at,
-    blockedUntil: clientData.blocked_until,
-    createdAt: clientData.created_at,
+    clientId: rpcData.client.clientId,
+    clientName: rpcData.client.clientName,
+    clientEmail: rpcData.client.clientEmail,
+    avatarUrl: rpcData.client.avatarUrl,
+    totalVisits: rpcData.client.totalVisits,
+    totalSpentCents: rpcData.client.totalSpentCents,
+    currency: rpcData.client.currency,
+    lastVisitDate: rpcData.client.lastVisitDate,
+    firstVisitDate: rpcData.client.firstVisitDate,
+    noShowCount: rpcData.client.noShowCount,
+    creatorNotes: rpcData.client.creatorNotes,
+    blockedAt: rpcData.client.blockedAt,
+    blockedUntil: rpcData.client.blockedUntil,
+    createdAt: rpcData.client.createdAt,
   };
 
-  // Map all appointments to history format
-  const appointmentHistory: ClientAppointmentHistory[] = allAppointments.map(
-    (apt) => ({
-      id: apt.id,
-      date: apt.date,
-      startTime: apt.start_time,
-      endTime: apt.end_time,
-      status: apt.status,
-      serviceName: apt.service_name,
-      servicePriceCents: apt.service_price_cents,
-      serviceCurrency: apt.service_currency,
-      serviceDurationMinutes: apt.service_duration_minutes,
-      clientNotes: apt.client_notes,
-      creatorNotes: apt.creator_notes,
-      cancelledAt: apt.cancelled_at,
-      createdAt: apt.created_at,
-    }),
-  );
+  const appointments: ClientAppointmentHistory[] = (
+    rpcData.appointments ?? []
+  ).map((apt) => ({
+    id: apt.id,
+    date: apt.date,
+    startTime: apt.startTime,
+    endTime: apt.endTime,
+    status: apt.status,
+    serviceName: apt.serviceName,
+    servicePriceCents: apt.servicePriceCents,
+    serviceCurrency: apt.serviceCurrency,
+    serviceDurationMinutes: apt.serviceDurationMinutes,
+    clientNotes: apt.clientNotes,
+    creatorNotes: apt.creatorNotes,
+    cancelledAt: apt.cancelledAt,
+    createdAt: apt.createdAt,
+  }));
 
   return {
     client,
-    appointments: appointmentHistory,
-    servicesBreakdown,
-    averageSpendCents,
+    appointments,
+    servicesBreakdown: rpcData.servicesBreakdown ?? [],
+    averageSpendCents: rpcData.averageSpendCents,
   };
 }
 
@@ -404,6 +367,24 @@ export interface ServicePreferencesResult {
  * Get paginated service preferences for a client
  * Supports search, sorting, and pagination
  */
+/**
+ * RPC response type from get_client_service_preferences
+ */
+interface ServicePreferencesRpcResponse {
+  services: Array<{
+    serviceName: string;
+    count: number;
+    totalCents: number;
+  }>;
+  total: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+/**
+ * Get paginated service preferences for a client
+ * Uses RPC function for efficient SQL GROUP BY with pagination
+ */
 export async function getServicePreferencesPaginated(
   beautyPageId: string,
   clientId: string,
@@ -411,88 +392,39 @@ export async function getServicePreferencesPaginated(
 ): Promise<ServicePreferencesResult> {
   const supabase = await createClient();
 
-  const search = options?.search?.trim().toLowerCase();
+  const search = options?.search?.trim() || null;
   const sort = options?.sort ?? "count";
   const order = options?.order ?? "desc";
   const page = options?.page ?? 1;
   const pageSize = options?.pageSize ?? SERVICE_PREFERENCES_PAGE_SIZE;
+  const offset = (page - 1) * pageSize;
 
-  const { data: appointments, error } = await supabase
-    .from("appointments")
-    .select("service_name, service_price_cents")
-    .eq("beauty_page_id", beautyPageId)
-    .eq("client_id", clientId)
-    .eq("status", "completed");
+  const { data, error } = await supabase.rpc("get_client_service_preferences", {
+    p_beauty_page_id: beautyPageId,
+    p_client_id: clientId,
+    p_search: search,
+    p_sort: sort,
+    p_order: order,
+    p_limit: pageSize,
+    p_offset: offset,
+  });
 
   if (error) {
     console.error("Error fetching service preferences:", error);
     throw error;
   }
 
-  if (!appointments || appointments.length === 0) {
+  if (!data) {
     return { services: [], total: 0, totalPages: 0, currentPage: 1 };
   }
 
-  // Aggregate services
-  const serviceMap = new Map<string, { count: number; totalCents: number }>();
-  for (const apt of appointments) {
-    const existing = serviceMap.get(apt.service_name) ?? {
-      count: 0,
-      totalCents: 0,
-    };
-    serviceMap.set(apt.service_name, {
-      count: existing.count + 1,
-      totalCents: existing.totalCents + apt.service_price_cents,
-    });
-  }
-
-  // Convert to array
-  let services: ServicePreference[] = Array.from(serviceMap.entries()).map(
-    ([serviceName, data]) => ({
-      serviceName,
-      count: data.count,
-      totalCents: data.totalCents,
-    }),
-  );
-
-  // Apply search filter
-  if (search) {
-    services = services.filter((s) =>
-      s.serviceName.toLowerCase().includes(search),
-    );
-  }
-
-  // Apply sorting
-  services.sort((a, b) => {
-    let comparison = 0;
-    switch (sort) {
-      case "count":
-        comparison = a.count - b.count;
-        break;
-      case "total":
-        comparison = a.totalCents - b.totalCents;
-        break;
-      case "name":
-        comparison = a.serviceName.localeCompare(b.serviceName);
-        break;
-    }
-    return order === "asc" ? comparison : -comparison;
-  });
-
-  // Calculate pagination
-  const total = services.length;
-  const totalPages = Math.ceil(total / pageSize);
-  const currentPage = Math.min(page, Math.max(1, totalPages));
-  const offset = (currentPage - 1) * pageSize;
-
-  // Apply pagination
-  const paginatedServices = services.slice(offset, offset + pageSize);
+  const rpcData = data as ServicePreferencesRpcResponse;
 
   return {
-    services: paginatedServices,
-    total,
-    totalPages,
-    currentPage: total === 0 ? 1 : currentPage,
+    services: rpcData.services ?? [],
+    total: rpcData.total,
+    totalPages: rpcData.totalPages,
+    currentPage: rpcData.currentPage,
   };
 }
 

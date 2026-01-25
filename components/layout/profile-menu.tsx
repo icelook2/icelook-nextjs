@@ -1,4 +1,4 @@
-import { Settings } from "lucide-react";
+import { CircleUser } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -32,7 +32,7 @@ export function SettingsNavLink({
       }
       aria-label={t("settings")}
     >
-      <Settings className={compact ? "h-6 w-6" : "h-7 w-7"} />
+      <CircleUser className={compact ? "h-6 w-6" : "h-7 w-7"} />
     </Link>
   );
 }

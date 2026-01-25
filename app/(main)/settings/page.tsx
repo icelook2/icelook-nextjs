@@ -2,7 +2,6 @@ import { Calendar, Heart, Mail, Palette, Sparkles, User } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
-import { getBeautyPageTypes } from "@/lib/queries";
 import { PageHeader } from "@/lib/ui/page-header";
 import { SettingsGroup } from "@/lib/ui/settings-group";
 import { SettingsItem } from "@/lib/ui/settings-item";
@@ -17,7 +16,6 @@ export default async function SettingsPage() {
     redirect("/auth");
   }
 
-  const beautyPageTypes = await getBeautyPageTypes();
   const t = await getTranslations("settings");
 
   const displayName = profile.full_name || t("unnamed_user");
@@ -60,8 +58,8 @@ export default async function SettingsPage() {
             />
           </SettingsGroup>
 
-          {/* Preferences */}
-          <SettingsGroup title={t("groups.preferences")}>
+          {/* Site Preferences */}
+          <SettingsGroup title={t("groups.site_preferences")}>
             <SettingsItem
               href="/settings/preferences"
               icon={Palette}
@@ -69,7 +67,12 @@ export default async function SettingsPage() {
               description={t("nav.preferences_description")}
               iconClassName="bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400"
               variant="grouped"
+              noBorder
             />
+          </SettingsGroup>
+
+          {/* My Activity */}
+          <SettingsGroup title={t("groups.my_activity")}>
             <SettingsItem
               href="/settings/visit-preferences"
               icon={Heart}
@@ -77,12 +80,7 @@ export default async function SettingsPage() {
               description={t("nav.visit_preferences_description")}
               iconClassName="bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-400"
               variant="grouped"
-              noBorder
             />
-          </SettingsGroup>
-
-          {/* Activity */}
-          <SettingsGroup title={t("groups.activity")}>
             <SettingsItem
               href="/appointments"
               icon={Calendar}
@@ -90,7 +88,12 @@ export default async function SettingsPage() {
               description={t("nav.appointments_description")}
               iconClassName="bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"
               variant="grouped"
+              noBorder
             />
+          </SettingsGroup>
+
+          {/* Beauty Pages */}
+          <SettingsGroup title={t("groups.beauty_pages")}>
             <SettingsItem
               href="/settings/beauty-pages"
               icon={Sparkles}
@@ -98,13 +101,8 @@ export default async function SettingsPage() {
               description={t("nav.beauty_pages_description")}
               iconClassName="bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-500/20 dark:text-fuchsia-400"
               variant="grouped"
-              noBorder
             />
-          </SettingsGroup>
-
-          {/* Business */}
-          <SettingsGroup title={t("groups.business")}>
-            <CreateBeautyPageSection beautyPageTypes={beautyPageTypes} />
+            <CreateBeautyPageSection />
           </SettingsGroup>
 
           {/* Logout */}

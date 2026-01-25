@@ -138,7 +138,7 @@ export function StepSuccess({
         <div className="flex items-center gap-3 pb-3">
           <Avatar
             url={creatorInfo.avatarUrl}
-            name={creatorInfo.displayName}
+            name={creatorInfo.name}
             size="md"
           />
           <div>

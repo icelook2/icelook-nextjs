@@ -15,6 +15,8 @@ interface BookingSummaryTranslations {
 }
 
 interface CreatorInfo {
+  /** Beauty page name - used for consistent gradient calculation */
+  name: string;
   displayName: string;
   avatarUrl: string | null;
 }
@@ -89,7 +91,7 @@ export function BookingSummary({
         <div className="flex items-center gap-2">
           <Avatar
             url={creatorInfo.avatarUrl}
-            name={creatorInfo.displayName}
+            name={creatorInfo.name}
             size="sm"
           />
           <span className="font-medium text-foreground">

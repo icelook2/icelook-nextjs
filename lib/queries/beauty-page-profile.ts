@@ -34,13 +34,6 @@ export type CreatorProfile = {
   bio: string | null;
 };
 
-/** Beauty page type (category) for profile display */
-export type ProfileBeautyPageType = {
-  id: string;
-  name: string;
-  slug: string;
-};
-
 /** Core beauty page data for profile display */
 export type BeautyPageInfo = {
   id: string;
@@ -51,13 +44,14 @@ export type BeautyPageInfo = {
   description: string | null;
   is_active: boolean;
   is_verified: boolean;
-  type: ProfileBeautyPageType | null;
   /** Creator's display name for bookings */
   creator_display_name: string | null;
   /** Creator's avatar for display */
   creator_avatar_url: string | null;
   /** Creator's bio */
   creator_bio: string | null;
+  /** When the slug was last changed (for cooldown calculation) */
+  slug_changed_at: string | null;
 } & ContactInfo;
 
 /** Working day for status calculation */
@@ -145,6 +139,7 @@ export async function getBeautyPageProfile(
       display_name,
       avatar_url,
       bio,
+      slug_changed_at,
       address,
       city,
       postal_code,
@@ -153,8 +148,7 @@ export async function getBeautyPageProfile(
       email,
       website_url,
       instagram_url,
-      facebook_url,
-      beauty_page_types (id, name, slug)
+      facebook_url
     `)
     .eq("slug", nickname)
     .eq("is_active", true)
@@ -215,7 +209,6 @@ export async function getBeautyPageProfile(
   // ============================================================================
 
   // Transform beauty page info
-  const typeData = beautyPage.beauty_page_types;
   const info: BeautyPageInfo = {
     id: beautyPage.id,
     name: beautyPage.name,
@@ -225,17 +218,12 @@ export async function getBeautyPageProfile(
     description: beautyPage.description,
     is_active: beautyPage.is_active,
     is_verified: beautyPage.is_verified,
-    type: typeData
-      ? {
-          id: (typeData as unknown as ProfileBeautyPageType).id,
-          name: (typeData as unknown as ProfileBeautyPageType).name,
-          slug: (typeData as unknown as ProfileBeautyPageType).slug,
-        }
-      : null,
     // Creator profile
     creator_display_name: beautyPage.display_name,
     creator_avatar_url: beautyPage.avatar_url,
     creator_bio: beautyPage.bio,
+    // Slug change tracking
+    slug_changed_at: beautyPage.slug_changed_at,
     // Contact info
     address: beautyPage.address,
     city: beautyPage.city,

@@ -36,7 +36,7 @@ export type ServiceWithRelated = {
 
 /**
  * Gets related services for a specific service.
- * Queries both directions since relationships are bi-directional.
+ * Uses RPC function that queries both directions with a UNION.
  *
  * @param serviceId - The service ID to find related services for
  * @param beautyPageId - The beauty page ID for authorization
@@ -48,52 +48,18 @@ export async function getRelatedServices(
 ): Promise<ProfileService[]> {
   const supabase = await createClient();
 
-  // Query relationships where this service is service_a
-  const { data: relatedA } = await supabase
-    .from("related_services")
-    .select(
-      `
-      services:service_b_id (
-        id, name, price_cents, duration_minutes, display_order
-      )
-    `,
-    )
-    .eq("service_a_id", serviceId)
-    .eq("beauty_page_id", beautyPageId);
+  const { data, error } = await supabase.rpc("get_related_services", {
+    p_service_id: serviceId,
+    p_beauty_page_id: beautyPageId,
+  });
 
-  // Query relationships where this service is service_b
-  const { data: relatedB } = await supabase
-    .from("related_services")
-    .select(
-      `
-      services:service_a_id (
-        id, name, price_cents, duration_minutes, display_order
-      )
-    `,
-    )
-    .eq("service_b_id", serviceId)
-    .eq("beauty_page_id", beautyPageId);
-
-  // Combine and transform results
-  const servicesA = (relatedA ?? [])
-    .map((r) => r.services as unknown as ProfileService)
-    .filter(Boolean);
-  const servicesB = (relatedB ?? [])
-    .map((r) => r.services as unknown as ProfileService)
-    .filter(Boolean);
-
-  // Deduplicate by id
-  const seen = new Set<string>();
-  const combined: ProfileService[] = [];
-
-  for (const service of [...servicesA, ...servicesB]) {
-    if (!seen.has(service.id)) {
-      seen.add(service.id);
-      combined.push(service);
-    }
+  if (error) {
+    console.error("Error fetching related services:", error);
+    return [];
   }
 
-  return combined.sort((a, b) => a.display_order - b.display_order);
+  // RPC returns jsonb array with the service data
+  return (data ?? []) as ProfileService[];
 }
 
 /**

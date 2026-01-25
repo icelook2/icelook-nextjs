@@ -1,13 +1,15 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
 import { getBeautyPageForViewer } from "@/lib/queries/beauty-page-viewer";
 import { getActiveBundles } from "@/lib/queries/bundles";
 import { getActivePromotions } from "@/lib/queries/promotions";
+import { getSlugRedirect } from "@/lib/queries/slug-history";
 import { PageHeader } from "@/lib/ui/page-header";
 import { Paper } from "@/lib/ui/paper";
 import { BookingBarWrapper } from "./_components/booking-bar-wrapper";
 import { ContactSection } from "./_components/contact-section";
+import { EditProfileDialog } from "./_components/edit-profile-dialog";
 import { HeroSection } from "./_components/hero-section";
 import { ProfileTabs } from "./_components/profile-tabs";
 import { ReviewsContent } from "./_components/reviews-content";
@@ -22,6 +24,7 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
   const t = await getTranslations("beauty_page");
   const tBooking = await getTranslations("booking");
   const tBookingDialog = await getTranslations("beauty_page.booking");
+  const tEditProfile = await getTranslations("beauty_page.edit_profile");
 
   // Get current user first (needed for ban check)
   const currentUser = await getProfile();
@@ -32,19 +35,44 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
 
   // Both "banned" and "not_found" show 404 (don't reveal ban status)
   if (result.type !== "success") {
+    // Check if this is an old slug that should redirect
+    const slugRedirect = await getSlugRedirect(nickname);
+    if (slugRedirect?.shouldRedirect) {
+      // 301 permanent redirect to new slug
+      redirect(`/${slugRedirect.newSlug}`);
+    }
     notFound();
   }
 
   const profile = result.profile;
 
-  // Fetch promotions and bundles for this beauty page
+  // Check if current user is the owner of this beauty page
+  const isOwner = currentUser?.id === profile.info.owner_id;
+
+  // Fetch promotions and bundles
   const [promotions, bundles] = await Promise.all([
     getActivePromotions(profile.info.id),
     getActiveBundles(profile.info.id),
   ]);
 
-  // Check if current user is the owner of this beauty page
-  const isOwner = currentUser?.id === profile.info.owner_id;
+  // Calculate slug cooldown days remaining (for edit profile dialog)
+  const SLUG_COOLDOWN_DAYS = 30;
+  const slugCooldownDaysRemaining = (() => {
+    const slugChangedAt = profile.info.slug_changed_at;
+    if (!slugChangedAt) {
+      return 0;
+    }
+    const lastChange = new Date(slugChangedAt);
+    const cooldownEnd = new Date(lastChange);
+    cooldownEnd.setDate(cooldownEnd.getDate() + SLUG_COOLDOWN_DAYS);
+    const now = new Date();
+    if (now >= cooldownEnd) {
+      return 0;
+    }
+    return Math.ceil(
+      (cooldownEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+  })();
 
   // Calculate counts for tabs
   const servicesCount = profile.serviceGroups.reduce(
@@ -72,6 +100,7 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
 
   // Creator info for booking
   const creatorInfo = {
+    name: profile.info.name,
     displayName: profile.info.creator_display_name ?? profile.info.name,
     avatarUrl: profile.info.creator_avatar_url ?? profile.info.logo_url,
   };
@@ -243,6 +272,41 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
               reviews: t("reviews"),
             }}
           />
+
+          {/* Edit Profile button - only visible to owner */}
+          {isOwner && (
+            <div className="mt-4">
+              <EditProfileDialog
+                beautyPageId={profile.info.id}
+                currentName={profile.info.name}
+                currentSlug={profile.info.slug}
+                currentBio={profile.info.creator_bio}
+                currentAvatarUrl={profile.info.creator_avatar_url}
+                slugChangedAt={profile.info.slug_changed_at}
+                translations={{
+                  editProfile: tEditProfile("button"),
+                  title: tEditProfile("title"),
+                  nameLabel: tEditProfile("name_label"),
+                  namePlaceholder: tEditProfile("name_placeholder"),
+                  slugLabel: tEditProfile("slug_label"),
+                  slugPlaceholder: tEditProfile("slug_placeholder"),
+                  slugHint: tEditProfile("slug_hint", {
+                    slug: profile.info.slug,
+                  }),
+                  slugCooldownWarning: tEditProfile("slug_cooldown_warning", {
+                    days: slugCooldownDaysRemaining,
+                  }),
+                  slugChangeWarning: tEditProfile("slug_change_warning"),
+                  bioLabel: tEditProfile("bio_label"),
+                  bioPlaceholder: tEditProfile("bio_placeholder"),
+                  bioHint: tEditProfile("bio_hint"),
+                  cancel: tEditProfile("cancel"),
+                  save: tEditProfile("save"),
+                  saving: tEditProfile("saving"),
+                }}
+              />
+            </div>
+          )}
         </Paper>
 
         <ProfileTabs

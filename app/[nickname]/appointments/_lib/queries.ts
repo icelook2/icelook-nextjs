@@ -36,6 +36,7 @@ export async function getExistingWorkingDays(
 
 /**
  * Get schedule data for a beauty page within a date range
+ * Uses parallel queries for improved performance
  */
 export async function getScheduleData(
   beautyPageId: string,
@@ -47,50 +48,50 @@ export async function getScheduleData(
 }> {
   const supabase = await createClient();
 
-  // Fetch working days with breaks
-  const { data: workingDays, error: workingDaysError } = await supabase
-    .from("working_days")
-    .select("*, working_day_breaks (*)")
-    .eq("beauty_page_id", beautyPageId)
-    .gte("date", startDate)
-    .lte("date", endDate)
-    .order("date");
+  // Fetch working days and appointments in parallel (independent queries)
+  const [workingDaysResult, appointmentsResult] = await Promise.all([
+    supabase
+      .from("working_days")
+      .select("*, working_day_breaks (*)")
+      .eq("beauty_page_id", beautyPageId)
+      .gte("date", startDate)
+      .lte("date", endDate)
+      .order("date"),
+    supabase
+      .from("appointments")
+      .select("*")
+      .eq("beauty_page_id", beautyPageId)
+      .gte("date", startDate)
+      .lte("date", endDate)
+      .order("date")
+      .order("start_time"),
+  ]);
 
-  if (workingDaysError) {
-    console.error("Error fetching working days:", workingDaysError);
+  if (workingDaysResult.error) {
+    console.error("Error fetching working days:", workingDaysResult.error);
   }
 
-  // Fetch appointments
-  const { data: appointments, error: appointmentsError } = await supabase
-    .from("appointments")
-    .select("*")
-    .eq("beauty_page_id", beautyPageId)
-    .gte("date", startDate)
-    .lte("date", endDate)
-    .order("date")
-    .order("start_time");
-
-  if (appointmentsError) {
-    console.error("Error fetching appointments:", appointmentsError);
+  if (appointmentsResult.error) {
+    console.error("Error fetching appointments:", appointmentsResult.error);
   }
 
   // Transform working days to include breaks array
-  const workingDaysWithBreaks: WorkingDayWithBreaks[] = (workingDays ?? []).map(
-    (wd) => ({
-      id: wd.id,
-      beauty_page_id: wd.beauty_page_id,
-      date: wd.date,
-      start_time: wd.start_time,
-      end_time: wd.end_time,
-      slot_interval_minutes: wd.slot_interval_minutes ?? 30,
-      created_at: wd.created_at,
-      updated_at: wd.updated_at,
-      breaks: wd.working_day_breaks ?? [],
-    }),
-  );
+  const workingDaysWithBreaks: WorkingDayWithBreaks[] = (
+    workingDaysResult.data ?? []
+  ).map((wd) => ({
+    id: wd.id,
+    beauty_page_id: wd.beauty_page_id,
+    date: wd.date,
+    start_time: wd.start_time,
+    end_time: wd.end_time,
+    slot_interval_minutes: wd.slot_interval_minutes ?? 30,
+    created_at: wd.created_at,
+    updated_at: wd.updated_at,
+    breaks: wd.working_day_breaks ?? [],
+  }));
 
   return {
     workingDays: workingDaysWithBreaks,
-    appointments: (appointments ?? []) as Appointment[],
+    appointments: (appointmentsResult.data ?? []) as Appointment[],
   };
 }

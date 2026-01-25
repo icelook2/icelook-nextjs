@@ -16,65 +16,40 @@ import { getScheduleData } from "./_lib/queries";
 import { getAppointmentsForDate } from "./_lib/workday-utils";
 
 /**
- * Fetch working day dates for calendar display
+ * Fetch all calendar dates in a single RPC call
+ * Replaces 3 separate queries with 1 RPC
  */
-async function fetchWorkingDatesForCalendar(
+async function fetchCalendarDates(
   beautyPageId: string,
   startDate: string,
   endDate: string,
-): Promise<Set<string>> {
+): Promise<{
+  workingDates: Set<string>;
+  appointmentDates: Set<string>;
+  pendingDates: Set<string>;
+}> {
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("working_days")
-    .select("date")
-    .eq("beauty_page_id", beautyPageId)
-    .gte("date", startDate)
-    .lte("date", endDate);
+  const { data, error } = await supabase.rpc("get_calendar_dates", {
+    p_beauty_page_id: beautyPageId,
+    p_start_date: startDate,
+    p_end_date: endDate,
+  });
 
-  return new Set(data?.map((wd: { date: string }) => wd.date) ?? []);
-}
+  if (error) {
+    console.error("Error fetching calendar dates:", error);
+    return {
+      workingDates: new Set(),
+      appointmentDates: new Set(),
+      pendingDates: new Set(),
+    };
+  }
 
-/**
- * Fetch dates with confirmed appointments for calendar display
- */
-async function fetchAppointmentDatesForCalendar(
-  beautyPageId: string,
-  startDate: string,
-  endDate: string,
-): Promise<Set<string>> {
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .from("appointments")
-    .select("date")
-    .eq("beauty_page_id", beautyPageId)
-    .gte("date", startDate)
-    .lte("date", endDate)
-    .not("status", "in", '("cancelled","no_show","pending")');
-
-  return new Set(data?.map((apt: { date: string }) => apt.date) ?? []);
-}
-
-/**
- * Fetch dates with pending appointments for calendar display
- */
-async function fetchPendingDatesForCalendar(
-  beautyPageId: string,
-  startDate: string,
-  endDate: string,
-): Promise<Set<string>> {
-  const supabase = await createClient();
-
-  const { data } = await supabase
-    .from("appointments")
-    .select("date")
-    .eq("beauty_page_id", beautyPageId)
-    .eq("status", "pending")
-    .gte("date", startDate)
-    .lte("date", endDate);
-
-  return new Set(data?.map((apt: { date: string }) => apt.date) ?? []);
+  return {
+    workingDates: new Set((data?.workingDates as string[]) ?? []),
+    appointmentDates: new Set((data?.appointmentDates as string[]) ?? []),
+    pendingDates: new Set((data?.pendingDates as string[]) ?? []),
+  };
 }
 
 type FilterType = "all" | "confirmed" | "pending";
@@ -130,21 +105,19 @@ export default async function AppointmentsPage({
   const calendarStart = toDateString(subMonths(startOfMonth(selectedDate), 1));
   const calendarEnd = toDateString(addMonths(startOfMonth(selectedDate), 12));
 
-  const [
-    scheduleData,
-    serviceGroups,
-    clientsResult,
-    workingDatesForCalendar,
-    appointmentDatesForCalendar,
-    pendingDatesForCalendar,
-  ] = await Promise.all([
-    getScheduleData(beautyPage.id, dateStr, dateStr),
-    getServiceGroupsWithServices(beautyPage.id),
-    getBeautyPageClients(beautyPage.id, { limit: 50 }),
-    fetchWorkingDatesForCalendar(beautyPage.id, calendarStart, calendarEnd),
-    fetchAppointmentDatesForCalendar(beautyPage.id, calendarStart, calendarEnd),
-    fetchPendingDatesForCalendar(beautyPage.id, calendarStart, calendarEnd),
-  ]);
+  const [scheduleData, serviceGroups, clientsResult, calendarDates] =
+    await Promise.all([
+      getScheduleData(beautyPage.id, dateStr, dateStr),
+      getServiceGroupsWithServices(beautyPage.id),
+      getBeautyPageClients(beautyPage.id, { limit: 50 }),
+      fetchCalendarDates(beautyPage.id, calendarStart, calendarEnd),
+    ]);
+
+  const {
+    workingDates: workingDatesForCalendar,
+    appointmentDates: appointmentDatesForCalendar,
+    pendingDates: pendingDatesForCalendar,
+  } = calendarDates;
 
   const { appointments, workingDays } = scheduleData;
 

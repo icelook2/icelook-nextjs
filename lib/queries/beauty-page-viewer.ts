@@ -37,6 +37,7 @@ type RpcBeautyPageResponse = {
     creator_display_name: string | null;
     creator_avatar_url: string | null;
     creator_bio: string | null;
+    slug_changed_at: string | null;
     address: string | null;
     city: string | null;
     postal_code: string | null;
@@ -46,11 +47,6 @@ type RpcBeautyPageResponse = {
     website_url: string | null;
     instagram_url: string | null;
     facebook_url: string | null;
-    type: {
-      id: string;
-      name: string;
-      slug: string;
-    } | null;
   };
   timezone?: string;
   workingDays?: Array<{
@@ -186,10 +182,10 @@ function transformRpcResponse(response: RpcBeautyPageResponse): BeautyPageProfil
     description: info.description,
     is_active: info.is_active,
     is_verified: info.is_verified,
-    type: info.type,
     creator_display_name: info.creator_display_name,
     creator_avatar_url: info.creator_avatar_url,
     creator_bio: info.creator_bio,
+    slug_changed_at: info.slug_changed_at ?? null,
     address: info.address,
     city: info.city,
     postal_code: info.postal_code,
