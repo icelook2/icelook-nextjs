@@ -161,7 +161,10 @@ function transformAnalyticsResponse(
     pending: data.appointments.pending,
     confirmed: data.appointments.confirmed,
     trends: {
-      total: calculateTrend(data.appointments.total, data.appointments.prevTotal),
+      total: calculateTrend(
+        data.appointments.total,
+        data.appointments.prevTotal,
+      ),
       completed: calculateTrend(
         data.appointments.completed,
         data.appointments.prevCompleted,
@@ -178,7 +181,9 @@ function transformAnalyticsResponse(
   // Calculate previous period average ticket for trend
   const prevAverageTicketCents =
     data.appointments.prevCompleted > 0
-      ? Math.round(data.revenue.prevTotalCents / data.appointments.prevCompleted)
+      ? Math.round(
+          data.revenue.prevTotalCents / data.appointments.prevCompleted,
+        )
       : null;
 
   const averageTicketTrend = calculateTrend(

@@ -105,11 +105,15 @@ export async function updateTimezone(input: {
 const VALID_SLOT_INTERVALS = [5, 10, 15, 30, 60] as const;
 
 const slotIntervalSchema = z.object({
-  slotInterval: z.number().refine(
-    (val): val is (typeof VALID_SLOT_INTERVALS)[number] =>
-      VALID_SLOT_INTERVALS.includes(val as (typeof VALID_SLOT_INTERVALS)[number]),
-    "Invalid slot interval",
-  ),
+  slotInterval: z
+    .number()
+    .refine(
+      (val): val is (typeof VALID_SLOT_INTERVALS)[number] =>
+        VALID_SLOT_INTERVALS.includes(
+          val as (typeof VALID_SLOT_INTERVALS)[number],
+        ),
+      "Invalid slot interval",
+    ),
 });
 
 /**

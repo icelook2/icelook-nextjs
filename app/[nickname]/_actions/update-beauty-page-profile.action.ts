@@ -58,7 +58,9 @@ const inputSchema = z.object({
   name: beautyPageNameSchema.optional(),
   slug: beautyPageSlugSchema.optional(),
   bio: z.string().max(500).optional(),
-  avatarUrl: z.string().url().nullable().optional(),
+  // Avatar can be a storage path (e.g., "user-id/avatar/image.png") or full URL (legacy)
+  // We accept any non-empty string, not just URLs, to support the path-based approach
+  avatarUrl: z.string().min(1).nullable().optional(),
 });
 
 // ============================================================================

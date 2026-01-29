@@ -11,7 +11,10 @@ export async function Product2Features() {
   const t = await getTranslations("product2");
 
   return (
-    <section id="features" className="scroll-mt-20 border-t border-border bg-surface/50">
+    <section
+      id="features"
+      className="scroll-mt-20 border-t border-border bg-surface/50"
+    >
       <div className="mx-auto max-w-6xl px-4 py-20">
         <div className="space-y-24">
           {/* Feature 1: Your Booking Page */}

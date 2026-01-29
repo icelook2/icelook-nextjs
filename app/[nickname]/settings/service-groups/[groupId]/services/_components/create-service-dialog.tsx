@@ -129,7 +129,9 @@ export function CreateServiceDialog({
                 state={errors.description ? "error" : "default"}
                 {...register("description")}
               />
-              <Field.Description>{t("service_description_hint")}</Field.Description>
+              <Field.Description>
+                {t("service_description_hint")}
+              </Field.Description>
               <Field.Error>{errors.description?.message}</Field.Error>
             </Field.Root>
 

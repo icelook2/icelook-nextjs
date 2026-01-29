@@ -20,7 +20,11 @@ export async function PolicyVersionBadge({
       <span className="rounded-md bg-surface-alt px-2 py-0.5 font-medium">
         v{version}
       </span>
-      <span>{t("effective_date", { date: formatEffectiveDate(effectiveDate, locale) })}</span>
+      <span>
+        {t("effective_date", {
+          date: formatEffectiveDate(effectiveDate, locale),
+        })}
+      </span>
     </div>
   );
 }

@@ -60,6 +60,8 @@
     "email_invalid": "Please enter a valid email address",
     "min_length": "Must be at least {min} characters",
     "max_length": "Must be at most {max} characters",
+    "name_min": "Name must be at least {min} characters",
+    "name_max": "Name must be at most {max} characters",
     "otp_length": "Code must be 6 digits",
     "otp_numeric": "Code must contain only numbers",
     "name_too_short": "Name must be at least 2 characters",
@@ -79,6 +81,9 @@
     "username_min": "Username must be at least 3 characters",
     "username_max": "Username must be at most 30 characters",
     "username_format": "Username can only contain lowercase letters, numbers, hyphens, and underscores",
+    "nickname_min": "Nickname must be at least {min} characters",
+    "nickname_max": "Nickname must be at most {max} characters",
+    "nickname_format": "Nickname must start with a letter and contain only lowercase letters, numbers, and hyphens",
     "specialty_required": "Please select a specialty",
     "service_group_name_required": "Service group name is required",
     "service_name_required": "Service name is required",
@@ -292,7 +297,21 @@
       "manage_profile": "Manage"
     },
     "logout_section": "Account",
-    "logout_button": "Log out"
+    "logout_button": "Log out",
+    "promo": {
+      "card_title": "Offer Your Services",
+      "card_description": "Create your beauty page and start accepting online bookings.",
+      "card_button": "Learn More",
+      "dialog_title": "Create Your Beauty Page",
+      "next": "Continue",
+      "continue": "Get Started",
+      "slide_1_title": "Your Professional Booking Profile",
+      "slide_1_description": "A Beauty Page is your personal business profile where clients can discover your services and book appointments online.",
+      "slide_2_title": "For Beauty Professionals",
+      "slide_2_description": "Hair stylists, nail technicians, makeup artists, estheticians, and other beauty service providers who want to accept online bookings.",
+      "slide_3_title": "Everything You Need",
+      "slide_3_description": "Your own icelook.app/@yourname link, online booking calendar, service menu with prices, and client management."
+    }
   },
   "specialist": {
     "wizard": {
@@ -2756,14 +2775,14 @@
       "continue": "Continue",
       "skip": "Skip",
       "get_started": "Get Started",
-      "create": "Create Beauty Page"
+      "create": "Create Beauty Page",
+      "step_of": "Step {current} of {total}"
     },
     "progress": {
       "choose_type": "Type",
       "name_nickname": "Name",
       "services": "Services",
-      "select_days": "Days",
-      "configure_hours": "Hours"
+      "first_working_day": "Schedule"
     },
     "intro": {
       "title": "Create Your Beauty Page",
@@ -2800,7 +2819,22 @@
       "checking": "Checking...",
       "available": "Available",
       "taken": "Already taken",
-      "invalid": "Invalid format"
+      "invalid": "Invalid format",
+      "try": "Try"
+    },
+    "avatar": {
+      "title": "Add your photo",
+      "subtitle": "Help clients recognize you with a profile photo. You can always change it later."
+    },
+    "contacts": {
+      "title": "Add your contacts",
+      "subtitle": "Help clients find and connect with you.",
+      "instagram_label": "Instagram",
+      "instagram_placeholder": "your_username",
+      "telegram_label": "Telegram",
+      "telegram_placeholder": "your_username",
+      "phone_label": "Phone",
+      "phone_placeholder": "+380 XX XXX XX XX"
     },
     "choose_type": {
       "title": "What do you do?",
@@ -2827,8 +2861,10 @@
       "subtitle": "What do you offer to clients?",
       "empty_title": "No services yet",
       "empty_subtitle": "Add services to show clients what you offer",
+      "empty_prompt": "Add your first service",
       "add_first": "Add First Service",
       "add_another": "Add Service",
+      "max_reached_hint": "You can add more services later in settings",
       "back": "Back",
       "skip": "Skip",
       "next": "Next",
@@ -2847,9 +2883,42 @@
         "save": "Save"
       }
     },
-    "select_days": {
-      "title": "Select working days",
-      "subtitle": "Choose which days you want to work",
+    "first_working_day": {
+      "title": "Set your first working day",
+      "subtitle": "When can clients book with you? You can add more days later.",
+      "select_date": "Select a date",
+      "selected_date": "Selected: {date}",
+      "working_hours": "Working hours",
+      "break_time": "Break",
+      "add_break": "Add a break"
+    },
+    "confirmation": {
+      "title": "Ready to create your page?",
+      "subtitle": "You can always edit everything later in your page settings.",
+      "ready_message": "Your beauty page will be live and visible to clients immediately after creation. You can add services, working hours, and other details anytime from your settings.",
+      "services_label": "Services",
+      "services_count": "{count, plural, =0 {No services yet} =1 {1 service} other {# services}}",
+      "availability_label": "Availability",
+      "availability_count": "{count, plural, =0 {Not set yet} =1 {1 working day} other {# working days}}",
+      "missing_note": "You can add services and availability later in settings."
+    },
+    "preview": {
+      "label": "Preview",
+      "default_name": "Your Beauty Page",
+      "services_title": "Services",
+      "services_group": "Services",
+      "more_services": "more",
+      "tabs": {
+        "services": "Services",
+        "reviews": "Reviews",
+        "contacts": "Contacts"
+      },
+      "empty_services": "Services will appear here once added",
+      "empty_contacts": "Contact info will appear here once added",
+      "phone": "Phone"
+    },
+    "booking_preview": {
+      "title": "Booking Preview",
       "weekdays": {
         "mo": "Mo",
         "tu": "Tu",
@@ -2859,38 +2928,13 @@
         "sa": "Sa",
         "su": "Su"
       },
-      "week_short": "W",
-      "preview_empty": "No days selected",
-      "preview_count": "{count, plural, =1 {1 day} other {# days}} selected",
-      "preview_weekdays": "{count} weekdays",
-      "preview_saturdays": "{count} Saturdays",
-      "preview_sundays": "{count} Sundays",
-      "back": "Back",
-      "skip": "Skip",
-      "next": "Next"
-    },
-    "configure_hours": {
-      "title": "Set working hours",
-      "subtitle": "When are you available on these days?",
-      "description": "Configure hours for each day type. All days of the same type will share these hours.",
-      "weekdays_label": "Weekdays",
-      "saturday_label": "Saturday",
-      "sunday_label": "Sunday",
-      "error_invalid_hours": "End time must be after start time",
-      "preview_empty": "No hours configured",
-      "preview_summary": "Working hours for {count, plural, one {# day} other {# days}}",
-      "back": "Back",
-      "skip": "Skip",
-      "create": "Create Beauty Page"
-    },
-    "confirmation": {
-      "title": "Ready to create your page?",
-      "subtitle": "You can always edit everything later in your page settings.",
-      "services_label": "Services",
-      "services_count": "{count, plural, =0 {No services yet} =1 {1 service} other {# services}}",
-      "availability_label": "Availability",
-      "availability_count": "{count, plural, =0 {Not set yet} =1 {1 working day} other {# working days}}",
-      "missing_note": "You can add services and availability later in settings."
+      "working_day": "Working day",
+      "selected_date": "Selected date",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "evening": "Evening",
+      "no_slots": "No time slots configured",
+      "select_date_hint": "Tap a working day to see available times"
     },
     "errors": {
       "not_authenticated": "You must be logged in",

@@ -10,16 +10,17 @@ export async function Product2Demo() {
   const t = await getTranslations("product2");
 
   return (
-    <section id="demo" className="scroll-mt-20 bg-gradient-to-b from-transparent via-surface/50 to-transparent">
+    <section
+      id="demo"
+      className="scroll-mt-20 bg-gradient-to-b from-transparent via-surface/50 to-transparent"
+    >
       <div className="mx-auto max-w-6xl px-4 py-20">
         {/* Section headline */}
         <div className="mb-12 text-center">
           <h2 className="text-2xl font-semibold md:text-3xl">
             {t("demo.headline")}
           </h2>
-          <p className="mt-3 text-muted">
-            {t("demo.subheadline")}
-          </p>
+          <p className="mt-3 text-muted">{t("demo.subheadline")}</p>
         </div>
 
         {/* Video placeholder */}

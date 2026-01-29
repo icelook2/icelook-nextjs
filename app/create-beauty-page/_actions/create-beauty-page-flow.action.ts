@@ -5,30 +5,31 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { RESERVED_SLUGS } from "@/lib/validation/schemas";
 import { createBeautyPageFlowSchema } from "../_lib/schemas";
-import { jsWeekdayToOurs } from "../_lib/types";
 
 type CreateBeautyPageFlowResult =
-  | { success: true; nickname: string }
+  | { success: true; nickname: string; beautyPageId: string }
   | { success: false; error: string };
 
 /**
- * Create a beauty page with optional services and working days
+ * Create a beauty page with optional services and first working day
  * This is the main action for the create beauty page flow
  */
 export async function createBeautyPageFlow(input: {
   name: string;
   nickname: string;
+  instagram: string | null;
+  telegram: string | null;
+  phone: string | null;
   services: Array<{
     name: string;
     priceCents: number;
     durationMinutes: number;
   }>;
-  selectedDates: string[];
-  weekdayHours: Array<{
-    weekday: number;
+  firstWorkingDay: {
+    date: string;
     startTime: string;
     endTime: string;
-  }>;
+  } | null;
 }): Promise<CreateBeautyPageFlowResult> {
   const t = await getTranslations("create_beauty_page");
   const tValidation = await getTranslations("validation");
@@ -55,8 +56,12 @@ export async function createBeautyPageFlow(input: {
     return { success: false, error: tValidation("invalid_input") };
   }
 
-  const { name, nickname, services, selectedDates, weekdayHours } =
-    validation.data;
+  const { name, nickname, services, firstWorkingDay } = validation.data;
+
+  // Contact fields are not validated by schema, take directly from input
+  const instagram = input.instagram;
+  const telegram = input.telegram;
+  const phone = input.phone;
 
   // Check for reserved slugs
   if (RESERVED_SLUGS.includes(nickname as (typeof RESERVED_SLUGS)[number])) {
@@ -89,12 +94,24 @@ export async function createBeautyPageFlow(input: {
   // Create beauty page
   // ============================================================================
 
+  // Convert social usernames to full URLs if provided
+  const instagramUrl = instagram
+    ? `https://instagram.com/${instagram.replace(/^@/, "")}`
+    : null;
+
+  const telegramUrl = telegram
+    ? `https://t.me/${telegram.replace(/^@/, "")}`
+    : null;
+
   const { data: beautyPage, error: beautyPageError } = await supabase
     .from("beauty_pages")
     .insert({
       name,
       slug: nickname,
       owner_id: user.id,
+      instagram_url: instagramUrl,
+      telegram_url: telegramUrl,
+      phone: phone || null,
     })
     .select("id")
     .single();
@@ -147,53 +164,23 @@ export async function createBeautyPageFlow(input: {
   }
 
   // ============================================================================
-  // Create working days (if any selected dates)
+  // Create first working day (if provided)
   // ============================================================================
 
-  if (selectedDates.length > 0 && weekdayHours.length > 0) {
-    // Build a map of weekday -> hours for quick lookup
-    const hoursMap = new Map<number, { startTime: string; endTime: string }>();
-    for (const hours of weekdayHours) {
-      hoursMap.set(hours.weekday, {
-        startTime: hours.startTime,
-        endTime: hours.endTime,
+  if (firstWorkingDay) {
+    const { error: workingDayError } = await supabase
+      .from("working_days")
+      .insert({
+        beauty_page_id: beautyPageId,
+        date: firstWorkingDay.date,
+        start_time: `${firstWorkingDay.startTime}:00`,
+        end_time: `${firstWorkingDay.endTime}:00`,
+        // slot_interval_minutes defaults to 30 at DB level
       });
-    }
 
-    const workingDaysToCreate: Array<{
-      beauty_page_id: string;
-      date: string;
-      start_time: string;
-      end_time: string;
-    }> = [];
-
-    // For each selected date, find the corresponding hours
-    for (const dateStr of selectedDates) {
-      const date = new Date(dateStr);
-      const jsWeekday = date.getDay(); // 0 = Sunday, 6 = Saturday
-      const ourWeekday = jsWeekdayToOurs(jsWeekday); // 0 = Monday, 6 = Sunday
-
-      const hours = hoursMap.get(ourWeekday);
-      if (hours) {
-        workingDaysToCreate.push({
-          beauty_page_id: beautyPageId,
-          date: dateStr,
-          start_time: `${hours.startTime}:00`,
-          end_time: `${hours.endTime}:00`,
-          // slot_interval_minutes defaults to 30 at DB level
-        });
-      }
-    }
-
-    if (workingDaysToCreate.length > 0) {
-      const { error: workingDaysError } = await supabase
-        .from("working_days")
-        .insert(workingDaysToCreate);
-
-      if (workingDaysError) {
-        console.error("Error creating working days:", workingDaysError);
-        // Don't fail the whole flow, just log the error
-      }
+    if (workingDayError) {
+      console.error("Error creating first working day:", workingDayError);
+      // Don't fail the whole flow, just log the error
     }
   }
 
@@ -205,5 +192,5 @@ export async function createBeautyPageFlow(input: {
   revalidatePath("/beauty-pages");
   revalidatePath(`/${nickname}`);
 
-  return { success: true, nickname };
+  return { success: true, nickname, beautyPageId };
 }

@@ -9,12 +9,13 @@ import {
   type CreateBeautyPageStep,
   initialState,
 } from "../_lib/types";
-import { StepConfigureHours } from "./step-configure-hours";
+import { uploadAvatar } from "@/lib/storage/upload-avatar";
+import { StepAvatar } from "./step-avatar";
 import { StepConfirmation } from "./step-confirmation";
-import { StepIntro } from "./step-intro";
+import { StepContacts } from "./step-contacts";
+import { StepFirstWorkingDay } from "./step-first-working-day";
 import { StepName } from "./step-name";
 import { StepNickname } from "./step-nickname";
-import { StepSelectDays } from "./step-select-days";
 import { StepServices } from "./step-services";
 
 interface CreateBeautyPageFlowProps {
@@ -81,26 +82,34 @@ export function CreateBeautyPageFlow(_props: CreateBeautyPageFlowProps) {
       durationMinutes: s.durationMinutes,
     }));
 
-    const selectedDatesArray = Array.from(state.selectedDates);
-
-    const weekdayHoursArray = Array.from(state.weekdayHours.values()).map(
-      (h) => ({
-        weekday: h.weekday,
-        startTime: h.startTime,
-        endTime: h.endTime,
-      }),
-    );
-
     startTransition(async () => {
       const result = await createBeautyPageFlow({
         name: state.name,
         nickname: state.nickname,
+        instagram: state.instagram || null,
+        telegram: state.telegram || null,
+        phone: state.phone || null,
         services: servicesData,
-        selectedDates: selectedDatesArray,
-        weekdayHours: weekdayHoursArray,
+        firstWorkingDay: state.firstWorkingDay,
       });
 
       if (result.success) {
+        // Upload avatar if one was selected (fire and forget - don't block navigation)
+        if (state.avatarFile) {
+          uploadAvatar(state.avatarFile, {
+            type: "beauty-page",
+            beautyPageId: result.beautyPageId,
+          }).catch((err) => {
+            // Log error but don't block - user can update avatar later in settings
+            console.error("Failed to upload avatar:", err);
+          });
+        }
+
+        // Clean up preview URL
+        if (state.avatarPreviewUrl) {
+          URL.revokeObjectURL(state.avatarPreviewUrl);
+        }
+
         router.push(`/${result.nickname}`);
       } else {
         setError(result.error);
@@ -112,26 +121,38 @@ export function CreateBeautyPageFlow(_props: CreateBeautyPageFlowProps) {
   const handleSkip = () => {
     const currentStep = state.step;
 
-    if (currentStep === "services") {
-      // Clear services and move to next step
+    if (currentStep === "avatar") {
+      // Clear avatar and move to contacts step
+      if (state.avatarPreviewUrl) {
+        URL.revokeObjectURL(state.avatarPreviewUrl);
+      }
+      setState((prev) => ({
+        ...prev,
+        avatarFile: null,
+        avatarPreviewUrl: null,
+        step: "contacts",
+      }));
+    } else if (currentStep === "contacts") {
+      // Clear all contacts and move to services step
+      setState((prev) => ({
+        ...prev,
+        instagram: "",
+        telegram: "",
+        phone: "",
+        step: "services",
+      }));
+    } else if (currentStep === "services") {
+      // Clear services and move to first working day step
       setState((prev) => ({
         ...prev,
         services: [],
-        step: "working-days",
+        step: "first-working-day",
       }));
-    } else if (currentStep === "working-days") {
-      // Skip both working-days and working-hours - go directly to confirmation
+    } else if (currentStep === "first-working-day") {
+      // Skip first working day - go directly to confirmation
       setState((prev) => ({
         ...prev,
-        selectedDates: new Set(),
-        weekdayHours: new Map(),
-        step: "confirmation",
-      }));
-    } else if (currentStep === "working-hours") {
-      // Skip working-hours - go to confirmation with default hours
-      setState((prev) => ({
-        ...prev,
-        weekdayHours: new Map(),
+        firstWorkingDay: null,
         step: "confirmation",
       }));
     } else {
@@ -139,24 +160,8 @@ export function CreateBeautyPageFlow(_props: CreateBeautyPageFlowProps) {
     }
   };
 
-  // Step-specific props for legacy steps
-  const stepProps = {
-    state,
-    onUpdate: handleUpdate,
-    onNext: handleNext,
-    onBack: handleBack,
-    onSkip: handleSkip,
-  };
-
-  // Determine visible step count for progress (working-hours may be hidden)
-  const getVisibleStepCount = () => {
-    // If working-days was skipped, working-hours won't be shown
-    // But for simplicity, we always show 7 dots
-    return TOTAL_STEPS;
-  };
-
   return (
-    <main className="min-h-screen bg-surface">
+    <main>
       {/* Error from creation */}
       {error && (
         <div className="fixed left-0 right-0 top-0 z-50 bg-danger/10 px-4 py-3 text-center text-sm text-danger">
@@ -165,14 +170,10 @@ export function CreateBeautyPageFlow(_props: CreateBeautyPageFlowProps) {
       )}
 
       {/* Step content */}
-      {state.step === "intro" && (
-        <StepIntro totalSteps={getVisibleStepCount()} onNext={handleNext} />
-      )}
-
       {state.step === "name" && (
         <StepName
           name={state.name}
-          totalSteps={getVisibleStepCount()}
+          totalSteps={TOTAL_STEPS}
           onUpdate={(name) => handleUpdate({ name })}
           onNext={handleNext}
           onPrevious={handleBack}
@@ -183,23 +184,77 @@ export function CreateBeautyPageFlow(_props: CreateBeautyPageFlowProps) {
         <StepNickname
           name={state.name}
           nickname={state.nickname}
-          totalSteps={getVisibleStepCount()}
+          totalSteps={TOTAL_STEPS}
           onUpdate={(nickname) => handleUpdate({ nickname })}
           onNext={handleNext}
           onPrevious={handleBack}
         />
       )}
 
-      {state.step === "services" && <StepServices {...stepProps} />}
+      {state.step === "avatar" && (
+        <StepAvatar
+          name={state.name}
+          nickname={state.nickname}
+          avatarFile={state.avatarFile}
+          avatarPreviewUrl={state.avatarPreviewUrl}
+          totalSteps={TOTAL_STEPS}
+          onUpdate={(avatarFile, avatarPreviewUrl) =>
+            handleUpdate({ avatarFile, avatarPreviewUrl })
+          }
+          onNext={handleNext}
+          onPrevious={handleBack}
+          onSkip={handleSkip}
+        />
+      )}
 
-      {state.step === "working-days" && <StepSelectDays {...stepProps} />}
+      {state.step === "contacts" && (
+        <StepContacts
+          name={state.name}
+          nickname={state.nickname}
+          avatarPreviewUrl={state.avatarPreviewUrl}
+          instagram={state.instagram}
+          telegram={state.telegram}
+          phone={state.phone}
+          totalSteps={TOTAL_STEPS}
+          onUpdate={(contacts) => handleUpdate(contacts)}
+          onNext={handleNext}
+          onPrevious={handleBack}
+          onSkip={handleSkip}
+        />
+      )}
 
-      {state.step === "working-hours" && <StepConfigureHours {...stepProps} />}
+      {state.step === "services" && (
+        <StepServices
+          name={state.name}
+          nickname={state.nickname}
+          avatarPreviewUrl={state.avatarPreviewUrl}
+          services={state.services}
+          totalSteps={TOTAL_STEPS}
+          onUpdate={(services) => handleUpdate({ services })}
+          onNext={handleNext}
+          onPrevious={handleBack}
+          onSkip={handleSkip}
+        />
+      )}
+
+      {state.step === "first-working-day" && (
+        <StepFirstWorkingDay
+          firstWorkingDay={state.firstWorkingDay}
+          totalSteps={TOTAL_STEPS}
+          onUpdate={(firstWorkingDay) => handleUpdate({ firstWorkingDay })}
+          onNext={handleNext}
+          onPrevious={handleBack}
+          onSkip={handleSkip}
+        />
+      )}
 
       {state.step === "confirmation" && (
         <StepConfirmation
-          state={state}
-          totalSteps={getVisibleStepCount()}
+          name={state.name}
+          nickname={state.nickname}
+          avatarPreviewUrl={state.avatarPreviewUrl}
+          services={state.services}
+          totalSteps={TOTAL_STEPS}
           onPrevious={handleBack}
           onSubmit={handleCreate}
           isSubmitting={isPending}

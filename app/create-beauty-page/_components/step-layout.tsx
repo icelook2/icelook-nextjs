@@ -1,14 +1,16 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { Button } from "@/lib/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { DotProgress } from "./dot-progress";
 
 interface StepLayoutProps {
-  /** Preview content shown at the top */
+  /** Preview content shown on the right side (hidden on mobile) */
   preview?: ReactNode;
+  /** Label for the preview section */
+  previewLabel?: string;
   /** Current step number (1-indexed for display) */
   currentStep: number;
   /** Total number of steps */
@@ -17,26 +19,10 @@ interface StepLayoutProps {
   title: string;
   /** Subtitle/description shown below the title */
   subtitle?: string;
-  /** Form/content area */
+  /** Form/content area (should include its own submit button) */
   children: ReactNode;
-  /** Called when Previous button is clicked */
-  onPrevious?: () => void;
-  /** Called when Continue/Next button is clicked (for non-form steps) */
-  onNext?: () => void;
-  /** Called when Skip button is clicked */
-  onSkip?: () => void;
-  /** Form ID if using form submission instead of onNext */
-  formId?: string;
-  /** Label for the next/continue button */
-  nextLabel?: string;
-  /** Whether the next button is disabled */
-  nextDisabled?: boolean;
-  /** Whether next action is loading */
-  nextLoading?: boolean;
-  /** Hide navigation buttons (for confirmation step with custom button) */
-  hideNavigation?: boolean;
-  /** Custom navigation content (replaces default buttons) */
-  customNavigation?: ReactNode;
+  /** Called when back button is clicked (shows back button when provided) */
+  onBack?: () => void;
   /** Additional class names for the container */
   className?: string;
 }
@@ -44,56 +30,56 @@ interface StepLayoutProps {
 /**
  * Step layout for the create beauty page flow.
  *
- * Layout (mobile-first, centered):
- * - Preview area at top (in a card)
- * - Dot progress indicator
- * - Title + subtitle
- * - Form/content
- * - Fixed navigation at bottom
+ * Split layout:
+ * - Desktop: Form panel on left (styled card), preview on right
+ * - Mobile: Form only (preview hidden)
+ *
+ * Each step handles its own navigation (Continue button in form).
  */
 export function StepLayout({
   preview,
+  previewLabel,
   currentStep,
   totalSteps,
   title,
   subtitle,
   children,
-  onPrevious,
-  onNext,
-  onSkip,
-  formId,
-  nextLabel,
-  nextDisabled,
-  nextLoading,
-  hideNavigation,
-  customNavigation,
+  onBack,
   className,
 }: StepLayoutProps) {
   const t = useTranslations("create_beauty_page");
 
-  const hasSkip = Boolean(onSkip);
-  const showPrevious = currentStep > 1 && onPrevious;
-
   return (
-    <div className={cn("flex min-h-screen flex-col", className)}>
-      {/* Main content area - centered */}
-      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pb-28 pt-6">
-        {/* Preview area */}
-        {preview && (
-          <div className="mb-6">
-            <div className="rounded-2xl border border-border bg-surface-secondary p-6">
-              {preview}
-            </div>
+    <div
+      className={cn(
+        "min-h-dvh px-4 py-6 sm:grid sm:grid-cols-4 sm:gap-6 sm:p-6 lg:grid-cols-3 lg:gap-8 lg:p-8",
+        className,
+      )}
+    >
+      {/* Form Panel - 2 cols on sm/md, 1 col on lg */}
+      <div className="mx-auto w-full max-w-md sm:col-span-2 sm:mx-0 sm:max-w-none sm:rounded-2xl sm:border sm:border-border sm:bg-surface sm:p-8 sm:shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:col-span-1 dark:sm:shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
+        {/* Back button + Progress indicator */}
+        <div className="mb-6 flex items-start gap-3">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent-soft/50"
+              aria-label={t("navigation.previous")}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
+          <div className="flex flex-col gap-2 pt-2">
+            <span className="text-xs text-muted">
+              {t("navigation.step_of", { current: currentStep, total: totalSteps })}
+            </span>
+            <DotProgress currentStep={currentStep} totalSteps={totalSteps} />
           </div>
-        )}
-
-        {/* Dot progress */}
-        <div className="mb-6 flex justify-center">
-          <DotProgress currentStep={currentStep} totalSteps={totalSteps} />
         </div>
 
         {/* Title + Subtitle */}
-        <div className="mb-8 text-center">
+        <div className="mb-8">
           <h1 className="text-2xl font-semibold">{title}</h1>
           {subtitle && <p className="mt-2 text-muted">{subtitle}</p>}
         </div>
@@ -102,53 +88,16 @@ export function StepLayout({
         <div className="flex-1">{children}</div>
       </div>
 
-      {/* Fixed bottom navigation */}
-      {!hideNavigation && (
-        <div className="fixed inset-x-0 bottom-0 border-t border-border bg-surface px-4 py-4">
-          <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
-            {customNavigation ? (
-              customNavigation
-            ) : (
-              <>
-                {/* Previous button */}
-                {showPrevious ? (
-                  <Button type="button" variant="outline" onClick={onPrevious}>
-                    {t("navigation.previous")}
-                  </Button>
-                ) : (
-                  <div /> // Spacer
-                )}
-
-                {/* Right side: Skip + Continue */}
-                <div className="flex items-center gap-3">
-                  {hasSkip && (
-                    <Button type="button" variant="ghost" onClick={onSkip}>
-                      {t("navigation.skip")}
-                    </Button>
-                  )}
-
-                  {formId ? (
-                    <Button
-                      type="submit"
-                      form={formId}
-                      disabled={nextDisabled}
-                      loading={nextLoading}
-                    >
-                      {nextLabel || t("navigation.continue")}
-                    </Button>
-                  ) : onNext ? (
-                    <Button
-                      type="button"
-                      onClick={onNext}
-                      disabled={nextDisabled}
-                      loading={nextLoading}
-                    >
-                      {nextLabel || t("navigation.continue")}
-                    </Button>
-                  ) : null}
-                </div>
-              </>
+      {/* Preview Panel - 2 cols on all breakpoints, hidden on mobile */}
+      {preview && (
+        <div className="hidden sm:col-span-2 sm:flex sm:justify-center">
+          <div className="max-w-xl flex-1">
+            {previewLabel && (
+              <div className="mb-4 text-xs font-medium uppercase tracking-wider text-muted">
+                {previewLabel}
+              </div>
             )}
+            {preview}
           </div>
         </div>
       )}

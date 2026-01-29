@@ -78,11 +78,7 @@ export function DeleteResourceDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {t.cancel}
           </Button>
-          <Button
-            variant="danger"
-            onClick={handleDelete}
-            disabled={isPending}
-          >
+          <Button variant="danger" onClick={handleDelete} disabled={isPending}>
             {t.deleteConfirmButton}
           </Button>
         </Dialog.Footer>

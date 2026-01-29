@@ -19,12 +19,8 @@ export async function Product2ClientsCta() {
               <Search className="h-7 w-7 text-accent" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold">
-                {t("clients.headline")}
-              </h2>
-              <p className="text-muted">
-                {t("clients.description")}
-              </p>
+              <h2 className="text-xl font-semibold">{t("clients.headline")}</h2>
+              <p className="text-muted">{t("clients.description")}</p>
             </div>
           </div>
 

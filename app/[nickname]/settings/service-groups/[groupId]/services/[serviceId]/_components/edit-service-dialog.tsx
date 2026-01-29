@@ -46,7 +46,10 @@ export function EditServiceDialog({
     reset,
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: service.name, description: service.description ?? "" },
+    defaultValues: {
+      name: service.name,
+      description: service.description ?? "",
+    },
   });
 
   // Reset form when dialog opens
@@ -115,7 +118,9 @@ export function EditServiceDialog({
                 state={errors.description ? "error" : "default"}
                 {...register("description")}
               />
-              <Field.Description>{t("service_description_hint")}</Field.Description>
+              <Field.Description>
+                {t("service_description_hint")}
+              </Field.Description>
               <Field.Error>{errors.description?.message}</Field.Error>
             </Field.Root>
 

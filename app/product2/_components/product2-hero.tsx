@@ -59,17 +59,26 @@ export async function Product2Hero() {
                   OK
                 </div>
                 <div>
-                  <p className="text-sm font-medium">{t("hero.testimonial_name")}</p>
-                  <p className="text-xs text-muted">{t("hero.testimonial_role")}</p>
+                  <p className="text-sm font-medium">
+                    {t("hero.testimonial_name")}
+                  </p>
+                  <p className="text-xs text-muted">
+                    {t("hero.testimonial_role")}
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-1">
                 <Quote className="mt-0.5 h-3 w-3 shrink-0 rotate-180 text-accent" />
-                <p className="text-sm text-muted">{t("hero.testimonial_quote")}</p>
+                <p className="text-sm text-muted">
+                  {t("hero.testimonial_quote")}
+                </p>
               </div>
               <div className="mt-2 flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  <Star
+                    key={i}
+                    className="h-3 w-3 fill-amber-400 text-amber-400"
+                  />
                 ))}
               </div>
             </Paper>
@@ -78,19 +87,11 @@ export async function Product2Hero() {
 
         {/* CTAs */}
         <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-          <Button
-            variant="primary"
-            size="lg"
-            render={<Link href="/auth" />}
-          >
+          <Button variant="primary" size="lg" render={<Link href="/auth" />}>
             {t("hero.cta_primary")}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="lg"
-            render={<Link href="#demo" />}
-          >
+          <Button variant="ghost" size="lg" render={<Link href="#demo" />}>
             {t("hero.cta_secondary")}
           </Button>
         </div>

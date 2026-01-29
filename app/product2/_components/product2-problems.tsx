@@ -20,13 +20,15 @@ export async function Product2Problems() {
       icon: CalendarX,
       title: t("problems.problem2_title"),
       description: t("problems.problem2_description"),
-      color: "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400",
+      color:
+        "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400",
     },
     {
       icon: Percent,
       title: t("problems.problem3_title"),
       description: t("problems.problem3_description"),
-      color: "bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
+      color:
+        "bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
     },
   ];
 
@@ -38,9 +40,7 @@ export async function Product2Problems() {
           <h2 className="text-2xl font-semibold md:text-3xl">
             {t("problems.headline")}
           </h2>
-          <p className="mt-3 text-muted">
-            {t("problems.subheadline")}
-          </p>
+          <p className="mt-3 text-muted">{t("problems.subheadline")}</p>
         </div>
 
         {/* Problem cards */}

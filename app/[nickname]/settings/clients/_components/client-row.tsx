@@ -24,7 +24,9 @@ export function ClientRow({ client, nickname, noBorder }: ClientRowProps) {
           <div className="min-w-0">
             <p className="font-medium truncate">{client.clientName}</p>
             {client.clientEmail && (
-              <p className="text-sm text-muted truncate">{client.clientEmail}</p>
+              <p className="text-sm text-muted truncate">
+                {client.clientEmail}
+              </p>
             )}
           </div>
         </div>

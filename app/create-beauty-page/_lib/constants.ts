@@ -30,18 +30,16 @@ export const DEFAULT_END_TIME = "18:00";
 /**
  * Step order for navigation (7-step wizard)
  *
- * Required steps: intro, name, nickname, confirmation
- * Optional steps: services, working-days, working-hours
- *
- * Note: working-hours is conditional - only shown if working-days was completed
+ * Required steps: name, nickname, confirmation
+ * Optional steps: avatar, contacts, services, first-working-day
  */
 export const STEP_ORDER: CreateBeautyPageStep[] = [
-  "intro",
   "name",
   "nickname",
+  "avatar",
+  "contacts",
   "services",
-  "working-days",
-  "working-hours",
+  "first-working-day",
   "confirmation",
 ];
 
@@ -49,9 +47,10 @@ export const STEP_ORDER: CreateBeautyPageStep[] = [
  * Steps that can be skipped (optional steps)
  */
 export const SKIPPABLE_STEPS: CreateBeautyPageStep[] = [
+  "avatar",
+  "contacts",
   "services",
-  "working-days",
-  "working-hours",
+  "first-working-day",
 ];
 
 /**
@@ -70,13 +69,6 @@ export const TIME_OPTIONS = Array.from({ length: 36 }, (_, i) => {
   const value = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
   return { value, label: value };
 });
-
-/**
- * Weekday indices (our system: 0=Monday, 6=Sunday)
- */
-export const WEEKDAY_INDICES = [0, 1, 2, 3, 4]; // Mon-Fri
-export const SATURDAY_INDEX = 5;
-export const SUNDAY_INDEX = 6;
 
 /**
  * Convert time string (HH:MM) to minutes since midnight

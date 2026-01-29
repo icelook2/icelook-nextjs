@@ -46,6 +46,7 @@ type RpcBeautyPageResponse = {
     email: string | null;
     website_url: string | null;
     instagram_url: string | null;
+    telegram_url: string | null;
     facebook_url: string | null;
   };
   timezone?: string;
@@ -169,7 +170,9 @@ export async function isUserBannedFromBeautyPage(
  * Transforms RPC response to BeautyPageProfile format.
  * Maintains compatibility with existing components.
  */
-function transformRpcResponse(response: RpcBeautyPageResponse): BeautyPageProfile {
+function transformRpcResponse(
+  response: RpcBeautyPageResponse,
+): BeautyPageProfile {
   const info = response.info!;
 
   // Transform info to BeautyPageInfo
@@ -194,6 +197,7 @@ function transformRpcResponse(response: RpcBeautyPageResponse): BeautyPageProfil
     email: info.email,
     website_url: info.website_url,
     instagram_url: info.instagram_url,
+    telegram_url: info.telegram_url,
     facebook_url: info.facebook_url,
   };
 

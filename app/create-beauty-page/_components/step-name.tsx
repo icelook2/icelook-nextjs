@@ -4,18 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Button } from "@/lib/ui/button";
 import { Field } from "@/lib/ui/field";
 import { Input } from "@/lib/ui/input";
+import { BeautyPagePreview } from "./previews/beauty-page-preview";
 import { StepLayout } from "./step-layout";
-
-// Consistent gradients for logo preview based on name
-const gradients = [
-  "from-blue-400 to-cyan-500",
-  "from-red-400 to-pink-500",
-  "from-green-400 to-emerald-500",
-  "from-yellow-400 to-orange-500",
-  "from-purple-400 to-indigo-500",
-];
 
 interface StepNameProps {
   name: string;
@@ -26,8 +19,11 @@ interface StepNameProps {
 }
 
 /**
- * Name step - collects only the beauty page name.
- * Shows a live preview of how the name will appear.
+ * Name step - collects the beauty page name.
+ *
+ * Uses StepLayout with "split" variant:
+ * - Desktop: Form panel on left, real-time preview on right
+ * - Mobile: Form only (preview hidden)
  */
 export function StepName({
   name,
@@ -59,42 +55,31 @@ export function StepName({
   });
 
   const nameValue = watch("name");
-  const displayName = nameValue || t("name.placeholder");
-  const initial = displayName.charAt(0).toUpperCase();
-  const gradientIndex = displayName.charCodeAt(0) % gradients.length;
-  const gradient = gradients[gradientIndex];
 
   const onSubmit = (data: FormData) => {
     onUpdate(data.name);
     onNext();
   };
 
+  // Generate a slug preview from the name
+  const slugPreview = nameValue
+    ? nameValue
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 30)
+    : "";
+
   return (
     <StepLayout
-      currentStep={2}
+      currentStep={1}
       totalSteps={totalSteps}
       title={t("name.title")}
       subtitle={t("name.subtitle")}
-      onPrevious={onPrevious}
-      formId="name-form"
-      preview={
-        <div className="flex flex-col items-center gap-3">
-          {/* Logo/Avatar with gradient */}
-          <div
-            className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-2xl font-bold text-white`}
-          >
-            {initial}
-          </div>
-          {/* Name preview */}
-          <h2 className="text-center text-lg font-semibold">{displayName}</h2>
-        </div>
-      }
+      previewLabel={t("preview.label")}
+      preview={<BeautyPagePreview name={nameValue} nickname={slugPreview} />}
     >
-      <form
-        id="name-form"
-        onSubmit={handleSubmit(onSubmit)}
-        className="space-y-6"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Field.Root>
           <Field.Label>{t("name.label")}</Field.Label>
           <Input
@@ -106,6 +91,8 @@ export function StepName({
           />
           <Field.Error>{errors.name?.message}</Field.Error>
         </Field.Root>
+
+        <Button type="submit">{t("navigation.continue")}</Button>
       </form>
     </StepLayout>
   );

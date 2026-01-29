@@ -41,7 +41,9 @@ export function HiddenServicesDialog({
             </p>
 
             <div className="rounded-lg border border-border bg-surface-secondary p-3">
-              <p className="mb-2 text-sm font-medium">{t.hiddenServicesLabel}</p>
+              <p className="mb-2 text-sm font-medium">
+                {t.hiddenServicesLabel}
+              </p>
               <ul className="space-y-2">
                 {hiddenServices.map((serviceName) => (
                   <li key={serviceName} className="flex items-center gap-2">

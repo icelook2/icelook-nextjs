@@ -30,7 +30,9 @@ export default async function PrivacyPolicyPage() {
       <Paper className="p-6 sm:p-8">
         {/* Header */}
         <div className="mb-8 border-b border-border pb-6">
-          <h1 className="mb-3 text-2xl font-bold sm:text-3xl">{policy.title}</h1>
+          <h1 className="mb-3 text-2xl font-bold sm:text-3xl">
+            {policy.title}
+          </h1>
           <PolicyVersionBadge
             version={policy.version}
             effectiveDate={policy.effective_date}

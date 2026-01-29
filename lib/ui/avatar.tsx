@@ -2,8 +2,10 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { getStorageUrl } from "@/lib/storage/get-storage-url";
 
 interface AvatarProps {
+  /** Storage path or full URL (handles both for backwards compatibility) */
   url?: string | null;
   name: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
@@ -67,14 +69,18 @@ export function Avatar({
     );
   }
 
+  // Construct full URL from storage path
+  const resolvedUrl = getStorageUrl(url);
+
   return (
     <Image
-      src={url}
+      src={resolvedUrl}
       alt={name}
       width={imageSize}
       height={imageSize}
       className={`${sizeClass} ${shapeClass} shrink-0 object-cover`}
       onError={() => setHasError(true)}
+      unoptimized
     />
   );
 }

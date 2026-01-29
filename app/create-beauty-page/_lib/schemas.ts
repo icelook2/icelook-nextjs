@@ -28,16 +28,25 @@ export const serverServiceSchema = z.object({
 });
 
 /**
- * Schema for weekday hours configuration
+ * Schema for break time configuration
  */
-export const weekdayHoursSchema = z.object({
-  weekday: z.number().min(0).max(6),
+export const breakTimeSchema = z.object({
   startTime: z.string().regex(/^\d{2}:\d{2}$/),
   endTime: z.string().regex(/^\d{2}:\d{2}$/),
 });
 
 /**
- * Full schema for creating beauty page with optional services and working days
+ * Schema for first working day configuration
+ */
+export const firstWorkingDaySchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/),
+  breakTime: breakTimeSchema.optional(),
+});
+
+/**
+ * Full schema for creating beauty page with optional services and first working day
  * Used by the server action
  */
 export const createBeautyPageFlowSchema = z.object({
@@ -48,11 +57,8 @@ export const createBeautyPageFlowSchema = z.object({
   // Optional - array of services
   services: z.array(serverServiceSchema),
 
-  // Optional - array of selected dates (YYYY-MM-DD format)
-  selectedDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
-
-  // Optional - weekday hours configuration
-  weekdayHours: z.array(weekdayHoursSchema),
+  // Optional - first working day configuration
+  firstWorkingDay: firstWorkingDaySchema.nullable(),
 });
 
 export type CreateBeautyPageFlowInput = z.infer<

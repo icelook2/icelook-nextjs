@@ -1,8 +1,21 @@
 "use client";
 
-import { Ban, ChevronDown, ChevronRight, Loader2, Search, UserPlus } from "lucide-react";
+import {
+  Ban,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  Search,
+  UserPlus,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useDeferredValue, useEffect, useRef, useState, useTransition } from "react";
+import {
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import type { BeautyPageClient } from "@/lib/queries/clients";
 import { Avatar } from "@/lib/ui/avatar";
 import { Button } from "@/lib/ui/button";
@@ -338,7 +351,11 @@ export function BlockClientButton({
                 </p>
               </Dialog.Body>
               <Dialog.Footer className="justify-end">
-                <Button variant="soft" onClick={handleBack} disabled={isBlocking}>
+                <Button
+                  variant="soft"
+                  onClick={handleBack}
+                  disabled={isBlocking}
+                >
                   {t("cancel")}
                 </Button>
                 <Button

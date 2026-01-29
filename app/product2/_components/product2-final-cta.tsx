@@ -25,9 +25,7 @@ export async function Product2FinalCta() {
           {t("final_cta.headline")}
         </h2>
 
-        <p className="mt-4 text-lg text-muted">
-          {t("final_cta.subheadline")}
-        </p>
+        <p className="mt-4 text-lg text-muted">{t("final_cta.subheadline")}</p>
 
         <Button
           variant="primary"
@@ -39,9 +37,7 @@ export async function Product2FinalCta() {
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
 
-        <p className="mt-4 text-sm text-muted">
-          {t("final_cta.trust_note")}
-        </p>
+        <p className="mt-4 text-sm text-muted">{t("final_cta.trust_note")}</p>
       </div>
     </section>
   );

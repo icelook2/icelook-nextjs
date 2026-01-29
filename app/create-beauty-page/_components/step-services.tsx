@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Clock, Pencil, Plus, Scissors, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/lib/ui/button";
@@ -19,28 +19,44 @@ import {
   formatDuration,
   formatPrice,
 } from "../_lib/constants";
-import {
-  generateLocalId,
-  type ServiceData,
-  type StepProps,
-} from "../_lib/types";
-import { ServicesPreview } from "./previews";
-import { SplitLayout } from "./split-layout";
+import { generateLocalId, type ServiceData } from "../_lib/types";
+import { BeautyPagePreview } from "./previews/beauty-page-preview";
+import { StepLayout } from "./step-layout";
+
+/** Maximum services during onboarding - users can add more later in settings */
+const MAX_SERVICES_ONBOARDING = 3;
+
+interface StepServicesProps {
+  name: string;
+  nickname: string;
+  avatarPreviewUrl: string | null;
+  services: ServiceData[];
+  totalSteps: number;
+  onUpdate: (services: ServiceData[]) => void;
+  onNext: () => void;
+  onPrevious: () => void;
+  onSkip: () => void;
+}
 
 /**
- * Step 2: Add Services
+ * Step 3: Add Services
  *
  * Allows users to add multiple services to their beauty page.
  * Services are stored in an array and can be added, edited, or removed.
  */
 export function StepServices({
-  state,
+  name,
+  nickname,
+  avatarPreviewUrl,
+  services,
+  totalSteps,
   onUpdate,
   onNext,
-  onBack,
+  onPrevious,
   onSkip,
-}: StepProps) {
-  const t = useTranslations("create_beauty_page.services");
+}: StepServicesProps) {
+  const t = useTranslations("create_beauty_page");
+  const tServices = useTranslations("create_beauty_page.services");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingService, setEditingService] = useState<ServiceData | null>(
     null,
@@ -51,82 +67,83 @@ export function StepServices({
       ...service,
       id: generateLocalId(),
     };
-    onUpdate({
-      services: [...state.services, newService],
-    });
+    onUpdate([...services, newService]);
     setIsAddDialogOpen(false);
   };
 
   const handleEditService = (service: ServiceData) => {
-    onUpdate({
-      services: state.services.map((s) => (s.id === service.id ? service : s)),
-    });
+    onUpdate(services.map((s) => (s.id === service.id ? service : s)));
     setEditingService(null);
   };
 
   const handleDeleteService = (serviceId: string) => {
-    onUpdate({
-      services: state.services.filter((s) => s.id !== serviceId),
-    });
-  };
-
-  const handleNext = () => {
-    onNext();
+    onUpdate(services.filter((s) => s.id !== serviceId));
   };
 
   return (
     <>
-      <SplitLayout
-        title={t("title")}
-        subtitle={t("subtitle")}
-        form={
-          <div className="space-y-4">
-            {/* Services list */}
-            {state.services.length > 0 ? (
-              <div className="space-y-2">
-                {state.services.map((service) => (
-                  <ServiceListItem
-                    key={service.id}
-                    service={service}
-                    onEdit={() => setEditingService(service)}
-                    onDelete={() => handleDeleteService(service.id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyState onAdd={() => setIsAddDialogOpen(true)} />
-            )}
-
-            {/* Add button (when list is not empty) */}
-            {state.services.length > 0 && (
-              <Button
-                variant="secondary"
-                onClick={() => setIsAddDialogOpen(true)}
-                className="w-full"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {t("add_another")}
-              </Button>
-            )}
-          </div>
+      <StepLayout
+        currentStep={5}
+        totalSteps={totalSteps}
+        title={tServices("title")}
+        subtitle={tServices("subtitle")}
+        previewLabel={t("preview.label")}
+        preview={
+          <BeautyPagePreview
+            name={name}
+            nickname={nickname}
+            avatarPreviewUrl={avatarPreviewUrl}
+            services={services}
+          />
         }
-        preview={<ServicesPreview services={state.services} />}
-      />
+        onBack={onPrevious}
+      >
+        <div className="space-y-6">
+          {/* Services list with placeholder cards for remaining slots */}
+          <div className="space-y-2">
+            {/* Real services */}
+            {services.map((service) => (
+              <ServiceListItem
+                key={service.id}
+                service={service}
+                onEdit={() => setEditingService(service)}
+                onDelete={() => handleDeleteService(service.id)}
+              />
+            ))}
 
-      {/* Fixed bottom actions */}
-      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-surface px-4 py-4">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <Button variant="ghost" onClick={onBack}>
-            {t("back")}
-          </Button>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={onSkip}>
-              {t("skip")}
-            </Button>
-            <Button onClick={handleNext}>{t("next")}</Button>
+            {/* Placeholder cards for remaining slots */}
+            {Array.from({
+              length: MAX_SERVICES_ONBOARDING - services.length,
+            }).map((_, index) => (
+              <PlaceholderCard
+                key={`placeholder-${index}`}
+                onAdd={() => setIsAddDialogOpen(true)}
+              />
+            ))}
           </div>
+
+          {/* Hint when at max */}
+          {services.length >= MAX_SERVICES_ONBOARDING && (
+            <p className="text-center text-sm text-muted">
+              {tServices("max_reached_hint")}
+            </p>
+          )}
+
+          {/* Skip button - only when no services */}
+          {services.length === 0 && (
+            <Button variant="ghost" onClick={onSkip}>
+              {tServices("skip")}
+            </Button>
+          )}
+
+          {/* Continue button - only show when services exist */}
+          {services.length > 0 && (
+            <div className="pt-2">
+              <Button onClick={onNext}>{t("navigation.continue")}</Button>
+            </div>
+          )}
         </div>
-      </div>
+      </StepLayout>
 
       {/* Add Service Dialog */}
       <ServiceDialog
@@ -151,27 +168,93 @@ export function StepServices({
 }
 
 // ============================================================================
-// Empty State
+// Placeholder Card
 // ============================================================================
 
-interface EmptyStateProps {
+interface PlaceholderCardProps {
   onAdd: () => void;
 }
 
-function EmptyState({ onAdd }: EmptyStateProps) {
-  const t = useTranslations("create_beauty_page.services");
-
+function PlaceholderCard({ onAdd }: PlaceholderCardProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border py-12 text-center">
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent-soft">
-        <Scissors className="h-7 w-7 text-accent" />
+    <div
+      className="flex items-center gap-3 rounded-xl border-2 border-dashed border-border p-3"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "0.75rem",
+        padding: "0.75rem",
+        borderRadius: "0.75rem",
+        borderWidth: "2px",
+        borderStyle: "dashed",
+      }}
+    >
+      {/* Placeholder icon area */}
+      <div
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/30"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "40px",
+          height: "40px",
+          minWidth: "40px",
+          minHeight: "40px",
+          borderRadius: "0.5rem",
+          opacity: 0.3,
+        }}
+      >
+        <Scissors
+          className="h-5 w-5 text-muted"
+          style={{ width: "20px", height: "20px" }}
+        />
       </div>
-      <h3 className="mb-2 font-semibold">{t("empty_title")}</h3>
-      <p className="mb-6 max-w-xs text-sm text-muted">{t("empty_subtitle")}</p>
-      <Button onClick={onAdd}>
-        <Plus className="mr-2 h-4 w-4" />
-        {t("add_first")}
-      </Button>
+
+      {/* Placeholder text area */}
+      <div className="min-w-0 flex-1">
+        <div
+          className="h-4 w-24 rounded bg-muted/30"
+          style={{
+            height: "16px",
+            width: "96px",
+            borderRadius: "0.25rem",
+            opacity: 0.3,
+          }}
+        />
+        <div
+          className="mt-1 h-3 w-16 rounded bg-muted/30"
+          style={{
+            marginTop: "4px",
+            height: "12px",
+            width: "64px",
+            borderRadius: "0.25rem",
+            opacity: 0.3,
+          }}
+        />
+      </div>
+
+      {/* Plus button on the right */}
+      <button
+        type="button"
+        onClick={onAdd}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/20 transition-colors hover:bg-blue-500/30"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "40px",
+          height: "40px",
+          minWidth: "40px",
+          minHeight: "40px",
+          borderRadius: "9999px",
+          backgroundColor: "rgba(59, 130, 246, 0.2)",
+        }}
+      >
+        <Plus
+          className="h-5 w-5 text-blue-500"
+          style={{ width: "20px", height: "20px", color: "rgb(59, 130, 246)" }}
+        />
+      </button>
     </div>
   );
 }
@@ -284,6 +367,18 @@ function ServiceDialog({
     },
   });
 
+  // Reset form when dialog opens in add mode
+  // This handles the case when `open` prop changes from parent
+  useEffect(() => {
+    if (open && mode === "add") {
+      reset({
+        name: "",
+        price: DEFAULT_PRICE,
+        durationMinutes: DEFAULT_DURATION,
+      });
+    }
+  }, [open, mode, reset]);
+
   const handleFormSubmit = (data: ServiceFormData) => {
     if (mode === "edit" && initialData) {
       onSubmit({
@@ -301,30 +396,15 @@ function ServiceDialog({
     }
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    if (newOpen && mode === "add") {
-      // Reset form when opening add dialog
-      reset({
-        name: "",
-        price: DEFAULT_PRICE,
-        durationMinutes: DEFAULT_DURATION,
-      });
-    }
-    if (!newOpen) {
-      reset();
-    }
-    onOpenChange(newOpen);
-  };
-
   const durationItems = DURATION_OPTIONS.map((opt) => ({
     value: opt.value,
     label: opt.label,
   }));
 
   return (
-    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal open={open} size="sm">
-        <Dialog.Header onClose={() => handleOpenChange(false)}>
+        <Dialog.Header onClose={() => onOpenChange(false)}>
           {mode === "add" ? t("add_title") : t("edit_title")}
         </Dialog.Header>
 
@@ -397,11 +477,18 @@ function ServiceDialog({
           </form>
         </Dialog.Body>
 
-        <Dialog.Footer>
-          <Button variant="ghost" onClick={() => handleOpenChange(false)}>
+        <Dialog.Footer className="flex-col-reverse sm:flex-row sm:justify-end">
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="w-full sm:w-auto"
+          >
             {t("cancel")}
           </Button>
-          <Button onClick={handleSubmit(handleFormSubmit)}>
+          <Button
+            onClick={handleSubmit(handleFormSubmit)}
+            className="w-full sm:w-auto"
+          >
             {mode === "add" ? t("add") : t("save")}
           </Button>
         </Dialog.Footer>

@@ -48,7 +48,8 @@ export default withSentryConfig(withNextIntl(nextConfig), {
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
   // side errors will fail.
   // Disabled in development to prevent ECONNRESET errors from blocking navigation.
-  tunnelRoute: process.env.NODE_ENV === "production" ? "/monitoring" : undefined,
+  tunnelRoute:
+    process.env.NODE_ENV === "production" ? "/monitoring" : undefined,
 
   webpack: {
     // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)

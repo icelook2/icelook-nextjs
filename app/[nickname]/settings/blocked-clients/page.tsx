@@ -48,10 +48,7 @@ export default async function BlockedClientsPage({
 
       <div className="mx-auto max-w-2xl space-y-6 px-4 pb-8">
         {/* Block Client Button */}
-        <BlockClientButton
-          beautyPageId={beautyPage.id}
-          nickname={nickname}
-        />
+        <BlockClientButton beautyPageId={beautyPage.id} nickname={nickname} />
 
         {/* Blocked Clients List */}
         <BlockedClientsList

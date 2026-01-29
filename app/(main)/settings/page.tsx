@@ -1,11 +1,12 @@
-import { Calendar, Heart, Mail, Palette, Sparkles, User } from "lucide-react";
+import { Calendar, Heart, Mail, Palette, User } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getProfile } from "@/lib/auth/session";
+import { getUserBeautyPages } from "@/lib/queries/beauty-pages";
 import { PageHeader } from "@/lib/ui/page-header";
 import { SettingsGroup } from "@/lib/ui/settings-group";
 import { SettingsItem } from "@/lib/ui/settings-item";
-import { CreateBeautyPageSection } from "./_components/create-beauty-page-section";
+import { BeautyPagesSection } from "./_components/beauty-pages-section";
 import { LogoutButton } from "./_components/logout-button";
 import { UserProfileHeader } from "./_components/user-profile-header";
 
@@ -16,7 +17,10 @@ export default async function SettingsPage() {
     redirect("/auth");
   }
 
-  const t = await getTranslations("settings");
+  const [t, beautyPages] = await Promise.all([
+    getTranslations("settings"),
+    getUserBeautyPages(profile.id),
+  ]);
 
   const displayName = profile.full_name || t("unnamed_user");
 
@@ -93,17 +97,7 @@ export default async function SettingsPage() {
           </SettingsGroup>
 
           {/* Beauty Pages */}
-          <SettingsGroup title={t("groups.beauty_pages")}>
-            <SettingsItem
-              href="/settings/beauty-pages"
-              icon={Sparkles}
-              title={t("nav.beauty_pages")}
-              description={t("nav.beauty_pages_description")}
-              iconClassName="bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-500/20 dark:text-fuchsia-400"
-              variant="grouped"
-            />
-            <CreateBeautyPageSection />
-          </SettingsGroup>
+          <BeautyPagesSection beautyPages={beautyPages} />
 
           {/* Logout */}
           <div className="px-4">

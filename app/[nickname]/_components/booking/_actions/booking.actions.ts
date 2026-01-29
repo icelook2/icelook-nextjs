@@ -186,7 +186,7 @@ export async function createBooking(
       return {
         success: false,
         error: restrictionResult.reason
-          ? errorTypeMap[restrictionResult.reason] ?? "validation"
+          ? (errorTypeMap[restrictionResult.reason] ?? "validation")
           : "validation",
         message: restrictionResult.message ?? "Booking not allowed",
       };
@@ -554,7 +554,10 @@ export async function createBooking(
         .eq("booked_count", validatedBundle.booked_count); // Optimistic lock
 
       if (incrementError) {
-        console.error("Error incrementing bundle booked_count:", incrementError);
+        console.error(
+          "Error incrementing bundle booked_count:",
+          incrementError,
+        );
         // Don't fail the booking - the appointment is still valid
         // The count will be slightly off but the booking succeeded
       } else if (updateCount === 0) {

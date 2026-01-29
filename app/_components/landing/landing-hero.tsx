@@ -33,26 +33,16 @@ export async function LandingHero() {
 
           {/* CTAs */}
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-            <Button
-              variant="primary"
-              size="lg"
-              render={<Link href="/auth" />}
-            >
+            <Button variant="primary" size="lg" render={<Link href="/auth" />}>
               {t("hero.cta_primary")}
             </Button>
-            <Button
-              variant="ghost"
-              size="lg"
-              render={<Link href="/demo" />}
-            >
+            <Button variant="ghost" size="lg" render={<Link href="/demo" />}>
               {t("hero.cta_secondary")}
             </Button>
           </div>
 
           {/* Trust indicator */}
-          <p className="mt-6 text-sm text-muted">
-            {t("hero.trust_indicator")}
-          </p>
+          <p className="mt-6 text-sm text-muted">{t("hero.trust_indicator")}</p>
         </div>
       </div>
     </section>

@@ -6,9 +6,11 @@ import {
   endOfMonth,
   endOfWeek,
   format,
+  isBefore,
   isSameDay,
   isSameMonth,
   isToday,
+  startOfDay,
   startOfMonth,
   startOfWeek,
   subMonths,
@@ -22,13 +24,16 @@ import { cn } from "@/lib/utils/cn";
 const localeMap = { en: enUS, uk } as const;
 
 interface SimpleDatePickerProps {
-  selectedDate: Date;
+  /** Selected date - pass null if no date is selected yet */
+  selectedDate: Date | null;
   highlightedDates?: Date[];
   onSelect: (date: Date) => void;
   hideHeader?: boolean;
   showMonthLabel?: boolean;
   fullWidth?: boolean;
   viewDate?: Date;
+  /** Minimum selectable date - dates before this will be disabled */
+  minDate?: Date;
   /** Dates that are working days (YYYY-MM-DD format) */
   workingDates?: Set<string>;
   /** Dates with confirmed appointments (YYYY-MM-DD format) */
@@ -49,6 +54,7 @@ export function SimpleDatePicker({
   showMonthLabel = false,
   fullWidth = false,
   viewDate: controlledViewDate,
+  minDate,
   workingDates,
   pendingDates,
 }: SimpleDatePickerProps) {
@@ -56,7 +62,7 @@ export function SimpleDatePicker({
   const locale = useLocale();
   const dateFnsLocale = localeMap[locale as keyof typeof localeMap] ?? enUS;
 
-  const [internalViewDate, setInternalViewDate] = useState(selectedDate);
+  const [internalViewDate, setInternalViewDate] = useState(selectedDate ?? new Date());
   const viewDate = controlledViewDate ?? internalViewDate;
   const setViewDate = setInternalViewDate;
 
@@ -127,12 +133,13 @@ export function SimpleDatePicker({
       <div className="grid grid-cols-7 gap-1 md:gap-2">
         {days.map((day) => {
           const dateStr = format(day, "yyyy-MM-dd");
-          const isSelected = isSameDay(day, selectedDate);
+          const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
           const isCurrentMonth = isSameMonth(day, viewDate);
           const isTodayDate = isToday(day);
           const isInRange = isHighlighted(day);
           const isWorkingDay = workingDates?.has(dateStr) ?? false;
           const hasPending = pendingDates?.has(dateStr) ?? false;
+          const isDisabled = minDate ? isBefore(startOfDay(day), startOfDay(minDate)) : false;
 
           // Empty slot for days from other months
           if (!isCurrentMonth) {
@@ -143,17 +150,27 @@ export function SimpleDatePicker({
             <button
               key={day.toISOString()}
               type="button"
-              onClick={() => onSelect(day)}
+              onClick={() => {
+                if (!isDisabled) {
+                  onSelect(day);
+                }
+              }}
+              disabled={isDisabled}
+              aria-disabled={isDisabled}
               style={
-                !isSelected && !isInRange
-                  ? { backgroundColor: "rgba(255, 255, 255, 0.06)" }
-                  : undefined
+                isDisabled
+                  ? { backgroundColor: "transparent", opacity: 0.3, cursor: "not-allowed" }
+                  : !isSelected && !isInRange
+                    ? { backgroundColor: "rgba(255, 255, 255, 0.06)" }
+                    : undefined
               }
               className={cn(
                 "relative flex flex-col items-center justify-center rounded-lg px-1.5 py-2 text-sm transition-colors",
-                "hover:bg-white/10",
+                !isDisabled && "hover:bg-white/10",
+                // Disabled styling
+                isDisabled && "pointer-events-none text-muted",
                 // Today styling
-                isTodayDate && !isSelected && "font-semibold text-accent",
+                isTodayDate && !isSelected && !isDisabled && "font-semibold text-accent",
                 // Selected day
                 isSelected && "bg-accent text-white hover:bg-accent/90",
                 // Highlighted range

@@ -83,7 +83,11 @@ export async function checkBookingRestrictions(
   }
 
   // 1. Check if client is blocked (using RPC function)
-  const blockResult = await checkClientBlocked(supabase, beautyPageId, client.clientId);
+  const blockResult = await checkClientBlocked(
+    supabase,
+    beautyPageId,
+    client.clientId,
+  );
   if (!blockResult.allowed) {
     return blockResult;
   }
@@ -269,7 +273,8 @@ async function checkVelocityLimits(
 
   // Check cooldown (most recent booking)
   const lastBooking = new Date(recentAppointments[0].created_at);
-  const secondsSinceLastBooking = (now.getTime() - lastBooking.getTime()) / 1000;
+  const secondsSinceLastBooking =
+    (now.getTime() - lastBooking.getTime()) / 1000;
 
   if (secondsSinceLastBooking < cooldownSeconds) {
     return {

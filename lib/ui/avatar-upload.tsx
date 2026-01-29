@@ -4,6 +4,7 @@ import { Camera, Loader2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { getStorageUrl } from "@/lib/storage/get-storage-url";
 import {
   type AvatarTarget,
   formatFileSize,
@@ -20,14 +21,14 @@ import { Button } from "./button";
 // ============================================================================
 
 interface AvatarUploadProps {
-  /** Current avatar URL */
-  currentUrl: string | null;
+  /** Current avatar path or URL (handles both for backwards compatibility) */
+  currentPathOrUrl: string | null;
   /** Fallback name for avatar placeholder */
   name: string;
   /** Upload target configuration */
   target: AvatarTarget;
-  /** Callback when upload succeeds */
-  onUploadSuccess: (url: string) => void;
+  /** Callback when upload succeeds - receives the storage path (not full URL) */
+  onUploadSuccess: (path: string) => void;
   /** Callback when avatar is removed */
   onRemove?: () => void;
   /** Whether remove is allowed */
@@ -53,7 +54,7 @@ const gradients: string[] = [
 // ============================================================================
 
 export function AvatarUpload({
-  currentUrl,
+  currentPathOrUrl,
   name,
   target,
   onUploadSuccess,
@@ -70,7 +71,11 @@ export function AvatarUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const displayUrl = previewUrl || currentUrl;
+  // Construct full URL from storage path for display
+  const currentDisplayUrl = currentPathOrUrl
+    ? getStorageUrl(currentPathOrUrl)
+    : null;
+  const displayUrl = previewUrl || currentDisplayUrl;
   const initial = name.charAt(0).toUpperCase();
   const gradientIndex = name.charCodeAt(0) % gradients.length;
   const gradient = gradients[gradientIndex];
@@ -155,7 +160,8 @@ export function AvatarUpload({
       }
       setPreviewUrl(null);
       setSelectedFile(null);
-      onUploadSuccess(result.url);
+      // Pass the storage path (not full URL) - will be resolved at display time
+      onUploadSuccess(result.path);
     } else {
       setError(t(result.error));
     }
@@ -203,6 +209,7 @@ export function AvatarUpload({
               fill
               className="object-cover"
               sizes="160px"
+              unoptimized
             />
             {/* Overlay on hover */}
             <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity hover:opacity-100">
@@ -261,7 +268,7 @@ export function AvatarUpload({
           </>
         ) : (
           allowRemove &&
-          currentUrl &&
+          currentPathOrUrl &&
           onRemove && (
             <Button
               type="button"

@@ -1,6 +1,13 @@
 "use client";
 
-import { CalendarDays, Clock, Hash, Package, Scissors, Trash2 } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  Hash,
+  Package,
+  Scissors,
+  Trash2,
+} from "lucide-react";
 import type { ServiceBundleWithServices } from "@/lib/types/bundles";
 import { Button } from "@/lib/ui/button";
 import { SettingsRow } from "@/lib/ui/settings-group";
@@ -64,22 +71,23 @@ export function BundleCard({
                     : `-${bundle.discount_percentage}%`}
                 </span>
                 {/* Time limit badge */}
-                {hasTimeLimit && bundle.availability.daysRemaining !== undefined && (
-                  <span
-                    className={cn(
-                      "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-                      bundle.availability.daysRemaining <= 3
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
-                        : "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
-                    )}
-                  >
-                    <CalendarDays className="h-3 w-3" />
-                    {t.daysRemaining.replace(
-                      "{days}",
-                      String(bundle.availability.daysRemaining),
-                    )}
-                  </span>
-                )}
+                {hasTimeLimit &&
+                  bundle.availability.daysRemaining !== undefined && (
+                    <span
+                      className={cn(
+                        "flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                        bundle.availability.daysRemaining <= 3
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+                          : "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
+                      )}
+                    >
+                      <CalendarDays className="h-3 w-3" />
+                      {t.daysRemaining.replace(
+                        "{days}",
+                        String(bundle.availability.daysRemaining),
+                      )}
+                    </span>
+                  )}
                 {/* Quantity limit badge */}
                 {hasQuantityLimit && remainingQuantity !== null && (
                   <span

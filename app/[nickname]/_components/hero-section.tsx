@@ -32,7 +32,6 @@ export function HeroSection({
   translations,
   onReviewsClick,
 }: HeroSectionProps) {
-
   const hasReviews = ratingStats && ratingStats.totalReviews > 0;
   const reviewsLabel = translations.reviews ?? "reviews";
 
@@ -72,26 +71,22 @@ export function HeroSection({
             )}
           </div>
 
-          {/* Type • Rating (reviews) */}
-          <p className="flex items-center gap-1.5 text-sm text-muted">
-            {info.type && <span>{info.type.name}</span>}
-            {info.type && hasReviews && <span>•</span>}
-            {hasReviews && (
-              <button
-                type="button"
-                onClick={onReviewsClick}
-                className="inline-flex items-center gap-1 hover:text-foreground"
-              >
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                <span className="font-medium text-foreground">
-                  {ratingStats.averageRating.toFixed(1)}
-                </span>
-                <span>
-                  ({ratingStats.totalReviews} {reviewsLabel})
-                </span>
-              </button>
-            )}
-          </p>
+          {/* Rating (reviews) */}
+          {hasReviews && (
+            <button
+              type="button"
+              onClick={onReviewsClick}
+              className="inline-flex items-center gap-1 text-sm text-muted hover:text-foreground"
+            >
+              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              <span className="font-medium text-foreground">
+                {ratingStats.averageRating.toFixed(1)}
+              </span>
+              <span>
+                ({ratingStats.totalReviews} {reviewsLabel})
+              </span>
+            </button>
+          )}
         </div>
       </div>
 

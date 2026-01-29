@@ -692,7 +692,9 @@ function ServiceRow({
             <>
               <span>{durationDisplay}</span>
               <span className="mx-1.5">·</span>
-              <span className={cn("font-medium", !isBlocked && "text-foreground")}>
+              <span
+                className={cn("font-medium", !isBlocked && "text-foreground")}
+              >
                 {priceDisplay}
               </span>
             </>

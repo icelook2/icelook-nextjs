@@ -180,7 +180,10 @@ export async function blockClientFromAppointment(
   }
 
   if (!appointment.client_id) {
-    return { success: false, error: "No client associated with this appointment" };
+    return {
+      success: false,
+      error: "No client associated with this appointment",
+    };
   }
 
   const beautyPageData = appointment.beauty_pages as unknown as {

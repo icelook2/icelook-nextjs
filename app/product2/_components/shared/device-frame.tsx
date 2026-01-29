@@ -10,7 +10,11 @@ type DeviceFrameProps = {
  * Device frame wrapper that displays content inside a phone or laptop mockup.
  * Used to showcase screenshots in a realistic device context.
  */
-export function DeviceFrame({ type, children, className = "" }: DeviceFrameProps) {
+export function DeviceFrame({
+  type,
+  children,
+  className = "",
+}: DeviceFrameProps) {
   if (type === "phone") {
     return (
       <div className={`relative mx-auto max-w-[280px] ${className}`}>

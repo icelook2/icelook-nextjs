@@ -21,19 +21,22 @@ export async function LandingFeatures() {
       icon: LinkIcon,
       title: t("features.feature1_title"),
       description: t("features.feature1_description"),
-      color: "bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
+      color:
+        "bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
     },
     {
       icon: CalendarCheck,
       title: t("features.feature2_title"),
       description: t("features.feature2_description"),
-      color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
+      color:
+        "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
     },
     {
       icon: Bell,
       title: t("features.feature3_title"),
       description: t("features.feature3_description"),
-      color: "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400",
+      color:
+        "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400",
     },
     {
       icon: Wallet,
@@ -51,12 +54,16 @@ export async function LandingFeatures() {
       icon: Star,
       title: t("features.feature6_title"),
       description: t("features.feature6_description"),
-      color: "bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400",
+      color:
+        "bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400",
     },
   ];
 
   return (
-    <section id="features" className="border-t border-border bg-surface/50 scroll-mt-20">
+    <section
+      id="features"
+      className="border-t border-border bg-surface/50 scroll-mt-20"
+    >
       <div className="mx-auto max-w-6xl px-4 py-20">
         {/* Section headline */}
         <div className="text-center">

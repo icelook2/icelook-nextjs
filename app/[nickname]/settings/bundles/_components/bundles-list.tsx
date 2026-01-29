@@ -125,7 +125,11 @@ export function BundlesList({
       });
 
       // Handle hidden services error
-      if (!result.success && result.error === "HIDDEN_SERVICES" && result.data?.hiddenServices) {
+      if (
+        !result.success &&
+        result.error === "HIDDEN_SERVICES" &&
+        result.data?.hiddenServices
+      ) {
         setHiddenServicesData({
           bundleName: bundle.name,
           services: result.data.hiddenServices,

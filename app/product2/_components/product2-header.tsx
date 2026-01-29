@@ -23,10 +23,16 @@ export function Product2Header() {
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">
-            <Link href="#features" className="text-sm text-muted hover:text-foreground">
+            <Link
+              href="#features"
+              className="text-sm text-muted hover:text-foreground"
+            >
               {t("header.features")}
             </Link>
-            <Link href="#how-it-works" className="text-sm text-muted hover:text-foreground">
+            <Link
+              href="#how-it-works"
+              className="text-sm text-muted hover:text-foreground"
+            >
               {t("header.how_it_works")}
             </Link>
           </nav>

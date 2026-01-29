@@ -31,7 +31,10 @@ export default async function BeautyPage({ params }: BeautyPageProps) {
 
   // Fetch beauty page with ban check - single RPC call
   // Returns "banned" if user is blocked, "not_found" if page doesn't exist
-  const result = await getBeautyPageForViewer(nickname, currentUser?.id ?? null);
+  const result = await getBeautyPageForViewer(
+    nickname,
+    currentUser?.id ?? null,
+  );
 
   // Both "banned" and "not_found" show 404 (don't reveal ban status)
   if (result.type !== "success") {

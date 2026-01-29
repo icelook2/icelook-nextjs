@@ -28,7 +28,10 @@ export async function LandingHowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="mx-auto max-w-6xl px-4 py-20 scroll-mt-20">
+    <section
+      id="how-it-works"
+      className="mx-auto max-w-6xl px-4 py-20 scroll-mt-20"
+    >
       {/* Section headline */}
       <div className="text-center">
         <h2 className="text-2xl font-semibold md:text-3xl">

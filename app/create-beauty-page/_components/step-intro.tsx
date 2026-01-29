@@ -21,7 +21,7 @@ export function StepIntro({ totalSteps, onNext }: StepIntroProps) {
   return (
     <div className="flex min-h-screen flex-col bg-surface">
       {/* Main content area */}
-      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 pb-28 pt-8">
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-8">
         {/* Dot progress */}
         <div className="mb-8 flex justify-center">
           <DotProgress currentStep={1} totalSteps={totalSteps} />
@@ -38,9 +38,7 @@ export function StepIntro({ totalSteps, onNext }: StepIntroProps) {
           <h2 className="mb-4 text-sm font-medium text-muted">
             {t("what_is_title")}
           </h2>
-          <p className="text-sm leading-relaxed">
-            {t("what_is_description")}
-          </p>
+          <p className="text-sm leading-relaxed">{t("what_is_description")}</p>
         </Paper>
 
         {/* Benefits */}
@@ -68,7 +66,7 @@ export function StepIntro({ totalSteps, onNext }: StepIntroProps) {
         </Paper>
 
         {/* Who it's for */}
-        <Paper className="p-5">
+        <Paper className="mb-6 p-5">
           <h2 className="mb-4 text-sm font-medium text-muted">
             {t("perfect_for")}
           </h2>
@@ -87,15 +85,11 @@ export function StepIntro({ totalSteps, onNext }: StepIntroProps) {
             </AudienceTag>
           </div>
         </Paper>
-      </div>
 
-      {/* Fixed bottom navigation */}
-      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-surface px-4 py-4">
-        <div className="mx-auto flex max-w-lg justify-center">
-          <Button onClick={onNext} className="w-full max-w-xs">
-            {t("cta")}
-          </Button>
-        </div>
+        {/* Continue button */}
+        <Button onClick={onNext} className="w-full">
+          {t("cta")}
+        </Button>
       </div>
     </div>
   );

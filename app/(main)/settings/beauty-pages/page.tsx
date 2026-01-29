@@ -21,7 +21,7 @@ export default async function BeautyPagesPage() {
         backHref=""
         containerClassName="mx-auto max-w-2xl"
       >
-        <Link href="/settings">
+        <Link href="/create-beauty-page">
           <Button variant="secondary" size="sm">
             <Plus className="h-4 w-4" />
             {t("create_new")}
@@ -34,7 +34,7 @@ export default async function BeautyPagesPage() {
           <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center">
             <h2 className="text-lg font-semibold">{t("empty_title")}</h2>
             <p className="mt-2 text-sm text-muted">{t("empty_description")}</p>
-            <Link href="/settings" className="mt-4 inline-block">
+            <Link href="/create-beauty-page" className="mt-4 inline-block">
               <Button>
                 <Plus className="h-4 w-4" />
                 {t("create_first")}

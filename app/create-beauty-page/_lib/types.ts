@@ -1,21 +1,21 @@
 /**
  * Steps in the beauty page creation flow (7-step wizard)
  *
- * 1. intro - Introduction explaining what a beauty page is
- * 2. name - Page name only
- * 3. nickname - Unique URL/slug (Fleeso-style preview)
- * 4. services - Optional service setup
- * 5. working-days - Optional working days selection
- * 6. working-hours - Optional working hours configuration (conditional)
+ * 1. name - Page name only
+ * 2. nickname - Unique URL/slug (Fleeso-style preview)
+ * 3. avatar - Optional avatar upload (preview only, uploads after creation)
+ * 4. contacts - Optional contact info (Instagram, Telegram, Phone)
+ * 5. services - Optional service setup
+ * 6. first-working-day - Optional first working day setup (single day)
  * 7. confirmation - Final review before creation
  */
 export type CreateBeautyPageStep =
-  | "intro"
   | "name"
   | "nickname"
+  | "avatar"
+  | "contacts"
   | "services"
-  | "working-days"
-  | "working-hours"
+  | "first-working-day"
   | "confirmation";
 
 /**
@@ -30,23 +30,22 @@ export interface ServiceData {
 }
 
 /**
- * Working hours configuration per weekday
- * Weekday uses our system: 0=Monday, 6=Sunday
+ * Break time configuration (e.g., lunch break)
  */
-export interface WeekdayHoursData {
-  weekday: number;
-  weekdayName: string;
-  startTime: string; // "09:00"
-  endTime: string; // "18:00"
+export interface BreakTimeData {
+  startTime: string; // "12:00"
+  endTime: string; // "13:00"
 }
 
 /**
- * Selected date info for grouping by weekday
+ * First working day configuration
+ * Simple: just one date with start and end time, optional break
  */
-export interface SelectedDateInfo {
-  dateStr: string; // "2024-01-15"
-  weekday: number; // 0=Monday, 6=Sunday
-  weekdayName: string; // "Monday"
+export interface FirstWorkingDayData {
+  date: string; // "YYYY-MM-DD" format
+  startTime: string; // "09:00"
+  endTime: string; // "18:00"
+  breakTime?: BreakTimeData; // Optional break (e.g., lunch)
 }
 
 /**
@@ -56,33 +55,42 @@ export interface SelectedDateInfo {
 export interface CreateBeautyPageState {
   step: CreateBeautyPageStep;
 
-  // Step 2: Name (required)
+  // Step 1: Name (required)
   name: string;
 
-  // Step 3: Nickname (required)
+  // Step 2: Nickname (required)
   nickname: string;
 
-  // Step 4: Services (optional - empty array if skipped)
+  // Step 3: Avatar (optional - preview only, uploads after creation)
+  avatarFile: File | null;
+  avatarPreviewUrl: string | null;
+
+  // Step 4: Contacts (optional - social media and phone)
+  instagram: string;
+  telegram: string;
+  phone: string;
+
+  // Step 5: Services (optional - empty array if skipped)
   services: ServiceData[];
 
-  // Step 5: Working Days (optional - empty set if skipped)
-  selectedDates: Set<string>; // "YYYY-MM-DD" format
-
-  // Step 6: Working Hours (optional - empty map if skipped)
-  // Key is weekday (0=Monday, 6=Sunday)
-  weekdayHours: Map<number, WeekdayHoursData>;
+  // Step 6: First Working Day (optional - null if skipped)
+  firstWorkingDay: FirstWorkingDayData | null;
 }
 
 /**
  * Initial state for the creation flow
  */
 export const initialState: CreateBeautyPageState = {
-  step: "intro",
+  step: "name",
   name: "",
   nickname: "",
+  avatarFile: null,
+  avatarPreviewUrl: null,
+  instagram: "",
+  telegram: "",
+  phone: "",
   services: [],
-  selectedDates: new Set(),
-  weekdayHours: new Map(),
+  firstWorkingDay: null,
 };
 
 /**

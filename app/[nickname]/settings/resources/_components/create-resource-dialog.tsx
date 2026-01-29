@@ -109,7 +109,9 @@ export function CreateResourceDialog({
                   placeholder={t.resourceNamePlaceholder}
                 />
                 {form.formState.errors.name && (
-                  <Field.Error>{form.formState.errors.name.message}</Field.Error>
+                  <Field.Error>
+                    {form.formState.errors.name.message}
+                  </Field.Error>
                 )}
               </Field.Root>
 
@@ -118,7 +120,9 @@ export function CreateResourceDialog({
                 <Field.Label>{t.unit}</Field.Label>
                 <Select.Root
                   value={form.watch("unit")}
-                  onValueChange={(value) => form.setValue("unit", value as string)}
+                  onValueChange={(value) =>
+                    form.setValue("unit", value as string)
+                  }
                 >
                   <Select.Trigger placeholder={t.unitPlaceholder} />
                   <Select.Content>
@@ -130,16 +134,22 @@ export function CreateResourceDialog({
                   </Select.Content>
                 </Select.Root>
                 {form.formState.errors.unit && (
-                  <Field.Error>{form.formState.errors.unit.message}</Field.Error>
+                  <Field.Error>
+                    {form.formState.errors.unit.message}
+                  </Field.Error>
                 )}
               </Field.Root>
 
               {/* Cost Per Unit */}
               <Field.Root>
-                <Field.Label>{t.costPerUnit} ({currency})</Field.Label>
+                <Field.Label>
+                  {t.costPerUnit} ({currency})
+                </Field.Label>
                 <NumberField
                   value={form.watch("costPerUnit")}
-                  onValueChange={(value) => form.setValue("costPerUnit", value ?? 0)}
+                  onValueChange={(value) =>
+                    form.setValue("costPerUnit", value ?? 0)
+                  }
                   min={0}
                   step={0.01}
                 />
@@ -150,7 +160,9 @@ export function CreateResourceDialog({
                 <Field.Label>{t.currentStock}</Field.Label>
                 <NumberField
                   value={form.watch("currentStock")}
-                  onValueChange={(value) => form.setValue("currentStock", value ?? 0)}
+                  onValueChange={(value) =>
+                    form.setValue("currentStock", value ?? 0)
+                  }
                   min={0}
                   step={0.1}
                 />

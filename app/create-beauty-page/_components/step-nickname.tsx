@@ -6,10 +6,12 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Button } from "@/lib/ui/button";
 import { Field } from "@/lib/ui/field";
 import { Input } from "@/lib/ui/input";
 import { cn } from "@/lib/utils/cn";
 import { checkNicknameAvailability } from "../_actions/check-nickname-availability.action";
+import { BeautyPagePreview } from "./previews/beauty-page-preview";
 import { StepLayout } from "./step-layout";
 
 type NicknameStatus = "idle" | "checking" | "available" | "taken" | "invalid";
@@ -55,7 +57,8 @@ export function StepNickname({
   const tValidation = useTranslations("validation");
 
   const [status, setStatus] = useState<NicknameStatus>("idle");
-  const [isPending, startTransition] = useTransition();
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [, startTransition] = useTransition();
 
   const schema = z.object({
     nickname: z
@@ -70,9 +73,6 @@ export function StepNickname({
 
   type FormData = z.infer<typeof schema>;
 
-  // Auto-generate initial nickname from name if not set
-  const initialNickname = nickname || slugify(name);
-
   const {
     register,
     handleSubmit,
@@ -81,16 +81,30 @@ export function StepNickname({
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { nickname: initialNickname },
+    defaultValues: { nickname: "" },
   });
 
   const nicknameValue = watch("nickname");
+
+  // Auto-generate nickname from name on mount
+  const [initialized, setInitialized] = useState(false);
+  useEffect(() => {
+    if (initialized) {
+      return;
+    }
+    const generatedNickname = nickname || slugify(name);
+    if (generatedNickname) {
+      setValue("nickname", generatedNickname, { shouldValidate: true });
+    }
+    setInitialized(true);
+  }, [initialized, name, nickname, setValue]);
   const displayNickname = nicknameValue || "your-nickname";
 
   // Debounced nickname availability check
   useEffect(() => {
     if (!nicknameValue || nicknameValue.length < 3) {
       setStatus("idle");
+      setSuggestions([]);
       return;
     }
 
@@ -100,18 +114,22 @@ export function StepNickname({
     );
     if (!isValidFormat) {
       setStatus("invalid");
+      setSuggestions([]);
       return;
     }
 
     setStatus("checking");
+    setSuggestions([]);
 
     const timeoutId = setTimeout(() => {
       startTransition(async () => {
         const result = await checkNicknameAvailability(nicknameValue);
         if (result.available) {
           setStatus("available");
+          setSuggestions([]);
         } else {
           setStatus("taken");
+          setSuggestions(result.suggestions || []);
         }
       });
     }, 500);
@@ -134,25 +152,19 @@ export function StepNickname({
     setValue("nickname", value, { shouldValidate: value.length >= 3 });
   };
 
-  const isNextDisabled = status !== "available";
+  const isSubmitDisabled = status !== "available";
 
   return (
     <StepLayout
-      currentStep={3}
+      currentStep={2}
       totalSteps={totalSteps}
       title={t("nickname.title")}
       subtitle={t("nickname.subtitle")}
-      onPrevious={onPrevious}
-      formId="nickname-form"
-      nextDisabled={isNextDisabled}
-      nextLoading={isPending}
-      preview={<NicknamePreview nickname={displayNickname} status={status} />}
+      previewLabel={t("preview.label")}
+      preview={<BeautyPagePreview name={name} nickname={displayNickname} />}
+      onBack={onPrevious}
     >
-      <form
-        id="nickname-form"
-        onSubmit={handleSubmit(onSubmit)}
-        className="space-y-6"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Field.Root>
           <Field.Label>{t("nickname.label")}</Field.Label>
           <div className="relative">
@@ -166,9 +178,7 @@ export function StepNickname({
               state={
                 errors.nickname || status === "taken" || status === "invalid"
                   ? "error"
-                  : status === "available"
-                    ? "default"
-                    : "default"
+                  : "default"
               }
               className={cn(
                 "pl-7",
@@ -208,45 +218,31 @@ export function StepNickname({
               {t("nickname.available")}
             </p>
           )}
+
+          {/* Suggestions when taken */}
+          {status === "taken" && suggestions.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-x-1 text-sm">
+              <span className="text-muted">{t("nickname.try")}:</span>
+              {suggestions.map((s, i) => (
+                <span key={s} className="inline-flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => setValue("nickname", s, { shouldValidate: true })}
+                    className="text-accent underline-offset-2 hover:underline"
+                  >
+                    @{s}
+                  </button>
+                  {i < suggestions.length - 1 && <span className="text-muted">,</span>}
+                </span>
+              ))}
+            </div>
+          )}
         </Field.Root>
+
+        <Button type="submit" disabled={isSubmitDisabled}>
+          {t("navigation.continue")}
+        </Button>
       </form>
     </StepLayout>
-  );
-}
-
-/**
- * URL preview component showing the full URL with validation status.
- * This is the key visual element inspired by Fleeso's design.
- */
-function NicknamePreview({
-  nickname,
-  status,
-}: {
-  nickname: string;
-  status: NicknameStatus;
-}) {
-  return (
-    <div className="flex items-center justify-center gap-2">
-      <div
-        className={cn(
-          "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-          status === "available"
-            ? "border-success/30 bg-success/10 text-success"
-            : status === "taken" || status === "invalid"
-              ? "border-danger/30 bg-danger/10 text-danger"
-              : "border-border bg-surface text-foreground",
-        )}
-      >
-        <span className="text-muted">icelook.app/</span>
-        <span>@{nickname}</span>
-      </div>
-      {status === "available" && <Check className="h-5 w-5 text-success" />}
-      {status === "checking" && (
-        <Loader2 className="h-5 w-5 animate-spin text-muted" />
-      )}
-      {(status === "taken" || status === "invalid") && (
-        <X className="h-5 w-5 text-danger" />
-      )}
-    </div>
   );
 }

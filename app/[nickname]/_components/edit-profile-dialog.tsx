@@ -497,19 +497,19 @@ export function EditProfileDialog({
               {view === "avatar" && (
                 <div className="p-4">
                   <AvatarUpload
-                    currentUrl={localAvatarUrl}
+                    currentPathOrUrl={localAvatarUrl}
                     name={localName}
                     target={{ type: "beauty-page", beautyPageId }}
                     shape="rounded"
-                    onUploadSuccess={async (url) => {
-                      // Save avatar URL to database
+                    onUploadSuccess={async (path) => {
+                      // Save avatar path to database (not full URL)
                       const result = await updateBeautyPageProfile({
                         beautyPageId,
-                        avatarUrl: url,
+                        avatarUrl: path,
                       });
                       if (result.success) {
-                        setLocalAvatarUrl(url);
-                        navigateBack();
+                        setLocalAvatarUrl(path);
+                        setOpen(false);
                       }
                     }}
                     onRemove={async () => {
@@ -533,7 +533,7 @@ export function EditProfileDialog({
                   translations={translations}
                   onSuccess={(newName) => {
                     setLocalName(newName);
-                    navigateBack();
+                    setOpen(false);
                   }}
                 />
               )}
@@ -546,7 +546,7 @@ export function EditProfileDialog({
                   translations={translations}
                   onSuccess={(newSlug) => {
                     setLocalSlug(newSlug);
-                    navigateBack();
+                    setOpen(false);
                   }}
                 />
               )}
@@ -558,7 +558,7 @@ export function EditProfileDialog({
                   translations={translations}
                   onSuccess={(newBio) => {
                     setLocalBio(newBio);
-                    navigateBack();
+                    setOpen(false);
                   }}
                 />
               )}

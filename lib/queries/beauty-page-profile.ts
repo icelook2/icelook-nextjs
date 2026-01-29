@@ -24,6 +24,7 @@ export type ContactInfo = {
   email: string | null;
   website_url: string | null;
   instagram_url: string | null;
+  telegram_url: string | null;
   facebook_url: string | null;
 };
 
@@ -148,6 +149,7 @@ export async function getBeautyPageProfile(
       email,
       website_url,
       instagram_url,
+      telegram_url,
       facebook_url
     `)
     .eq("slug", nickname)
@@ -233,6 +235,7 @@ export async function getBeautyPageProfile(
     email: beautyPage.email,
     website_url: beautyPage.website_url,
     instagram_url: beautyPage.instagram_url,
+    telegram_url: beautyPage.telegram_url,
     facebook_url: beautyPage.facebook_url,
   };
 

@@ -23,8 +23,14 @@ export type AvatarTarget =
 
 type ValidationResult = { valid: true } | { valid: false; error: string };
 
+/**
+ * Result of an upload operation.
+ *
+ * On success, returns the storage path (NOT the full URL).
+ * Use `getStorageUrl(path)` or `resolveStorageUrl(path)` to construct the full URL.
+ */
 type UploadResult =
-  | { success: true; url: string }
+  | { success: true; path: string }
   | { success: false; error: string };
 
 // ============================================================================
@@ -163,16 +169,10 @@ export async function uploadAvatar(
     return { success: false, error: "upload_failed" };
   }
 
-  // Get the public URL
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from(BUCKET_NAME).getPublicUrl(storagePath);
-
-  // Note: The database webhook will trigger background processing
-  // which will resize/optimize the image and update the database.
-  // For now, we return the URL of the original upload.
-
-  return { success: true, url: publicUrl };
+  // Return only the storage path, not the full URL.
+  // The full URL should be constructed at render time using resolveStorageUrl().
+  // This makes the database environment-agnostic.
+  return { success: true, path: storagePath };
 }
 
 // ============================================================================
@@ -218,7 +218,7 @@ export async function deleteAvatar(
       }
     }
 
-    return { success: true, url: "" };
+    return { success: true, path: "" };
   } catch {
     return { success: false, error: "delete_failed" };
   }

@@ -47,9 +47,7 @@ export async function Product2Testimonials() {
           <h2 className="text-2xl font-semibold md:text-3xl">
             {t("testimonials.headline")}
           </h2>
-          <p className="mt-3 text-muted">
-            {t("testimonials.subheadline")}
-          </p>
+          <p className="mt-3 text-muted">{t("testimonials.subheadline")}</p>
         </div>
 
         {/* Testimonial cards */}
@@ -84,7 +82,10 @@ export async function Product2Testimonials() {
               {/* Star rating */}
               <div className="mt-4 flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <Star
+                    key={i}
+                    className="h-4 w-4 fill-amber-400 text-amber-400"
+                  />
                 ))}
               </div>
             </Paper>

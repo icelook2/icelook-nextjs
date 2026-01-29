@@ -99,6 +99,13 @@ body {
   position: relative;
 }
 
+/* Create Beauty Page: Surface background on mobile */
+@media (max-width: 639px) {
+  body.create-beauty-page {
+    background-color: var(--theme-surface);
+  }
+}
+
 .root {
   /* Base UI: Creates stacking context for portal components (Dialog, Popover, Menu) */ isolation: isolate;
   isolation: isolate;

@@ -1,6 +1,13 @@
 "use client";
 
-import { AlertTriangle, Minus, Plus, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Minus,
+  Plus,
+  ToggleLeft,
+  ToggleRight,
+  Trash2,
+} from "lucide-react";
 import { useState, useTransition } from "react";
 import type { ResourceWithStatus } from "@/lib/types/resources";
 import { cn } from "@/lib/utils/cn";
@@ -131,14 +138,16 @@ export function ResourceCard({
             {/* Cost per unit */}
             {resource.cost_per_unit_cents > 0 && (
               <span>
-                {formatPrice(resource.cost_per_unit_cents, locale, currency)}/{resource.unit}
+                {formatPrice(resource.cost_per_unit_cents, locale, currency)}/
+                {resource.unit}
               </span>
             )}
 
             {/* Total value */}
             {resource.totalValueCents > 0 && (
               <span className="text-xs">
-                {t.totalValue}: {formatPrice(resource.totalValueCents, locale, currency)}
+                {t.totalValue}:{" "}
+                {formatPrice(resource.totalValueCents, locale, currency)}
               </span>
             )}
           </div>
@@ -192,7 +201,8 @@ export function ResourceCard({
             <div className="space-y-4">
               <div className="text-center">
                 <p className="text-sm text-muted mb-2">
-                  {resource.name} - {formatStockWithUnit(resource.current_stock, resource.unit)}
+                  {resource.name} -{" "}
+                  {formatStockWithUnit(resource.current_stock, resource.unit)}
                 </p>
               </div>
 
@@ -222,9 +232,13 @@ export function ResourceCard({
 
               {adjustmentValue !== 0 && (
                 <p className="text-center text-sm">
-                  {adjustmentValue > 0 ? t.adjustStockAdd : t.adjustStockRemove}:{" "}
+                  {adjustmentValue > 0 ? t.adjustStockAdd : t.adjustStockRemove}
+                  :{" "}
                   <strong>
-                    {formatStockWithUnit(Math.abs(adjustmentValue), resource.unit)}
+                    {formatStockWithUnit(
+                      Math.abs(adjustmentValue),
+                      resource.unit,
+                    )}
                   </strong>
                 </p>
               )}

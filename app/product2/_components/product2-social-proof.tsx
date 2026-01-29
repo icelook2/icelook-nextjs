@@ -29,9 +29,7 @@ export async function Product2SocialProof() {
         {/* Avatar row with join message */}
         <div className="mb-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
           <AvatarRow size="md" moreCount={495} />
-          <p className="text-sm text-muted">
-            {t("stats.join_message")}
-          </p>
+          <p className="text-sm text-muted">{t("stats.join_message")}</p>
         </div>
 
         {/* Stats grid */}

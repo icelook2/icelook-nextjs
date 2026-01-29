@@ -787,7 +787,9 @@ async function deductResourcesForAppointment(
       | { id: string; cost_per_unit_cents: number; is_active: boolean }
       | { id: string; cost_per_unit_cents: number; is_active: boolean }[]
       | null;
-    const resource = Array.isArray(resourceData) ? resourceData[0] : resourceData;
+    const resource = Array.isArray(resourceData)
+      ? resourceData[0]
+      : resourceData;
     if (!resource?.is_active) {
       continue;
     }

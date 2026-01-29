@@ -19,7 +19,8 @@ export async function Product2HowItWorks() {
       description: t("how_it_works.step1_description"),
       screenshotLabel: t("how_it_works.screenshot1_label"),
       screenshotDescription: t("how_it_works.screenshot1_description"),
-      color: "bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
+      color:
+        "bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400",
     },
     {
       number: 2,
@@ -28,7 +29,8 @@ export async function Product2HowItWorks() {
       description: t("how_it_works.step2_description"),
       screenshotLabel: t("how_it_works.screenshot2_label"),
       screenshotDescription: t("how_it_works.screenshot2_description"),
-      color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
+      color:
+        "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400",
     },
     {
       number: 3,
@@ -37,7 +39,8 @@ export async function Product2HowItWorks() {
       description: t("how_it_works.step3_description"),
       screenshotLabel: t("how_it_works.screenshot3_label"),
       screenshotDescription: t("how_it_works.screenshot3_description"),
-      color: "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400",
+      color:
+        "bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400",
     },
   ];
 
@@ -49,9 +52,7 @@ export async function Product2HowItWorks() {
           <h2 className="text-2xl font-semibold md:text-3xl">
             {t("how_it_works.headline")}
           </h2>
-          <p className="mt-3 text-muted">
-            {t("how_it_works.subheadline")}
-          </p>
+          <p className="mt-3 text-muted">{t("how_it_works.subheadline")}</p>
         </div>
 
         {/* Steps */}
@@ -65,7 +66,9 @@ export async function Product2HowItWorks() {
                 >
                   {step.number}
                 </div>
-                <step.icon className={`h-5 w-5 ${step.color.includes("violet") ? "text-violet-600 dark:text-violet-400" : step.color.includes("emerald") ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`} />
+                <step.icon
+                  className={`h-5 w-5 ${step.color.includes("violet") ? "text-violet-600 dark:text-violet-400" : step.color.includes("emerald") ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}
+                />
               </div>
 
               {/* Step content */}

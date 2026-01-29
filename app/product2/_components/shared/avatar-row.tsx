@@ -6,10 +6,7 @@ type AvatarRowProps = {
    * - A string URL to an image
    * - An object with initials and optional color
    */
-  avatars?: Array<
-    | string
-    | { initials: string; color?: string }
-  >;
+  avatars?: Array<string | { initials: string; color?: string }>;
   /** Number to show as "more" count (e.g., +495) */
   moreCount?: number;
   /** Size of each avatar */

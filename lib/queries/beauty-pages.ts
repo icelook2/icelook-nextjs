@@ -23,12 +23,9 @@ export type BeautyPage = {
   facebook_url: string | null;
 };
 
-export type BeautyPageWithType = BeautyPage & {
-  beauty_page_types: Array<{
-    id: string;
-    name: string;
-  }>;
-};
+// Note: beauty_page_types table was removed from the schema
+// Keeping this alias for backwards compatibility
+export type BeautyPageWithType = BeautyPage;
 
 export type UserBeautyPage = Pick<BeautyPage, "id" | "name" | "slug"> & {
   avatar_url: string | null;
@@ -72,7 +69,7 @@ export async function getBeautyPageByNickname(
 
   const { data, error } = await supabase
     .from("beauty_pages")
-    .select("*, beauty_page_types(*)")
+    .select("*")
     .eq("slug", nickname)
     .eq("is_active", true)
     .single();
