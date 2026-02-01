@@ -1,5 +1,8 @@
+"use client";
+
 import { BadgeCheck } from "lucide-react";
 import Link from "next/link";
+import { useSearchHistory } from "@/lib/hooks";
 import type { BeautyPageSearchResult } from "@/lib/queries/search";
 import { Avatar } from "@/lib/ui/avatar";
 
@@ -8,9 +11,25 @@ interface SearchResultCardProps {
 }
 
 export function SearchResultCard({ result }: SearchResultCardProps) {
+  const { addViewedPage } = useSearchHistory();
+
+  function handleClick() {
+    // Track this page in history when clicked
+    addViewedPage({
+      id: result.id,
+      slug: result.slug,
+      name: result.name,
+      displayName: result.display_name,
+      avatarUrl: result.logo_url,
+      city: result.city,
+      isVerified: result.is_verified,
+    });
+  }
+
   return (
     <Link
       href={`/${result.slug}`}
+      onClick={handleClick}
       className="flex items-center gap-3 rounded-lg py-3 transition-colors hover:bg-surface-hover"
     >
       <Avatar

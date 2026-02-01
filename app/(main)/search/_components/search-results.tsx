@@ -19,7 +19,7 @@ export function SearchResults({
   const t = useTranslations("search");
 
   // Empty state: no query yet
-  if (!query || query.trim().length < 2) {
+  if (!query || query.trim().length < 1) {
     return <EmptyStateVariants message={t("empty_prompt")} />;
   }
 

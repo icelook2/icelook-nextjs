@@ -20,8 +20,9 @@ type SearchResult =
  * Called from the client-side search component with debouncing.
  *
  * Automatically filters out beauty pages where the current user is banned.
+ * Searches start from the first character using prefix matching.
  *
- * @param query - Search query (minimum 2 characters)
+ * @param query - Search query (minimum 1 character)
  * @param offset - Number of results to skip (for pagination)
  * @returns Search results with pagination info or error
  */
@@ -30,7 +31,7 @@ export async function searchAction(
   offset = 0,
 ): Promise<SearchResult> {
   // Minimum query length check
-  if (!query || query.trim().length < 2) {
+  if (!query || query.trim().length < 1) {
     return { success: true, results: [], hasMore: false };
   }
 

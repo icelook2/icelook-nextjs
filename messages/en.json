@@ -157,11 +157,15 @@
     "subtitle": "Find your perfect specialist",
     "placeholder": "Search by name or username...",
     "aria_label": "Search specialists",
-    "clear": "Clear search",
+    "clear": "Clear",
     "empty_prompt": "Start typing to search for specialists",
     "no_results": "No specialists found for \"{query}\"",
     "results_label": "Search results",
-    "end_of_list": "You've reached the end"
+    "end_of_list": "You've reached the end",
+    "recent": "Recent",
+    "recent_matches": "Recent matches",
+    "remove_from_history": "Remove from history",
+    "no_recent_matches": "No recent matches"
   },
   "settings": {
     "title": "Settings",
