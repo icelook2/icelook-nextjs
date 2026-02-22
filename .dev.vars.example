@@ -1,3 +1,0 @@
-# Cloudflare local runtime variables (used by `wrangler` / `opennextjs-cloudflare preview`)
-NEXT_PUBLIC_API_AUTH_BASE=http://127.0.0.1:8787/auth
-API_BASE_URL=http://127.0.0.1:8787
