@@ -1,7 +1,6 @@
 "use client";
 
 import { Menu as BaseMenu } from "@base-ui/react/menu";
-import { motion } from "motion/react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
@@ -47,7 +46,7 @@ function MenuPortal({ children }: { children: ReactNode }) {
 }
 
 // ============================================================================
-// Menu Content (Positioner + Popup with Animation)
+// Menu Content (Positioner + Popup)
 // ============================================================================
 
 interface MenuContentProps {
@@ -69,11 +68,7 @@ function MenuContent({
     <BaseMenu.Positioner side={side} align={align} sideOffset={sideOffset}>
       <BaseMenu.Popup
         render={
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -4 }}
-            transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          <div
             className={cn(
               "min-w-[180px] rounded-xl border border-text/10 bg-surface p-1 shadow-lg",
               "focus:outline-none",

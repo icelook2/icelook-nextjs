@@ -33,17 +33,6 @@ export function CookieConsentProvider({
         // Consent categories to show in the banner
         // Available: 'necessary', 'functionality', 'marketing', 'measurement', 'experience'
         consentCategories: ["necessary", "measurement", "marketing"],
-        // Legal links - update these with your actual URLs
-        legalLinks: {
-          privacyPolicy: {
-            href: "/privacy",
-            label: "Privacy Policy",
-          },
-          termsOfService: {
-            href: "/terms",
-            label: "Terms of Service",
-          },
-        },
       }}
     >
       {children}

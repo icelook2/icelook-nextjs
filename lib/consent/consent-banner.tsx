@@ -2,7 +2,6 @@
 
 import { useConsentManager } from "@c15t/react";
 import { ChevronDown } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Button } from "@/lib/ui/button";
@@ -72,21 +71,13 @@ function ConsentCategory({
         />
       </div>
 
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="border-t border-border px-3 py-2">
-              <p className="text-xs text-muted">{description}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isExpanded && (
+        <div className="overflow-hidden">
+          <div className="border-t border-border px-3 py-2">
+            <p className="text-xs text-muted">{description}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -142,148 +133,114 @@ export function ConsentBanner() {
   );
 
   // Don't render anything on server to avoid hydration mismatch
-  if (!mounted) {
+  if (!mounted || !showPopup) {
     return null;
   }
 
   return (
-    <AnimatePresence>
-      {showPopup && (
-        <>
-          {/* Blocking overlay */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50"
-            aria-hidden="true"
-          />
+    <>
+      {/* Blocking overlay */}
+      <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
 
-          {/*
-            Banner with responsive behavior:
-            - Mobile: bottom sheet (full width, no gap, rounded top only, slides up)
-            - Desktop: bottom-left card (fixed width, padding, fully rounded, slides from left)
-          */}
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 md:inset-x-auto md:left-0 md:p-6"
+      {/*
+        Banner with responsive behavior:
+        - Mobile: bottom sheet (full width, no gap, rounded top only)
+        - Desktop: bottom-left card (fixed width, padding, fully rounded)
+      */}
+      <div className="fixed inset-x-0 bottom-0 md:inset-x-auto md:left-0 md:p-6">
+        <div
+          className={cn(
+            "w-full bg-surface shadow-lg",
+            "rounded-t-2xl",
+            "md:w-[420px] md:rounded-2xl md:border md:border-border",
+          )}
+        >
+          {/* Header */}
+          <div className="p-4 pb-0">
+            <h2 className="text-base font-semibold text-foreground">
+              {t("banner.title")}
+            </h2>
+            <p className="mt-1 text-sm text-muted">
+              {isExpanded ? t("dialog.description") : t("banner.description")}
+            </p>
+          </div>
+
+          {/* Content area */}
+          <div className="px-4">
+            {isExpanded && (
+              <div className="mt-3 space-y-2 pb-1">
+                {displayedConsents.map((consentName) => {
+                  const isNecessary = consentName === "necessary";
+                  const isChecked = isNecessary
+                    ? true
+                    : Boolean(selectedConsents[consentName]);
+
+                  return (
+                    <ConsentCategory
+                      key={consentName}
+                      name={consentName}
+                      checked={isChecked}
+                      disabled={isNecessary}
+                      isExpanded={expandedCategory === consentName}
+                      onToggle={() =>
+                        setExpandedCategory(
+                          expandedCategory === consentName ? null : consentName,
+                        )
+                      }
+                      onChange={(checked) =>
+                        setSelectedConsent(consentName, checked)
+                      }
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div
+            className={cn(
+              "p-4 pt-3",
+              "flex gap-2",
+              isExpanded ? "flex-col" : "flex-col sm:flex-row sm:items-center",
+            )}
           >
-            <div
-              className={cn(
-                "w-full bg-surface shadow-lg",
-                // Mobile: bottom sheet style
-                "rounded-t-2xl",
-                // Desktop: card style with full rounding
-                "md:w-[420px] md:rounded-2xl md:border md:border-border",
-              )}
-            >
-              {/* Header */}
-              <div className="p-4 pb-0">
-                <h2 className="text-base font-semibold text-foreground">
-                  {t("banner.title")}
-                </h2>
-                <p className="mt-1 text-sm text-muted">
-                  {isExpanded
-                    ? t("dialog.description")
-                    : t("banner.description")}
-                </p>
-              </div>
-
-              {/* Content area */}
-              <div className="px-4">
-                {/* Expanded: show category toggles */}
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="mt-3 space-y-2 pb-1">
-                        {displayedConsents.map((consentName) => {
-                          const isNecessary = consentName === "necessary";
-                          const isChecked = isNecessary
-                            ? true
-                            : Boolean(selectedConsents[consentName]);
-
-                          return (
-                            <ConsentCategory
-                              key={consentName}
-                              name={consentName}
-                              checked={isChecked}
-                              disabled={isNecessary}
-                              isExpanded={expandedCategory === consentName}
-                              onToggle={() =>
-                                setExpandedCategory(
-                                  expandedCategory === consentName
-                                    ? null
-                                    : consentName,
-                                )
-                              }
-                              onChange={(checked) =>
-                                setSelectedConsent(consentName, checked)
-                              }
-                            />
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Footer */}
-              <div
-                className={cn(
-                  "p-4 pt-3",
-                  "flex gap-2",
-                  isExpanded
-                    ? "flex-col"
-                    : "flex-col sm:flex-row sm:items-center",
-                )}
-              >
-                {isExpanded ? (
-                  <>
-                    <Button onClick={handleRejectAll} variant="outline">
-                      {t("dialog.rejectAll")}
-                    </Button>
-                    <Button onClick={handleAcceptAll} variant="outline">
-                      {t("dialog.acceptAll")}
-                    </Button>
-                    <Button onClick={handleSaveSettings}>
-                      {t("dialog.saveSettings")}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button onClick={handleAcceptAll} className="flex-1">
-                      {t("banner.acceptAll")}
-                    </Button>
-                    <Button
-                      onClick={handleRejectAll}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      {t("banner.rejectAll")}
-                    </Button>
-                    <Button
-                      onClick={handleCustomize}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      {t("banner.customize")}
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            {isExpanded ? (
+              <>
+                <Button onClick={handleRejectAll} variant="outline">
+                  {t("dialog.rejectAll")}
+                </Button>
+                <Button onClick={handleAcceptAll} variant="outline">
+                  {t("dialog.acceptAll")}
+                </Button>
+                <Button onClick={handleSaveSettings}>
+                  {t("dialog.saveSettings")}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button onClick={handleAcceptAll} className="flex-1">
+                  {t("banner.acceptAll")}
+                </Button>
+                <Button
+                  onClick={handleRejectAll}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {t("banner.rejectAll")}
+                </Button>
+                <Button
+                  onClick={handleCustomize}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {t("banner.customize")}
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

@@ -6,21 +6,20 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
+import { resendOtpAction, verifyOtpAction } from "@/app/auth/actions";
 import { Button } from "@/lib/ui/button";
 import { Field } from "@/lib/ui/field";
 import { OtpInput } from "@/lib/ui/otp-input";
-import { resendOtp, verifyOtp } from "../actions";
 import { createTranslatedSchemas } from "../schemas";
 
 interface OtpStepProps {
   email: string;
-  redirectTo: string;
   onBack: () => void;
 }
 
 const COOLDOWN_SECONDS = 60;
 
-export function OtpStep({ email, redirectTo, onBack }: OtpStepProps) {
+export function OtpStep({ email, onBack }: OtpStepProps) {
   const t = useTranslations("auth");
   const tValidation = useTranslations("validation");
   const [isPending, startTransition] = useTransition();
@@ -59,8 +58,7 @@ export function OtpStep({ email, redirectTo, onBack }: OtpStepProps) {
     setServerError(null);
 
     startTransition(async () => {
-      const result = await verifyOtp(email, data.code, redirectTo);
-      // Only reaches here on error (redirect throws on success)
+      const result = await verifyOtpAction(email, data.code);
       if (!result.success) {
         setServerError(result.error);
       }
@@ -75,7 +73,7 @@ export function OtpStep({ email, redirectTo, onBack }: OtpStepProps) {
     setIsResending(true);
     setServerError(null);
 
-    const result = await resendOtp(email);
+    const result = await resendOtpAction(email);
 
     if (result.success) {
       setCooldown(COOLDOWN_SECONDS);
@@ -97,9 +95,7 @@ export function OtpStep({ email, redirectTo, onBack }: OtpStepProps) {
           <Controller
             name="code"
             control={control}
-            render={({ field }) => (
-              <OtpInput {...field} autoFocus error={!!error} />
-            )}
+            render={({ field }) => <OtpInput {...field} autoFocus error={!!error} />}
           />
           <Field.Error>{error}</Field.Error>
         </Field.Root>

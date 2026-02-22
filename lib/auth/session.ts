@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getApiSession } from "@/lib/api/auth-server";
 import type { VisitPreferences } from "@/lib/types";
 
 export type Profile = {
@@ -14,19 +14,13 @@ export type Profile = {
 };
 
 export async function getSession() {
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  return session;
+  const apiSession = await getApiSession();
+  return apiSession?.session ?? null;
 }
 
 export async function getUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+  const apiSession = await getApiSession();
+  return apiSession?.user ?? null;
 }
 
 export async function requireAuth(redirectTo = "/auth") {
@@ -40,22 +34,22 @@ export async function requireAuth(redirectTo = "/auth") {
 }
 
 export async function getProfile(): Promise<Profile | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   if (!user) {
     return null;
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  return profile;
+  return {
+    id: user.id,
+    email: user.email ?? null,
+    full_name: user.name ?? null,
+    avatar_url: user.image ?? null,
+    preferred_locale: null,
+    visit_preferences: null as VisitPreferences | null,
+    created_at: "",
+    updated_at: "",
+  };
 }
 
 export function isOnboardingComplete(profile: Profile | null): boolean {

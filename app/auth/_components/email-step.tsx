@@ -5,10 +5,10 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { sendOtpAction } from "@/app/auth/actions";
 import { Button } from "@/lib/ui/button";
 import { Field } from "@/lib/ui/field";
 import { Input } from "@/lib/ui/input";
-import { signInWithOtp } from "../actions";
 import { createTranslatedSchemas } from "../schemas";
 
 interface EmailStepProps {
@@ -37,7 +37,7 @@ export function EmailStep({ onSubmitted }: EmailStepProps) {
   async function onSubmit(data: FormData) {
     setServerError(null);
 
-    const result = await signInWithOtp(data.email);
+    const result = await sendOtpAction(data.email);
 
     if (result.success) {
       onSubmitted(data.email);

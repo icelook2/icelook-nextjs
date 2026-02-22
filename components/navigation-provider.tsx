@@ -1,14 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-} from "react";
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useRef } from "react";
 
 interface NavigationContextValue {
   /**

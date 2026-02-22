@@ -17,11 +17,7 @@ export function LocaleProvider({
   timeZone = "UTC",
 }: LocaleProviderProps) {
   return (
-    <NextIntlClientProvider
-      locale={locale}
-      messages={messages}
-      timeZone={timeZone}
-    >
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone={timeZone}>
       {children}
     </NextIntlClientProvider>
   );

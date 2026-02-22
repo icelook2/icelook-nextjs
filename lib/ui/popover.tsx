@@ -1,7 +1,6 @@
 "use client";
 
 import { Popover as BasePopover } from "@base-ui/react/popover";
-import { motion } from "motion/react";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/utils/cn";
 
@@ -34,7 +33,7 @@ function PopoverPortal({ children }: { children: ReactNode }) {
 }
 
 // ============================================================================
-// Popover Content with Animation
+// Popover Content
 // ============================================================================
 
 interface PopoverContentProps {
@@ -56,11 +55,7 @@ function PopoverContent({
     <BasePopover.Positioner side={side} align={align} sideOffset={sideOffset}>
       <BasePopover.Popup
         render={
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -4 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -4 }}
-            transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          <div
             className={cn(
               "rounded-2xl border border-text/10 bg-surface p-2 shadow-lg",
               "focus:outline-none",

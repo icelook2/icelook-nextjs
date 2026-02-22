@@ -1,10 +1,17 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
 import { IcelookLogo } from "@/components/icelook-logo";
+import { resolvePostLoginDestination } from "@/lib/auth/landing";
+import { getUser } from "@/lib/auth/session";
 import { Paper } from "@/lib/ui/paper";
 import { AuthForm } from "./_components/auth-form";
 
 export default async function AuthPage() {
+  const user = await getUser();
+  if (user) {
+    redirect(await resolvePostLoginDestination(user.id));
+  }
+
   const t = await getTranslations("auth");
   const currentYear = new Date().getFullYear();
 
@@ -25,23 +32,11 @@ export default async function AuthPage() {
           <AuthForm />
         </Paper>
 
-        {/* Legal Links */}
-        <p className="mt-4 text-center text-xs text-muted">
-          {t("legal_agreement")}{" "}
-          <Link href="/terms" className="underline hover:text-foreground">
-            {t("terms_of_service")}
-          </Link>{" "}
-          {t("and")}{" "}
-          <Link href="/privacy" className="underline hover:text-foreground">
-            {t("privacy_policy")}
-          </Link>
-        </p>
+        <p className="mt-4 text-center text-xs text-muted">{t("legal_agreement")}</p>
       </div>
 
       {/* Copyright */}
-      <p className="mt-8 text-center text-xs text-muted">
-        {t("copyright", { year: currentYear })}
-      </p>
+      <p className="mt-8 text-center text-xs text-muted">{t("copyright", { year: currentYear })}</p>
     </main>
   );
 }

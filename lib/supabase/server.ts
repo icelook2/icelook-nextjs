@@ -6,12 +6,14 @@ function getEnvVars() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_IL_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl) {
-    throw new Error("Missing NEXT_PUBLIC_IL_SUPABASE_URL environment variable");
+    throw new Error(
+      "Missing NEXT_PUBLIC_IL_SUPABASE_URL. Set it in .env.local for Next.js dev/build and in .dev.vars (or Wrangler vars/secrets) for Cloudflare preview/deploy.",
+    );
   }
 
   if (!supabaseAnonKey) {
     throw new Error(
-      "Missing NEXT_PUBLIC_IL_SUPABASE_ANON_KEY environment variable",
+      "Missing NEXT_PUBLIC_IL_SUPABASE_ANON_KEY. Set it in .env.local for Next.js dev/build and in .dev.vars (or Wrangler vars/secrets) for Cloudflare preview/deploy.",
     );
   }
 
