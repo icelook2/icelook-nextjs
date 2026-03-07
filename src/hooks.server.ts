@@ -1,7 +1,6 @@
 import { sequence } from '@sveltejs/kit/hooks';
-import { building } from '$app/environment';
-import { auth } from '$lib/server/auth';
-import { svelteKitHandler } from 'better-auth/svelte-kit';
+import { redirect } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import type { Handle } from '@sveltejs/kit';
 import { paraglideMiddleware } from '$lib/paraglide/server';
 
@@ -30,15 +29,31 @@ const handleTheme: Handle = ({ event, resolve }) => {
 	});
 };
 
-const handleBetterAuth: Handle = async ({ event, resolve }) => {
-	const session = await auth.api.getSession({ headers: event.request.headers });
-
-	if (session) {
-		event.locals.session = session.session;
-		event.locals.user = session.user;
+const handleSession: Handle = async ({ event, resolve }) => {
+	const cookie = event.request.headers.get('cookie');
+	if (cookie) {
+		try {
+			const res = await fetch(`${env.API_URL}/api/auth/get-session`, {
+				headers: { cookie }
+			});
+			if (res.ok) {
+				const data: { session?: App.Locals['session']; user?: App.Locals['user'] } =
+					await res.json();
+				event.locals.session = data.session;
+				event.locals.user = data.user;
+			}
+		} catch {
+			/* API unreachable */
+		}
 	}
-
-	return svelteKitHandler({ event, resolve, auth, building });
+	return resolve(event);
 };
 
-export const handle: Handle = sequence(handleTheme, handleParaglide, handleBetterAuth);
+const handleAuthGuard: Handle = ({ event, resolve }) => {
+	if (event.locals.user && event.route.id?.startsWith('/(auth)')) {
+		redirect(302, '/');
+	}
+	return resolve(event);
+};
+
+export const handle: Handle = sequence(handleTheme, handleParaglide, handleSession, handleAuthGuard);

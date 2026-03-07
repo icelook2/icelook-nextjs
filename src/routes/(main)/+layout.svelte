@@ -1,28 +1,114 @@
 <script lang="ts">
-	let { children } = $props();
+	import Avatar from '$lib/components/ui/avatar.svelte';
+	import IcelookLogo from '$lib/components/ui/icelook-logo.svelte';
+	import { CalendarDays, Search, Settings, UserRound } from 'lucide-svelte';
+
+	let { data, children } = $props();
+
+	const defaultSpecialist = $derived(data.defaultSpecialist);
 </script>
 
 <div class="flex h-screen">
 	<!-- Sidebar -->
-	<aside class="flex flex-col justify-between py-4 px-2 w-14 border-r shrink-0">
-		<!-- Profile icon (top) -->
-		<button aria-label="Profile">
-			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="12" cy="8" r="4" />
-				<path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-			</svg>
-		</button>
-		<!-- Settings icon (bottom) -->
-		<button aria-label="Settings">
-			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<circle cx="12" cy="12" r="3" />
-				<path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-			</svg>
-		</button>
+	<aside class="hidden sm:flex flex-col items-center justify-between py-4 px-2 w-16 shrink-0">
+		<!-- Logo (top) -->
+		<a href="/" aria-label="Home">
+			<IcelookLogo size="md" />
+		</a>
+
+		<!-- Navigation (center) -->
+		<div class="flex flex-col items-center gap-2">
+			{#if defaultSpecialist}
+				<a
+					href="/{defaultSpecialist.nickname}"
+					class="inline-flex h-12 w-12 items-center justify-center rounded-full transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+					aria-label="My profile"
+				>
+					<Avatar src={defaultSpecialist.avatarUrl} name={defaultSpecialist.name} size="sm" />
+				</a>
+			{:else}
+				<div
+					class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-400 dark:text-neutral-600"
+					aria-label="No profile"
+				>
+					<UserRound size={24} />
+				</div>
+			{/if}
+			{#if defaultSpecialist}
+				<a
+					href="/{defaultSpecialist.nickname}/schedule"
+					class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
+					aria-label="Appointments"
+				>
+					<CalendarDays size={24} />
+				</a>
+			{/if}
+			<a
+				href="/search"
+				class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
+				aria-label="Search"
+			>
+				<Search size={24} />
+			</a>
+		</div>
+
+		<!-- Settings (bottom) -->
+		<a
+			href="/settings"
+			class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
+			aria-label="Settings"
+		>
+			<Settings size={24} />
+		</a>
 	</aside>
 
 	<!-- Main content -->
-	<main class="flex-1 overflow-auto">
+	<main class="flex-1 overflow-auto pb-16 sm:pb-0">
 		{@render children()}
 	</main>
+
+	<!-- Bottom nav: visible on mobile, hidden on sm+ -->
+	<nav
+		class="fixed bottom-0 left-0 right-0 flex items-center justify-around border-t border-neutral-200 bg-white px-4 py-2 dark:border-neutral-800 dark:bg-neutral-900 sm:hidden"
+	>
+		{#if defaultSpecialist}
+			<a
+				href="/{defaultSpecialist.nickname}"
+				class="inline-flex h-12 w-12 items-center justify-center rounded-full transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+				aria-label="My profile"
+			>
+				<Avatar src={defaultSpecialist.avatarUrl} name={defaultSpecialist.name} size="sm" />
+			</a>
+		{:else}
+			<div
+				class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-400 dark:text-neutral-600"
+				aria-label="No profile"
+			>
+				<UserRound size={24} />
+			</div>
+		{/if}
+		{#if defaultSpecialist}
+			<a
+				href="/{defaultSpecialist.nickname}/schedule"
+				class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
+				aria-label="Appointments"
+			>
+				<CalendarDays size={24} />
+			</a>
+		{/if}
+		<a
+			href="/search"
+			class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
+			aria-label="Search"
+		>
+			<Search size={24} />
+		</a>
+		<a
+			href="/settings"
+			class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
+			aria-label="Settings"
+		>
+			<Settings size={24} />
+		</a>
+	</nav>
 </div>

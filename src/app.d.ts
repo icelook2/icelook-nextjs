@@ -18,7 +18,7 @@ declare global {
 		}
 
         interface Locals {
-			user?: User;
+			user?: User & { onboardedAt?: string | null };
 			session?: Session;
 			theme: 'light' | 'dark' | 'system';
 		}

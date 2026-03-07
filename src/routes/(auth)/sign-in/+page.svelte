@@ -3,7 +3,7 @@
 	import EmailStep from '$lib/components/auth/sign-in/steps/EmailStep.svelte';
 	import VerifyOtpStep from '$lib/components/auth/sign-in/steps/VerifyOtpStep.svelte';
 
-	let auth = $state<SignInContext>({ step: 'email' });
+	let auth = $state<SignInContext>({ step: 'email', email: '' });
 
 	setSignInContext(auth);
 </script>

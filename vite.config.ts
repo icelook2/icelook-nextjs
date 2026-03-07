@@ -6,6 +6,22 @@ import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
+	server: {
+		proxy: {
+			'/api/auth': 'http://localhost:8787',
+			'/specialists': 'http://localhost:8787',
+			'/images': 'http://localhost:8787',
+			'/me': 'http://localhost:8787',
+			'/search': {
+				target: 'http://localhost:8787',
+				bypass(req) {
+					if (req.headers.accept?.includes('text/html')) {
+						return req.url;
+					}
+				}
+			}
+		}
+	},
 	plugins: [
 		tailwindcss(),
 		sveltekit(),

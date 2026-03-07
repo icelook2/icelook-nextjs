@@ -26,6 +26,7 @@ src/lib/paraglide
 project.inlang/cache/
 # Playwright
 test-results
+.playwright-mcp/
 # Cloudflare Types
 /worker-configuration.d.ts
 

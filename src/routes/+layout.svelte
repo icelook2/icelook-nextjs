@@ -7,10 +7,6 @@
 
 	let { children, data } = $props();
 
-	// Synchronous — sets theme state during SSR so the correct value is rendered
-	initTheme(data.theme);
-
-	// Reactive — re-applies if data.theme changes on client-side navigation
 	$effect(() => {
 		initTheme(data.theme);
 	});
