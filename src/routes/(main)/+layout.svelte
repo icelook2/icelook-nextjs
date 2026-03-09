@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Avatar from '$lib/components/ui/avatar.svelte';
 	import IcelookLogo from '$lib/components/ui/icelook-logo.svelte';
-	import { CalendarDays, Search, Settings, UserRound } from 'lucide-svelte';
+	import { CalendarCheck, CalendarDays, Search, Settings } from 'lucide-svelte';
 
 	let { data, children } = $props();
 
@@ -26,21 +26,23 @@
 				>
 					<Avatar src={defaultSpecialist.avatarUrl} name={defaultSpecialist.name} size="sm" />
 				</a>
-			{:else}
-				<div
-					class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-400 dark:text-neutral-600"
-					aria-label="No profile"
-				>
-					<UserRound size={24} />
-				</div>
 			{/if}
 			{#if defaultSpecialist}
 				<a
 					href="/{defaultSpecialist.nickname}/schedule"
 					class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
-					aria-label="Appointments"
+					aria-label="Schedule"
 				>
 					<CalendarDays size={24} />
+				</a>
+			{/if}
+			{#if !defaultSpecialist}
+				<a
+					href="/appointments"
+					class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
+					aria-label="My Appointments"
+				>
+					<CalendarCheck size={24} />
 				</a>
 			{/if}
 			<a
@@ -79,21 +81,23 @@
 			>
 				<Avatar src={defaultSpecialist.avatarUrl} name={defaultSpecialist.name} size="sm" />
 			</a>
-		{:else}
-			<div
-				class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-400 dark:text-neutral-600"
-				aria-label="No profile"
-			>
-				<UserRound size={24} />
-			</div>
 		{/if}
 		{#if defaultSpecialist}
 			<a
 				href="/{defaultSpecialist.nickname}/schedule"
 				class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
-				aria-label="Appointments"
+				aria-label="Schedule"
 			>
 				<CalendarDays size={24} />
+			</a>
+		{/if}
+		{#if !defaultSpecialist}
+			<a
+				href="/appointments"
+				class="inline-flex h-12 w-12 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
+				aria-label="My Appointments"
+			>
+				<CalendarCheck size={24} />
 			</a>
 		{/if}
 		<a

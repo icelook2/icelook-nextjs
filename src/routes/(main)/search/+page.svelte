@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft } from 'lucide-svelte';
+	import BackButton from '$lib/components/ui/back-button.svelte';
 	import SearchInput from '$lib/components/ui/search-input.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import SpecialistCard from '$lib/components/specialist-card.svelte';
@@ -117,12 +117,7 @@
 
 <div class="mx-auto flex h-full w-full max-w-2xl flex-col px-6 py-6">
 	<header class="flex items-center gap-3">
-		<a
-			href="/"
-			class="inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
-		>
-			<ArrowLeft size={20} />
-		</a>
+		<BackButton />
 		<h1 class="text-xl font-semibold text-neutral-900 dark:text-neutral-50">Search</h1>
 	</header>
 

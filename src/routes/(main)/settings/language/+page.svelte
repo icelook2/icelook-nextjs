@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowLeft } from 'lucide-svelte';
+	import BackButton from '$lib/components/ui/back-button.svelte';
 	import { getLocale, setLocale, type Locale } from '$lib/paraglide/runtime.js';
 
 	const options: { value: Locale; label: string }[] = [
@@ -11,12 +11,7 @@
 </script>
 
 <header class="flex items-center gap-3">
-	<a
-		href="/settings"
-		class="inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
-	>
-		<ArrowLeft size={20} />
-	</a>
+	<BackButton fallback="/settings" />
 	<h1 class="text-xl font-semibold text-neutral-900 dark:text-neutral-50">Language</h1>
 </header>
 

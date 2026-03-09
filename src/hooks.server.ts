@@ -50,9 +50,32 @@ const handleSession: Handle = async ({ event, resolve }) => {
 };
 
 const handleAuthGuard: Handle = ({ event, resolve }) => {
-	if (event.locals.user && event.route.id?.startsWith('/(auth)')) {
+	const user = event.locals.user;
+	const routeId = event.route.id ?? '';
+
+	const isAuthRoute = routeId.startsWith('/(auth)');
+	const isOnboardingRoute = routeId === '/onboarding';
+
+	// Unauthenticated user accessing onboarding → sign-in
+	if (!user && isOnboardingRoute) {
+		redirect(302, '/sign-in');
+	}
+
+	// Authenticated user on auth pages → home or onboarding
+	if (user && isAuthRoute) {
+		redirect(302, user.onboardedAt ? '/' : '/onboarding');
+	}
+
+	// Authenticated but not onboarded → force to onboarding
+	if (user && !user.onboardedAt && routeId && !isOnboardingRoute) {
+		redirect(302, '/onboarding');
+	}
+
+	// Authenticated and onboarded → block re-access to onboarding
+	if (user && user.onboardedAt && isOnboardingRoute) {
 		redirect(302, '/');
 	}
+
 	return resolve(event);
 };
 

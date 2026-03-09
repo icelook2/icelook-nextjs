@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
-	import { ArrowLeft, Camera } from 'lucide-svelte';
+	import { Camera } from 'lucide-svelte';
+	import BackButton from '$lib/components/ui/back-button.svelte';
 	import Avatar from '$lib/components/ui/avatar.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 
@@ -76,12 +77,7 @@
 </script>
 
 <header class="flex items-center gap-3">
-	<a
-		href="/settings/profile"
-		class="inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
-	>
-		<ArrowLeft size={20} />
-	</a>
+	<BackButton fallback="/settings/profile" />
 	<h1 class="text-xl font-semibold text-neutral-900 dark:text-neutral-50">Avatar</h1>
 </header>
 

@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { ArrowLeft, Info, Settings, Star } from 'lucide-svelte';
+	import { Info, Settings, Star } from 'lucide-svelte';
+	import BackButton from '$lib/components/ui/back-button.svelte';
 	import Avatar from '$lib/components/ui/avatar.svelte';
 	import Button from '$lib/components/ui/button.svelte';
 	import Checkbox from '$lib/components/ui/checkbox.svelte';
 	import EditProfileDialog from '$lib/components/edit-profile-dialog.svelte';
 	import ContactsDialog from '$lib/components/contacts-dialog.svelte';
+	import CreateAppointmentDialog from '$lib/components/create-appointment-dialog.svelte';
 	import type { Service } from '$lib/types/specialist';
 
 	const { data } = $props();
@@ -13,8 +15,15 @@
 
 	let editProfileOpen = $state(false);
 	let contactsOpen = $state(false);
+	let bookingDialogOpen = $state(false);
 
 	let selected: Record<number, boolean> = $state({});
+
+	const selectedServiceIds = $derived(
+		Object.entries(selected)
+			.filter(([, v]) => v)
+			.map(([k]) => Number(k))
+	);
 
 	function formatPrice(price: number): string {
 		return new Intl.NumberFormat(undefined, {
@@ -34,24 +43,21 @@
 <div class="mx-auto w-full max-w-2xl px-6 py-6">
 	<!-- Page header -->
 	<header class="flex items-center gap-3">
-		<a
-			href="/"
-			class="inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
-		>
-			<ArrowLeft size={20} />
-		</a>
+		<BackButton fallback="/search" />
 		<div>
 			<h1 class="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
 				{specialist.name}
 			</h1>
 			<p class="text-sm text-neutral-500 dark:text-neutral-400">@{specialist.nickname}</p>
 		</div>
-		<a
-			href="/{specialist.nickname}/settings"
-			class="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
-		>
-			<Settings size={20} />
-		</a>
+		{#if isOwner}
+			<a
+				href="/{specialist.nickname}/settings"
+				class="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
+			>
+				<Settings size={20} />
+			</a>
+		{/if}
 	</header>
 
 	<!-- Profile header -->
@@ -64,9 +70,11 @@
 	</section>
 
 	<div class="mt-4 flex items-center gap-2">
-		<Button variant="outline" size="sm" onclick={() => (editProfileOpen = true)}>
-			Edit Profile
-		</Button>
+		{#if isOwner}
+			<Button variant="outline" size="sm" onclick={() => (editProfileOpen = true)}>
+				Edit Profile
+			</Button>
+		{/if}
 
 		<Button variant="outline" size="sm">
 			<Star size={14} class="fill-yellow-400 text-yellow-400" />
@@ -124,6 +132,15 @@
 
 <EditProfileDialog bind:open={editProfileOpen} {specialist} />
 <ContactsDialog bind:open={contactsOpen} {specialist} editable={isOwner} />
+<CreateAppointmentDialog bind:open={bookingDialogOpen} {specialist} {selectedServiceIds} />
+
+{#if selectedServiceIds.length > 0}
+	<div class="fixed bottom-20 sm:bottom-6 right-4 flex items-center gap-2 z-40 bg-white dark:bg-neutral-900 shadow-lg rounded-2xl px-3 py-2 border border-neutral-200 dark:border-neutral-800">
+		<span class="text-sm font-medium">{selectedServiceIds.length} service(s)</span>
+		<Button variant="outline" size="sm" onclick={() => (selected = {})}>Clear</Button>
+		<Button size="sm" onclick={() => (bookingDialogOpen = true)}>Book</Button>
+	</div>
+{/if}
 
 {#snippet serviceRow(service: Service)}
 	<li class="flex items-center gap-3 py-3">

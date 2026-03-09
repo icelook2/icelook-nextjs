@@ -63,3 +63,11 @@ export interface DefaultSpecialist {
 	name: string;
 	avatarUrl: string | null;
 }
+
+export interface MySpecialist {
+	id: string;
+	nickname: string;
+	name: string;
+	avatarUrl: string | null;
+	isDefault: boolean;
+}

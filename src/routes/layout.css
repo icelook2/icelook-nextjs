@@ -5,3 +5,29 @@
 body {
 	@apply bg-neutral-50 text-neutral-950 dark:bg-neutral-950 dark:text-neutral-50;
 }
+
+.scrollbar-themed {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-neutral-300) transparent;
+}
+
+.dark .scrollbar-themed {
+	scrollbar-color: var(--color-neutral-600) transparent;
+}
+
+.scrollbar-themed::-webkit-scrollbar {
+	width: 6px;
+}
+
+.scrollbar-themed::-webkit-scrollbar-thumb {
+	background-color: var(--color-neutral-300);
+	border-radius: 9999px;
+}
+
+.dark .scrollbar-themed::-webkit-scrollbar-thumb {
+	background-color: var(--color-neutral-600);
+}
+
+.scrollbar-themed::-webkit-scrollbar-track {
+	background: transparent;
+}

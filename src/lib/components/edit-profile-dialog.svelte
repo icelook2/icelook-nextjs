@@ -178,7 +178,12 @@
 			<h2 class="text-lg font-semibold">Edit Profile</h2>
 		{:else if step === 'avatar'}
 			<div class="flex items-center gap-2">
-				<IconButton onclick={() => { resetAvatarState(); goBack(); }}>
+				<IconButton
+					onclick={() => {
+						resetAvatarState();
+						goBack();
+					}}
+				>
 					<ArrowLeft size={20} />
 				</IconButton>
 				<h2 class="text-lg font-semibold">Avatar</h2>
@@ -198,7 +203,10 @@
 			<!-- Avatar -->
 			<button
 				class="flex w-full items-center justify-between py-3 text-left"
-				onclick={() => { error = ''; step = 'avatar'; }}
+				onclick={() => {
+					error = '';
+					step = 'avatar';
+				}}
 			>
 				<span class="text-sm text-neutral-900 dark:text-neutral-50">Avatar</span>
 				<span class="flex items-center gap-1">
@@ -249,22 +257,19 @@
 		</div>
 	{:else if step === 'avatar'}
 		<div class="flex flex-col items-center gap-4">
-			<button
-				type="button"
-				class="group relative cursor-pointer"
-				onclick={() => fileInput.click()}
-			>
+			<button type="button" class="group relative cursor-pointer" onclick={() => fileInput.click()}>
 				{#if previewUrl}
-					<img
-						src={previewUrl}
-						alt="Preview"
-						class="h-24 w-24 rounded-full object-cover"
-					/>
+					<img src={previewUrl} alt="Preview" class="h-24 w-24 rounded-full object-cover" />
 				{:else}
 					<Avatar src={specialist.avatarUrl} name={specialist.name} size="xl" />
 				{/if}
-				<div class="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 transition-colors group-hover:bg-black/40">
-					<Camera size={24} class="text-white opacity-0 transition-opacity group-hover:opacity-100" />
+				<div
+					class="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 transition-colors group-hover:bg-black/40"
+				>
+					<Camera
+						size={24}
+						class="text-white opacity-0 transition-opacity group-hover:opacity-100"
+					/>
 				</div>
 			</button>
 			<p class="text-xs text-neutral-500 dark:text-neutral-400">Click to choose a photo</p>
@@ -281,7 +286,12 @@
 		</div>
 	{:else if step === 'bio'}
 		<FormField label={fieldLabels[step]} {error}>
-			<Textarea bind:value={draft} rows={4} maxlength={128} placeholder="Tell people about yourself..." />
+			<Textarea
+				bind:value={draft}
+				rows={4}
+				maxlength={128}
+				placeholder="Tell people about yourself..."
+			/>
 			<p class="mt-1.5 text-right text-xs text-neutral-400 dark:text-neutral-500">
 				{draft.length}/128
 			</p>
@@ -295,7 +305,8 @@
 				</p>
 			{:else}
 				<p class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
-					Nickname can be changed once every 6 months. Your previous nickname stays reserved for 6 months.
+					Nickname can be changed once every 6 months. Your previous nickname stays reserved for 6
+					months.
 				</p>
 			{/if}
 		</FormField>
@@ -309,11 +320,18 @@
 		{#if step === 'main'}
 			<Button variant="outline" onclick={() => (open = false)} class="w-full">Done</Button>
 		{:else if step === 'avatar'}
-			<Button onclick={saveAvatar} loading={uploading} disabled={!selectedFile} class="w-full">Save</Button>
+			<Button onclick={saveAvatar} loading={uploading} disabled={!selectedFile} class="w-full"
+				>Save</Button
+			>
 		{:else if step === 'name'}
 			<Button onclick={saveName} loading={saving} class="w-full">Save</Button>
 		{:else if step === 'nickname'}
-			<Button onclick={saveNickname} loading={saving} disabled={nicknameCooldown.locked} class="w-full">Save</Button>
+			<Button
+				onclick={saveNickname}
+				loading={saving}
+				disabled={nicknameCooldown.locked}
+				class="w-full">Save</Button
+			>
 		{:else if step === 'bio'}
 			<Button onclick={saveBio} loading={saving} class="w-full">Save</Button>
 		{/if}

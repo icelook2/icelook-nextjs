@@ -7,8 +7,10 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 		<script>
-			// Runs only when no theme cookie is set (system default, first visit)
-			if (!document.documentElement.classList.contains('dark') && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+			// Only apply OS dark preference when theme is 'system' (no explicit cookie)
+			const themeCookie = document.cookie.split('; ').find(function(r) { return r.startsWith('theme='); });
+			const themeValue = themeCookie ? themeCookie.split('=')[1] : null;
+			if (themeValue !== 'light' && !document.documentElement.classList.contains('dark') && window.matchMedia('(prefers-color-scheme: dark)').matches) {
 				document.documentElement.classList.add('dark');
 			}
 		</script>

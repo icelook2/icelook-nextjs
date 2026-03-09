@@ -1,18 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { ArrowLeft, ChevronRight } from 'lucide-svelte';
+	import { ChevronRight } from 'lucide-svelte';
+	import BackButton from '$lib/components/ui/back-button.svelte';
 	import Avatar from '$lib/components/ui/avatar.svelte';
 
 	const profile = $derived(page.data.profile);
 </script>
 
 <header class="flex items-center gap-3">
-	<a
-		href="/settings"
-		class="inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-900 transition-colors hover:bg-neutral-100 dark:text-neutral-50 dark:hover:bg-neutral-800"
-	>
-		<ArrowLeft size={20} />
-	</a>
+	<BackButton fallback="/settings" />
 	<h1 class="text-xl font-semibold text-neutral-900 dark:text-neutral-50">Profile</h1>
 </header>
 
