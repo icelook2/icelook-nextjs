@@ -15,7 +15,7 @@ To recreate this project with the same configuration:
 
 ```sh
 # recreate this project
-pnpm dlx sv create --template minimal --types ts --add mcp="ide:claude-code+setup:remote" paraglide="languageTags:en, uk+demo:yes" better-auth="demo:password" tailwindcss="plugins:forms" playwright vitest="usages:component,unit" eslint prettier sveltekit-adapter="adapter:cloudflare+cfTarget:workers" devtools-json drizzle="database:postgresql+postgresql:neon" --install pnpm web-app
+pnpm dlx sv@0.12.5 create --template minimal --types ts --add mcp="ide:claude-code+setup:remote" --install pnpm web-app
 ```
 
 ## Developing

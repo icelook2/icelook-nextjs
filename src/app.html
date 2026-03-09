@@ -1,22 +1,10 @@
 <!doctype html>
-
-<html lang="%paraglide.lang%">
+<html lang="en">
 	<head>
 		<meta charset="utf-8" />
-
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-
-		<script>
-			// Only apply OS dark preference when theme is 'system' (no explicit cookie)
-			const themeCookie = document.cookie.split('; ').find(function(r) { return r.startsWith('theme='); });
-			const themeValue = themeCookie ? themeCookie.split('=')[1] : null;
-			if (themeValue !== 'light' && !document.documentElement.classList.contains('dark') && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-				document.documentElement.classList.add('dark');
-			}
-		</script>
 		%sveltekit.head%
 	</head>
-
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
