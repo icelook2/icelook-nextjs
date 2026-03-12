@@ -7,10 +7,10 @@
 			'rounded-lg border-2 border-neutral-300 bg-transparent',
 			'transition-all',
 			'focus-visible:outline-2 focus-visible:outline-offset-2',
-			'focus-visible:outline-neutral-900 focus-visible:border-neutral-900',
+			'focus-visible:outline-accent-600 focus-visible:border-accent-600',
 			'disabled:pointer-events-none disabled:opacity-50',
 			'dark:border-neutral-600',
-			'dark:focus-visible:outline-neutral-100 dark:focus-visible:border-neutral-100'
+			'dark:focus-visible:outline-accent-500 dark:focus-visible:border-accent-500'
 		]
 	});
 

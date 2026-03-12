@@ -1,2 +1,101 @@
 @import "tailwindcss";
 @plugin "@iconify/tailwind4";
+
+/* Default accent = blue */
+:root {
+  --accent-50: var(--color-blue-50);
+  --accent-100: var(--color-blue-100);
+  --accent-200: var(--color-blue-200);
+  --accent-300: var(--color-blue-300);
+  --accent-400: var(--color-blue-400);
+  --accent-500: var(--color-blue-500);
+  --accent-600: var(--color-blue-600);
+  --accent-700: var(--color-blue-700);
+  --accent-800: var(--color-blue-800);
+  --accent-900: var(--color-blue-900);
+  --accent-950: var(--color-blue-950);
+}
+
+[data-accent="green"] {
+  --accent-50: var(--color-emerald-50);
+  --accent-100: var(--color-emerald-100);
+  --accent-200: var(--color-emerald-200);
+  --accent-300: var(--color-emerald-300);
+  --accent-400: var(--color-emerald-400);
+  --accent-500: var(--color-emerald-500);
+  --accent-600: var(--color-emerald-600);
+  --accent-700: var(--color-emerald-700);
+  --accent-800: var(--color-emerald-800);
+  --accent-900: var(--color-emerald-900);
+  --accent-950: var(--color-emerald-950);
+}
+
+[data-accent="yellow"] {
+  --accent-50: var(--color-amber-50);
+  --accent-100: var(--color-amber-100);
+  --accent-200: var(--color-amber-200);
+  --accent-300: var(--color-amber-300);
+  --accent-400: var(--color-amber-400);
+  --accent-500: var(--color-amber-500);
+  --accent-600: var(--color-amber-600);
+  --accent-700: var(--color-amber-700);
+  --accent-800: var(--color-amber-800);
+  --accent-900: var(--color-amber-900);
+  --accent-950: var(--color-amber-950);
+}
+
+[data-accent="pink"] {
+  --accent-50: var(--color-pink-50);
+  --accent-100: var(--color-pink-100);
+  --accent-200: var(--color-pink-200);
+  --accent-300: var(--color-pink-300);
+  --accent-400: var(--color-pink-400);
+  --accent-500: var(--color-pink-500);
+  --accent-600: var(--color-pink-600);
+  --accent-700: var(--color-pink-700);
+  --accent-800: var(--color-pink-800);
+  --accent-900: var(--color-pink-900);
+  --accent-950: var(--color-pink-950);
+}
+
+[data-accent="orange"] {
+  --accent-50: var(--color-orange-50);
+  --accent-100: var(--color-orange-100);
+  --accent-200: var(--color-orange-200);
+  --accent-300: var(--color-orange-300);
+  --accent-400: var(--color-orange-400);
+  --accent-500: var(--color-orange-500);
+  --accent-600: var(--color-orange-600);
+  --accent-700: var(--color-orange-700);
+  --accent-800: var(--color-orange-800);
+  --accent-900: var(--color-orange-900);
+  --accent-950: var(--color-orange-950);
+}
+
+[data-accent="purple"] {
+  --accent-50: var(--color-violet-50);
+  --accent-100: var(--color-violet-100);
+  --accent-200: var(--color-violet-200);
+  --accent-300: var(--color-violet-300);
+  --accent-400: var(--color-violet-400);
+  --accent-500: var(--color-violet-500);
+  --accent-600: var(--color-violet-600);
+  --accent-700: var(--color-violet-700);
+  --accent-800: var(--color-violet-800);
+  --accent-900: var(--color-violet-900);
+  --accent-950: var(--color-violet-950);
+}
+
+@theme inline {
+  --color-accent-50: var(--accent-50);
+  --color-accent-100: var(--accent-100);
+  --color-accent-200: var(--accent-200);
+  --color-accent-300: var(--accent-300);
+  --color-accent-400: var(--accent-400);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  --color-accent-700: var(--accent-700);
+  --color-accent-800: var(--accent-800);
+  --color-accent-900: var(--accent-900);
+  --color-accent-950: var(--accent-950);
+}

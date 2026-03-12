@@ -11,7 +11,7 @@
 </script>
 
 <a
-	class={cx('text-neutral-900 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 dark:text-neutral-100 dark:focus-visible:outline-neutral-100', className)}
+	class={cx('text-accent-600 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 dark:text-accent-500 dark:focus-visible:outline-accent-500', className)}
 	{...rest}
 >
 	{@render children()}

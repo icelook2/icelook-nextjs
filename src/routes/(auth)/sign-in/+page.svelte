@@ -124,6 +124,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Sign In | Icelook</title>
+</svelte:head>
+
 <div class="w-full max-w-sm px-6 space-y-8">
 	<div class="flex flex-col items-center gap-3">
 		<IcelookLogo class="h-10" />

@@ -1,13 +1,24 @@
 export type Theme = "dark" | "light" | "system";
+export type AccentColor =
+  | "blue"
+  | "green"
+  | "yellow"
+  | "pink"
+  | "orange"
+  | "purple";
 
 export class ThemeStore {
   preference = $state<Theme>("system");
+  accent = $state<AccentColor>("blue");
 
-  constructor(initial: () => Theme) {
-    this.preference = initial();
+  constructor(initial: () => { theme: Theme; accent: AccentColor }) {
+    const { theme, accent } = initial();
+    this.preference = theme;
+    this.accent = accent;
 
     this.#setInitialTheme();
     this.#trackSystemTheme();
+    this.#syncAccent();
   }
 
   #setInitialTheme() {
@@ -41,9 +52,21 @@ export class ThemeStore {
     });
   }
 
+  #syncAccent() {
+    $effect(() => {
+      document.documentElement.setAttribute("data-accent", this.accent);
+    });
+  }
+
   setTheme(value: Theme) {
     this.preference = value;
 
     document.cookie = `theme=${value}; path=/; max-age=31536000`;
+  }
+
+  setAccent(value: AccentColor) {
+    this.accent = value;
+
+    document.cookie = `accent=${value}; path=/; max-age=31536000`;
   }
 }

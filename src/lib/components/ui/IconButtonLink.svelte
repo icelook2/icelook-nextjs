@@ -9,7 +9,7 @@
 		variants: {
 			variant: {
 				ghost:
-					'hover:bg-neutral-100 focus-visible:outline-neutral-900 dark:hover:bg-neutral-800 dark:focus-visible:outline-neutral-100'
+					'hover:bg-neutral-100 focus-visible:outline-accent-600 dark:hover:bg-neutral-800 dark:focus-visible:outline-accent-500'
 			}
 		},
 		defaultVariants: {

@@ -9,7 +9,7 @@
 		variants: {
 			variant: {
 				primary:
-					'bg-neutral-900 text-white hover:bg-neutral-800 focus-visible:outline-neutral-900 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200 dark:focus-visible:outline-neutral-100'
+					'bg-accent-600 text-white hover:bg-accent-700 focus-visible:outline-accent-600 dark:bg-accent-500 dark:hover:bg-accent-400 dark:focus-visible:outline-accent-500'
 			}
 		},
 		defaultVariants: {
@@ -29,7 +29,7 @@
 </script>
 
 <a
-	class={cx(buttonLink({ variant }), active && 'ring-2 ring-neutral-900 dark:ring-neutral-100', className)}
+	class={cx(buttonLink({ variant }), active && 'ring-2 ring-accent-600 dark:ring-accent-500', className)}
 	aria-current={active ? 'page' : undefined}
 	{...rest}
 >

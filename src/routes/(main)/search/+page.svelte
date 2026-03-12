@@ -3,6 +3,10 @@
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 </script>
 
+<svelte:head>
+	<title>Search | Icelook</title>
+</svelte:head>
+
 <PageHeader>
 	{#snippet leading()}
 		<IconButtonLink href="/" aria-label="Go back">

@@ -5,12 +5,12 @@
 
 	let { children } = $props();
 
-	const iconColor = (active: boolean) => active ? 'text-neutral-900 dark:text-white' : 'text-neutral-400 dark:text-neutral-500';
+	const iconColor = (active: boolean) => active ? 'text-accent-600 dark:text-accent-400' : 'text-neutral-400 dark:text-neutral-500';
 </script>
 
 <div class="grid grid-cols-[auto_1fr] min-h-screen">
   <aside class="flex flex-col items-center justify-between px-2 py-4">
-    <a href="/">
+    <a href="/settings" class="active:scale-[0.97] transition-transform">
       <IcelookLogo class="h-9" />
     </a>
 

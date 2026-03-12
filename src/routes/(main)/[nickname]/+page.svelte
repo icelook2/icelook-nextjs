@@ -1,7 +1,12 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import IconButtonLink from '$lib/components/ui/IconButtonLink.svelte';
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 </script>
+
+<svelte:head>
+	<title>@{page.params.nickname} | Icelook</title>
+</svelte:head>
 
 <PageHeader>
 	{#snippet leading()}

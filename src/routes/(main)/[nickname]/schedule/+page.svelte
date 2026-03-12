@@ -4,6 +4,10 @@
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 </script>
 
+<svelte:head>
+	<title>Schedule | Icelook</title>
+</svelte:head>
+
 <PageHeader>
 	{#snippet leading()}
 		<IconButtonLink href="/{page.params.nickname}" aria-label="Go back">

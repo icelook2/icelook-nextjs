@@ -3,6 +3,10 @@
 	import PageHeader from '$lib/components/ui/PageHeader.svelte';
 </script>
 
+<svelte:head>
+	<title>Appointment | Icelook</title>
+</svelte:head>
+
 <PageHeader>
 	{#snippet leading()}
 		<IconButtonLink href="/appointments" aria-label="Go back">
